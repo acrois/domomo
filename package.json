@@ -1,0 +1,15 @@
+{
+  "name": "domomo",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "dom-serializer": "^2.0.0",
+    "htmlparser2": "^9.1.0"
+  }
+}
