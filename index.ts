@@ -1,6 +1,3 @@
-// import { parseDocument, Parser } from "htmlparser2";
-// import { DomHandler } from "domhandler";
-// import diff from "microdiff";
 import postgres from 'postgres'
 
 const sql = postgres({
@@ -10,51 +7,6 @@ const sql = postgres({
   host: 'localhost',
   port: 5432,
 });
-
-// const now = await sql`SELECT NOW()`;
-// console.log(now);
-
-// Parse HTML to a simplified JSON structure
-// function htmlToJson(html: string) {
-//   const handler = new DomHandler();
-//   const parser = new Parser(handler);
-//   parser.write(html);
-//   parser.end();
-
-//   const simplifyDom = (node: any) => ({
-//     type: node.type,
-//     name: node.name,
-//     attribs: node.attribs,
-//     children: node.children ? node.children.map(simplifyDom) : undefined,
-//     data: node.data,
-//   });
-
-//   return handler.dom.map(simplifyDom);
-// }
-
-// Reconstruct HTML from the simplified JSON structure
-// function jsonToHtml(nodes) {
-//   const buildHtml = (node) => {
-//     if (node.type === "tag") {
-//       const attrs = node.attribs
-//         ? Object.entries(node.attribs)
-//           .map(([key, value]) => `${key}="${value}"`)
-//           .join(" ")
-//         : "";
-//       const openingTag = `<${node.name}${attrs ? ` ${attrs}` : ""}>`;
-//       const closingTag = `</${node.name}>`;
-//       const children = node.children ? node.children.map(buildHtml).join("") : "";
-//       return `${openingTag}${children}${closingTag}`;
-//     } else if (node.type == "directive") {
-//       return `<${node.data}>`;
-//     } else if (node.type === "text") {
-//       return node.data;
-//     }
-//     return '';
-//   };
-
-//   return nodes.map(buildHtml).join("");
-// }
 
 enum NodeType {
   WINDOW,
@@ -143,7 +95,6 @@ const server = Bun.serve({
       WHERE name = ${uri.pathname}
     `;
 
-    // let cd = content[uri.pathname];
     let organized = null;
 
     if (document.length > 0) {
@@ -167,7 +118,7 @@ const server = Bun.serve({
 
     switch (request.method) {
       case 'GET':
-        // curl http://localhost:3000/spoke
+        // curl http://localhost:3000/
         if (document.length === 0 || organized === null || organized === undefined) {
           return new Response('Not found.', { status: 404 });
         }
