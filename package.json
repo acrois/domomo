@@ -2,14 +2,22 @@
   "name": "domomo",
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "dev": "docker compose up -d && bun --watch src/index.ts",
+    "build": "bun build src/index.ts && docker compose build",
+    "clean": "docker compose down -v",
+    "start": "NODE_ENV=production bun src/index.ts",
+    "test": "bun test"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "bun-types": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
     "dom-serializer": "^2.0.0",
+    "elysia": "^1.0.13",
     "htmlparser2": "^9.1.0",
     "microdiff": "^1.4.0",
     "postgres": "^3.4.4"
