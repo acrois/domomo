@@ -7,7 +7,7 @@ CREATE TABLE public.node_type (
 
 CREATE TABLE public.node (
 	id uuid DEFAULT gen_random_uuid() NOT NULL,
-	type_id int2 NULL,
+	type_id int2 NOT NULL,
 	"name" varchar NULL,
 	value varchar NULL,
 	CONSTRAINT node_pk PRIMARY KEY (id),

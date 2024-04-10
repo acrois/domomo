@@ -1,14 +1,14 @@
-INSERT INTO public.node ("name",value) VALUES
-	 ('/',NULL),
-	 ('!doctype','!DOCTYPE html'),
-	 (NULL,'
+INSERT INTO public.node (id,type_id,"name",value) VALUES
+	 ('460347c3-1285-4e7b-8ddc-7352cb4e3aec',9,'/',NULL),
+	 ('63787a60-1886-4dd9-8f89-e382f05b2217',10,'!doctype','!DOCTYPE html'),
+	 ('63f20fd3-c17a-4ec1-a8af-fa681e7f8515',3,NULL,'
 '),
-	 ('html',NULL),
-	 ('head',NULL),
-	 ('body',NULL),
-	 (NULL,'Test Document'),
-	 ('title',NULL),
-	 ('p',NULL);
+	 ('5bbc6a6c-fde2-4947-a449-0ead50b2356d',1,'html',NULL),
+	 ('7d907b80-061f-4984-bafc-465ed363a5c7',1,'head',NULL),
+	 ('40c0753c-2f6f-47a8-80b2-5f10a5dfc1b3',1,'body',NULL),
+	 ('63f20fd3-c17a-4ec1-a8af-fa681e7f8516',3,NULL,'Test Document'),
+	 ('c5014d95-9c0d-4c33-8770-beea58ae74d1',1,'title',NULL),
+	 ('37680211-1548-4ab5-9551-36fa0a4e346c',1,'p',NULL);
 
 INSERT INTO public.node_attachment (id,parent_id,child_id,"position") VALUES
 	 ('9669b51e-1278-453a-9f2d-fe6e4b89a3eb','460347c3-1285-4e7b-8ddc-7352cb4e3aec','63787a60-1886-4dd9-8f89-e382f05b2217',0),
