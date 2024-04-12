@@ -21,8 +21,14 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', (event) => {
+document.addEventListener('DOMContentLoaded', () => {
     let draggedItem = null;
+
+    const resetIncorrect = () => {
+        document.querySelectorAll('.incorrect').forEach(item => {
+            item.classList.remove('incorrect');
+        });
+    };
 
     document.querySelectorAll('.tag').forEach(item => {
         item.addEventListener('dragstart', function() {
@@ -30,7 +36,16 @@ document.addEventListener('DOMContentLoaded', (event) => {
         });
 
         item.addEventListener('dragend', function() {
-            draggedItem = null;
+            setTimeout(() => {
+                if (draggedItem.parentNode.classList.contains('description')) {
+                    draggedItem.style.display = 'none'; // Hide dragged item if correctly placed
+                } else {
+                    // Return to original position if not placed correctly
+                    document.getElementById('tags').appendChild(draggedItem);
+                }
+                resetIncorrect();
+                draggedItem = null;
+            }, 500); // Delay to show the incorrect match before resetting
         });
     });
 
@@ -46,6 +61,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 this.classList.add('correct');
             } else {
                 this.classList.add('incorrect');
+                setTimeout(() => {
+                    this.classList.remove('incorrect'); // Remove incorrect highlight after a delay
+                }, 1000); // Delay before removing the incorrect highlight
             }
         });
     });

@@ -3,7 +3,6 @@ import postgres from 'postgres'
 import { nodeToHTML, rowsToParents, rowsToTree } from "./util";
 
 // client-side script to connect websocket for bidirectional async updates
-// uri per node
 // update nodes
 // create nodes
 // client-side designMode html attribute and contenteditable element attribute
@@ -31,8 +30,24 @@ const sql = postgres({
 });
 const encoder = new TextEncoder();
 const app = new Elysia()
+  .derive(async ({ headers, request }) => {
+    const uri = new URL(request.url);
+    const domain = uri.hostname;
+    // console.log(domain);
+    const t = await sql`SELECT id FROM domains WHERE name = ${domain}`
+
+    if (t.length > 0 ) {
+      return {
+        domain: t[0],
+      }
+    }
+
+    return {
+      domain: null,
+    }
+  })
   .derive(({ headers }) => {
-    const auth = headers['Authorization']
+    const auth = headers['authorization']
 
     return {
       bearer: auth?.startsWith('Bearer ') ? auth.slice(7) : null
@@ -43,6 +58,10 @@ const app = new Elysia()
     let text = typeof response === 'string' ? response : '';
 
     if (response !== null && typeof response === 'object') {
+      // id and children in object is a good indicator of tree
+      //   TODO find a better one
+      // also, we did not request the raw (server default) response
+      //   raw is useful for debugging and as an escape hatch
       if ('id' in response && 'children' in response && !('raw' in query)) {
         type = 'text/html'
         text = nodeToHTML(response);
@@ -76,14 +95,19 @@ const app = new Elysia()
     // console.log(code);
     return estr;
   })
-  .get("*", async ({ params }) => {
+  .get("*", async ({ params, domain }) => {
+    if (!domain) {
+      throw new NotFoundError();
+    }
+
     // console.log(params);
     const path = `/${params['*']}`
     const document = await sql`
       SELECT
-        id
-      FROM documents
-      WHERE name = ${path}
+        document_id AS id
+      FROM domain_documents
+      WHERE id = ${domain.id}
+        AND document_name = ${path}
     `;
 
     let organized = null;
@@ -113,15 +137,18 @@ const app = new Elysia()
 
     return organized;
   })
-  .guard({
-
-  }, (app) => app
-    .resolve(async ({ params: { document, fragment } }) => {
+  .guard({}, (app) => app
+    .resolve(async ({ domain, params: { document, fragment } }) => {
+      if (!domain) {
+        throw new NotFoundError();
+      }
+      // console.log(domain, document);
       const doc = await sql`
         SELECT
           *
-        FROM documents
-        WHERE id = ${document}
+        FROM domain_documents
+        WHERE id = ${domain.id}
+        AND document_id = ${document}
       `;
 
       const frag = await sql`
@@ -151,7 +178,7 @@ const app = new Elysia()
           position,
           parent
         FROM document_tree
-        WHERE root = ${document.id}
+        WHERE root = ${document.document_id}
       `;
       // console.log(tree);
       const parents = rowsToParents(tree);
@@ -163,7 +190,7 @@ const app = new Elysia()
         }
       }
 
-      throw 'Invalid';
+      throw new NotFoundError();
     })
   )
   .listen(3000)
