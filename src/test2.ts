@@ -1,7 +1,7 @@
 import { unified } from 'unified';
 import rehypeParse from 'rehype-parse';
 import rehypeStringify from 'rehype-stringify';
-import { removeKeys } from './util';
+import { removeKeys, renameProperty } from './util';
 
 const htmlToAstToJsonToHtml = async (html) => {
     // Parse HTML to AST
@@ -12,18 +12,24 @@ const htmlToAstToJsonToHtml = async (html) => {
         })
         .parse(html);
 
-    const cleanAST = removeKeys(ast, ['position']);
+    const cleanAST = renameProperty(
+      renameProperty(
+        removeKeys(ast, ['position']),
+        'type',
+        'node_type'
+      ),
+      'tagName',
+      'name'
+    );
 
     // Optionally convert AST to JSON
     const json = JSON.stringify(cleanAST); // Convert AST to JSON
     console.log(json);
-    // Convert JSON back to AST (if needed)
-    const astFromJson = JSON.parse(json);
 
     // Convert AST back to HTML
     const htmlOutput = unified()
         .use(rehypeStringify)
-        .stringify(astFromJson);
+        .stringify(ast);
 
     return htmlOutput;
 };

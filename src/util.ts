@@ -2,12 +2,12 @@ import { DomHandler, Parser } from "htmlparser2";
 
 export enum NodeType {
   WINDOW,
+  DOMAIN,
   DOCUMENT,
   DOCUMENT_TYPE,
   ELEMENT,
   TEXT,
   COMMENT,
-  DOMAIN,
 }
 
 export type NodeTypeName = keyof typeof NodeType;
@@ -136,3 +136,53 @@ export const removeKeys = (obj: object, keys: string[]) => obj !== Object(obj)
         (acc, x) => Object.assign(acc, { [x]: removeKeys(obj[x], keys) }),
         {}
       )
+
+type AnyObject = { [key: string]: any };
+
+export const renameProperty = (obj: AnyObject, oldProp: string, newProp: string): AnyObject => {
+  if (Array.isArray(obj)) {
+    // If it's an array, apply the function to each element
+    return obj.map(item => renameProperty(item, oldProp, newProp));
+  } else if (obj !== null && typeof obj === 'object') {
+    // If it's an object, rename the property and apply the function to each property
+    const newObj: AnyObject = {};
+    for (const key in obj) {
+      const value = obj[key];
+      // If the current key matches the old property name, rename it
+      if (key === oldProp) {
+        newObj[newProp] = renameProperty(value, oldProp, newProp);
+      } else {
+        newObj[key] = renameProperty(value, oldProp, newProp);
+      }
+    }
+    return newObj;
+  }
+  // Return the value if it's neither an array nor an object
+  return obj;
+}
+
+export const transformPropertyValue = (
+  obj: AnyObject,
+  propName: string,
+  transformFunction: (value: any) => any
+): AnyObject => {
+  if (Array.isArray(obj)) {
+    // If it's an array, apply the function to each element
+    return obj.map(item => transformPropertyValue(item, propName, transformFunction));
+  } else if (obj !== null && typeof obj === 'object') {
+    // If it's an object, check each property
+    const newObj: AnyObject = {};
+    for (const key in obj) {
+      const value = obj[key];
+      // Apply the transform function to the property if it matches
+      if (key === propName) {
+        newObj[key] = transformFunction(value);
+      } else {
+        newObj[key] = transformPropertyValue(value, propName, transformFunction);
+      }
+    }
+    return newObj;
+  }
+  // Return the value if it's neither an array nor an object
+  return obj;
+}
