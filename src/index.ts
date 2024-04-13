@@ -1,6 +1,7 @@
-import { Elysia, NotFoundError } from "elysia";
+import { Elysia, NotFoundError, ParseError } from "elysia";
 import postgres from 'postgres'
-import { nodeToHTML, rowsToParents, rowsToTree } from "./util";
+import { cleanTree, htmlToDocument, nodeToHTML, rowsToParents, rowsToTree } from "./util";
+import diff from "microdiff";
 
 // client-side script to connect websocket for bidirectional async updates
 // update nodes
@@ -10,7 +11,7 @@ import { nodeToHTML, rowsToParents, rowsToTree } from "./util";
 // TODO handle application/json-html-ast
 
 // curl http://localhost:3000/
-// curl -X PUT -H "Content-Type: text/html" -d @test.html http://localhost:3000/spoke
+// curl -X PUT -H "Content-Type: text/html" -d @sample/test.html http://localhost:3000/spoke
 
 // content[uri.pathname] = htmlToJson(await (await request.blob()).text());
 // if (cd !== undefined) {
@@ -51,6 +52,12 @@ const app = new Elysia()
 
     return {
       bearer: auth?.startsWith('Bearer ') ? auth.slice(7) : null
+    }
+  })
+  .onParse(({ request }, contentType) => {
+    if (contentType == 'text/html') {
+      const uri = new URL(request.url);
+      return (async () => htmlToDocument(uri.pathname, await request.text()))();
     }
   })
   .mapResponse(({ query, response, set, headers }) => {
@@ -136,6 +143,61 @@ const app = new Elysia()
     }
 
     return organized;
+  })
+  .put('*', async ({ params, domain, body }) => {
+    if (!domain) {
+      throw new NotFoundError();
+    }
+
+    if (!body) {
+      throw new ParseError();
+    }
+
+    console.log(JSON.stringify(body));
+
+    // console.log(params);
+    const path = `/${params['*']}`
+    const document = await sql`
+      SELECT
+        document_id AS id
+      FROM domain_documents
+      WHERE id = ${domain.id}
+        AND document_name = ${path}
+    `;
+
+    // let organized = null;
+    // let organizedClean = null;
+
+    // if (document.length > 0) {
+    //   const doc = document[0];
+    //   // console.log(doc);
+    //   const tree = await sql`
+    //     SELECT
+    //       id,
+    //       node_type,
+    //       name,
+    //       value,
+    //       position,
+    //       parent
+    //     FROM document_tree
+    //     WHERE root = ${doc.id}
+    //   `;
+    //   // console.log(tree);
+    //   organized = rowsToTree(tree);
+
+    //   if (organized) {
+    //     organized = organized;
+    //     organizedClean = cleanTree(organized);
+    //   }
+    //   // console.log(JSON.stringify(organized));
+    // }
+
+    // console.log(organized, organizedClean);
+    // const d = diff(organizedClean ?? {}, body ?? {});
+    // console.log(JSON.stringify(d));
+    // const c = sql``
+
+    // return organized;
   })
   .guard({}, (app) => app
     .resolve(async ({ domain, params: { document, fragment } }) => {
