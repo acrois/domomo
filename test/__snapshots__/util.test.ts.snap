@@ -1,0 +1,265 @@
+// Bun Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`html to node 1`] = `
+{
+  "children": [
+    {
+      "children": [
+        {
+          "children": undefined,
+          "name": "!doctype",
+          "node_type": "DOCUMENT_TYPE",
+          "value": "!DOCTYPE html",
+        },
+        {
+          "children": undefined,
+          "name": undefined,
+          "node_type": "TEXT",
+          "value": 
+"
+  "
+,
+        },
+        {
+          "children": [
+            {
+              "children": undefined,
+              "name": undefined,
+              "node_type": "TEXT",
+              "value": 
+"
+
+  "
+,
+            },
+            {
+              "children": [
+                {
+                  "children": undefined,
+                  "name": undefined,
+                  "node_type": "TEXT",
+                  "value": 
+"
+    "
+,
+                },
+                {
+                  "children": [
+                    {
+                      "children": undefined,
+                      "name": undefined,
+                      "node_type": "TEXT",
+                      "value": "Test Document",
+                    },
+                  ],
+                  "name": "title",
+                  "node_type": "ELEMENT",
+                  "value": undefined,
+                },
+                {
+                  "children": undefined,
+                  "name": undefined,
+                  "node_type": "TEXT",
+                  "value": 
+"
+  "
+,
+                },
+              ],
+              "name": "head",
+              "node_type": "ELEMENT",
+              "value": undefined,
+            },
+            {
+              "children": undefined,
+              "name": undefined,
+              "node_type": "TEXT",
+              "value": 
+"
+
+  "
+,
+            },
+            {
+              "children": [
+                {
+                  "children": undefined,
+                  "name": undefined,
+                  "node_type": "TEXT",
+                  "value": 
+"
+    "
+,
+                },
+                {
+                  "children": [
+                    {
+                      "children": undefined,
+                      "name": undefined,
+                      "node_type": "TEXT",
+                      "value": 
+"
+      "
+,
+                    },
+                    {
+                      "children": [
+                        {
+                          "children": undefined,
+                          "name": undefined,
+                          "node_type": "TEXT",
+                          "value": "Hello, World!",
+                        },
+                      ],
+                      "name": "h1",
+                      "node_type": "ELEMENT",
+                      "value": undefined,
+                    },
+                    {
+                      "children": undefined,
+                      "name": undefined,
+                      "node_type": "TEXT",
+                      "value": 
+"
+      "
+,
+                    },
+                    {
+                      "children": [
+                        {
+                          "children": undefined,
+                          "name": undefined,
+                          "node_type": "TEXT",
+                          "value": "This is a test paragraph.",
+                        },
+                      ],
+                      "name": "p",
+                      "node_type": "ELEMENT",
+                      "value": undefined,
+                    },
+                    {
+                      "children": undefined,
+                      "name": undefined,
+                      "node_type": "TEXT",
+                      "value": 
+"
+    "
+,
+                    },
+                  ],
+                  "name": "div",
+                  "node_type": "ELEMENT",
+                  "value": undefined,
+                },
+                {
+                  "children": undefined,
+                  "name": undefined,
+                  "node_type": "TEXT",
+                  "value": 
+"
+  "
+,
+                },
+              ],
+              "name": "body",
+              "node_type": "ELEMENT",
+              "value": undefined,
+            },
+            {
+              "children": undefined,
+              "name": undefined,
+              "node_type": "TEXT",
+              "value": 
+"
+
+  "
+,
+            },
+          ],
+          "name": "html",
+          "node_type": "ELEMENT",
+          "value": undefined,
+        },
+      ],
+      "name": "/",
+      "node_type": "DOCUMENT",
+      "value": null,
+    },
+  ],
+  "name": null,
+  "node_type": "WINDOW",
+  "value": null,
+}
+`;
+
+exports[`node to html 1`] = `"<!DOCTYPE html><html data-guid="5bbc6a6c-fde2-4947-a449-0ead50b2356d"><head data-guid="7d907b80-061f-4984-bafc-465ed363a5c7"><title data-guid="c5014d95-9c0d-4c33-8770-beea58ae74d1">Test Document</title></head><body data-guid="40c0753c-2f6f-47a8-80b2-5f10a5dfc1b3"><p data-guid="37680211-1548-4ab5-9551-36fa0a4e346c">Test Document</p></body></html>"`;
+
+exports[`html to node 2`] = `
+{
+  "children": [
+    {
+      "children": [
+        {
+          "children": undefined,
+          "name": "!doctype",
+          "node_type": "DOCUMENT_TYPE",
+          "value": "!DOCTYPE html",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "children": undefined,
+                      "name": undefined,
+                      "node_type": "TEXT",
+                      "value": "Test Document",
+                    },
+                  ],
+                  "name": "title",
+                  "node_type": "ELEMENT",
+                  "value": undefined,
+                },
+              ],
+              "name": "head",
+              "node_type": "ELEMENT",
+              "value": undefined,
+            },
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "children": undefined,
+                      "name": undefined,
+                      "node_type": "TEXT",
+                      "value": "Test Document",
+                    },
+                  ],
+                  "name": "p",
+                  "node_type": "ELEMENT",
+                  "value": undefined,
+                },
+              ],
+              "name": "body",
+              "node_type": "ELEMENT",
+              "value": undefined,
+            },
+          ],
+          "name": "html",
+          "node_type": "ELEMENT",
+          "value": undefined,
+        },
+      ],
+      "name": "/",
+      "node_type": "DOCUMENT",
+      "value": null,
+    },
+  ],
+  "name": null,
+  "node_type": "WINDOW",
+  "value": null,
+}
+`;

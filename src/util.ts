@@ -74,7 +74,7 @@ export const rowsToParents = (treeRows: any[]) => {
 
 export const rowsToTree = (treeRows: any[]): DatabaseNode => {
   const parents = rowsToParents(treeRows);
-  return parents[0];
+  return parents[0]!;
 }
 
 export const htmlToDocument = (path: string, html: string): BasicNode[] => {
@@ -109,7 +109,7 @@ export const htmlToDocument = (path: string, html: string): BasicNode[] => {
     children: [
       {
         node_type: 'DOCUMENT',
-        name: '/',
+        name: path,
         value: null,
         children: handler.dom.map(simplifyDom),
       },

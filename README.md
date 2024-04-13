@@ -6,6 +6,8 @@ Hypermedia Content Management System
 
 This project was created using `bun init` in bun v1.0.25. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
 
+It also requires a runtime that supports docker & docker compose.
+
 To install dependencies:
 
 ```bash
@@ -17,7 +19,7 @@ bun install
 To run:
 
 ```bash
-bun run index.ts
+bun dev
 ```
 
 ## About
@@ -25,6 +27,14 @@ bun run index.ts
 Essentially, this service stores ASTs in a database. It retrieves them, compiles is to a format like HTML, and serves that upon request.
 
 (WIP) The API exposes facilities for event-based, functional programming (EBFP), document fragments, templates, slots, and portals along with traditional iframe, img, object, etc.
+
+### Version Control
+
+(WIP) Using the database WAL (Postgres) we automatically track the versions of indivual nodes, enabling undo/redo and recovery.
+
+### IAM
+
+OAuth, SAML, OIDC
 
 ### Offline Distribution
 
