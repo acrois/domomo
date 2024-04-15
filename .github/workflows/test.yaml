@@ -1,0 +1,44 @@
+name: Test an Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_url:
+        description: 'Deployment URL'
+        required: true
+        type: string
+        default: 'https://test.kinetech.cloud'
+  workflow_call:
+    inputs:
+      deployment_url:
+        description: 'Deployment URL'
+        required: true
+        type: string
+        default: 'https://test.kinetech.cloud'
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  deployments: write
+  pull-requests: write
+
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Deploy to Cloudflare Pages
+        run: echo "test"
