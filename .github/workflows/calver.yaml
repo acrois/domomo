@@ -1,0 +1,25 @@
+name: CalVer Tagging
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        required: true
+        description: Variant tag to pass to CalVer
+        type: string
+  push:
+    branches:
+      - "**"
+    tags:
+      - "!**"
+concurrency: tag-environment
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    name: Tag revision
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Version
+        uses: acrois/calver@trunk

@@ -1,6 +1,8 @@
 import { Elysia, NotFoundError, ParseError } from "elysia";
 import postgres from 'postgres'
 import { astToHTML, parseToAST, rowsToParents, rowsToTree } from "./util";
+import { JwksClient } from "jwks-rsa";
+import jwt from "jsonwebtoken";
 // import diff from "microdiff";
 
 // client-side script to connect websocket for bidirectional async updates
@@ -20,6 +22,21 @@ import { astToHTML, parseToAST, rowsToParents, rowsToTree } from "./util";
 //   console.log(e);
 // }
 // console.log(content);
+
+// TODO env
+const AUD = 'da2b88366aa5a356fe89d72cc01699701bb89a01d32f75ddedd512923e57647a';
+const TEAM_DOMAIN = '';
+const CERTS_URL = `${TEAM_DOMAIN}/cdn-cgi/access/certs`;
+
+const client = new JwksClient({
+  jwksUri: CERTS_URL
+});
+
+const getKey = (header, callback) => {
+  client.getSigningKey(header.kid, function(err, key) {
+    callback(err, key?.getPublicKey());
+  });
+}
 
 const name = 'Nodula';
 const sql = postgres({
@@ -47,11 +64,19 @@ const app = new Elysia()
       domain: null,
     }
   })
-  .derive(({ headers }) => {
-    const auth = headers['authorization']
+  .derive(({ headers, cookie }) => {
+    const basicAuth = headers['authorization'] ?? headers['Authorization']
+    const cfAuth = cookie['CF_Authorization'] ?? headers['cf_authorization']
+
+    let decodedJwt = null;
+
+    if (cfAuth && cfAuth.value) {
+      decodedJwt = jwt.verify(cfAuth.value, getKey, { audience: AUD });
+    }
 
     return {
-      bearer: auth?.startsWith('Bearer ') ? auth.slice(7) : null
+      bearer: basicAuth?.startsWith('Bearer ') ? basicAuth.slice(7) : null,
+      jwt: decodedJwt,
     }
   })
   .onParse(({ request }, contentType) => {
@@ -92,8 +117,10 @@ const app = new Elysia()
     set.headers['Content-Type'] = `${type}; charset=utf-8`
 
     return new Response(
-      Bun.gzipSync(encoder.encode(text)),
-    )
+      Bun.gzipSync(
+        encoder.encode(text)
+      ),
+    );
   })
   .onError(({ code, error, set }) => {
     const estr = error?.toString();
