@@ -1,0 +1,98 @@
+name: Deploy CloudFlare Pages
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches:
+      - "**"
+      # - main
+      # - master
+      # - trunk
+    tags:
+      - "!**"
+  # Run every time a PR is updated
+  pull_request:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  deployments: write
+  pull-requests: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Build job
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      # - name: Setup Pages
+      #   uses: actions/configure-pages@v3
+      #   with:
+      #     # Automatically inject basePath in your Next.js configuration file and disable
+      #     # server side image optimization (https://nextjs.org/docs/api-reference/next/image#unoptimized).
+      #     #
+      #     # You may remove this line if you want to manage the configuration yourself.
+      #     static_site_generator: next
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Build with Next.js
+        run: bun run build
+      # - name: Upload artifact
+      #   uses: actions/upload-pages-artifact@v1
+      #   with:
+      #     path: build
+      - name: Archive distributable
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-distributable
+          path: build
+      # TODO move workflow
+      - name: Publish to Cloudflare Pages
+        id: pages-action
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: ${{ github.event.repository.name }}
+          directory: build
+          # Optional: Enable this if you want to have GitHub Deployments triggered
+          # gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: Switch what branch you are publishing to.
+          # By default this will be the branch which triggered this workflow
+          branch: ${{ github.head_ref || github.ref_name }}
+          # Enable Wrangler v3
+          wranglerVersion: '3'
+      - name: Comment PR
+        if: github.event_name == 'pull_request'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          GITHUB_TOKEN: ${{ secrets.SVC_CLI_BOT_GITHUB_TOKEN }}
+          message: |
+            Deployed ${{ steps.pages-action.outputs.environment }} build to CloudFlare Pages!
+
+            | Key                     | Value |
+            | ----------------------- | ----- |
+            | **Last commit:**        | ${{ github.event.pull_request.head.sha || github.event.workflow_run.head_sha || github.sha }} |
+            | **Preview URL**:        | ${{ steps.pages-action.outputs.url }} |
+            | **Branch Preview URL**: | https://${{ github.head_ref || github.ref_name }}.${{ github.event.repository.name }}.pages.dev |
+          comment_tag: deployment
+          mode: upsert
