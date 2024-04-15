@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW public.documents
+CREATE OR REPLACE VIEW documents
 AS SELECT id,
     type_id,
     name,
@@ -8,7 +8,7 @@ AS SELECT id,
            FROM node_type
           WHERE node_type.tag::text = 'DOCUMENT'::text));
 
-CREATE OR REPLACE VIEW public.document_tree
+CREATE OR REPLACE VIEW document_tree
 AS WITH RECURSIVE cte AS (
          SELECT documents.id,
             documents.type_id,

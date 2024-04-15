@@ -1,4 +1,7 @@
 import { DomHandler, Parser } from "htmlparser2";
+import { unified } from 'unified';
+import rehypeParse from 'rehype-parse';
+import rehypeStringify from 'rehype-stringify';
 
 export enum NodeType {
   WINDOW,
@@ -75,6 +78,55 @@ export const rowsToParents = (treeRows: any[]) => {
 export const rowsToTree = (treeRows: any[]): DatabaseNode => {
   const parents = rowsToParents(treeRows);
   return parents[0]!;
+}
+
+export const astToHTML = (ast: any) => {
+  const trans = transformPropertyValue(
+    renameProperty(
+      renameProperty(
+        ast,
+        'node_type', // from
+        'type' // to
+      ),
+      'name', // from
+      'tagName' // to
+    ),
+    'type',
+    v => v == 'DOCUMENT' ? 'root' : v == 'DOCUMENT_TYPE' ? 'doctype' : v.toLowerCase()
+  );
+  return unified()
+    .use(rehypeStringify)
+    .stringify(trans);
+}
+
+export const parseToAST = (html: string, fragment: boolean = false) => {
+  const root = transformPropertyValue(
+    renameProperty(
+      renameProperty(
+        removeKeys(
+          unified()
+            .use(rehypeParse, {
+              fragment,
+              verbose: false,
+            })
+            .parse(html),
+          ['position'] // remove
+        ),
+        'type', // from
+        'node_type' // to
+      ),
+      'tagName', // from
+      'name' // to
+    ),
+    'node_type',
+    v => v == 'doctype' ? 'DOCUMENT_TYPE' : v.toUpperCase()
+  );
+
+  if (!fragment) {
+    root.node_type = 'DOCUMENT';
+  }
+
+  return root;
 }
 
 export const htmlToDocument = (path: string, html: string): BasicNode[] => {

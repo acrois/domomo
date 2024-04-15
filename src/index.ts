@@ -1,7 +1,7 @@
 import { Elysia, NotFoundError, ParseError } from "elysia";
 import postgres from 'postgres'
-import { cleanTree, htmlToDocument, nodeToHTML, rowsToParents, rowsToTree } from "./util";
-import diff from "microdiff";
+import { astToHTML, parseToAST, rowsToParents, rowsToTree } from "./util";
+// import diff from "microdiff";
 
 // client-side script to connect websocket for bidirectional async updates
 // update nodes
@@ -56,9 +56,13 @@ const app = new Elysia()
   })
   .onParse(({ request }, contentType) => {
     if (contentType == 'text/html') {
-      const uri = new URL(request.url);
-      return (async () => htmlToDocument(uri.pathname, await request.text()))();
+      return (async () => {
+        const ast = parseToAST(await request.text())
+        ast.name = new URL(request.url).pathname
+        return ast;
+      })();
     }
+    // else if ()
   })
   .mapResponse(({ query, response, set, headers }) => {
     let type = headers['Content-Type'] ?? 'text/plain';
@@ -71,7 +75,7 @@ const app = new Elysia()
       //   raw is useful for debugging and as an escape hatch
       if ('id' in response && 'children' in response && !('raw' in query)) {
         type = 'text/html'
-        text = nodeToHTML(response);
+        text = astToHTML(response);
       }
       else if (response instanceof Response) {
         text = response.toString()
@@ -131,18 +135,18 @@ const app = new Elysia()
           position,
           parent
         FROM document_tree
-        WHERE root = ${doc.id}
+        WHERE root = ${doc!.id}
       `;
       // console.log(tree);
       organized = rowsToTree(tree);
       // console.log(JSON.stringify(organized));
     }
 
-    if (document.length === 0 || organized === null || organized === undefined) {
+    if (document.length === 0 || organized === null || organized === undefined || organized.children.length === 0) {
       throw new NotFoundError();
     }
 
-    return organized;
+    return organized.children[0];
   })
   .put('*', async ({ params, domain, body }) => {
     if (!domain) {
@@ -153,17 +157,109 @@ const app = new Elysia()
       throw new ParseError();
     }
 
-    console.log(JSON.stringify(body));
+    // console.log(JSON.stringify(body));
 
     // console.log(params);
     const path = `/${params['*']}`
     const document = await sql`
       SELECT
-        document_id AS id
+        document_attachment_id
       FROM domain_documents
       WHERE id = ${domain.id}
         AND document_name = ${path}
     `;
+
+    // await sql.begin(async sql => {
+      if (document.length !== 0) {
+        await sql`
+          DELETE FROM node_attachment
+          WHERE id = ${document[0]!.document_attachment_id}
+        `;
+      }
+
+      const insertNode = async (node: any, parentId: string, next_position: number = 0) => {
+        // console.log(node);
+        const type = node.node_type;
+        let name = node.name;
+
+        if (name === null || name === undefined) {
+          name = type === 'DOCUMENT_TYPE'
+            ? '!doctype'
+            : type === 'DOCUMENT'
+              ? path
+              : null
+        }
+
+        let value = node.value;
+
+        if (value === null || value === undefined) {
+          value = type === 'DOCUMENT_TYPE'
+            ? '!DOCTYPE html'
+            : null
+        }
+        // console.log(node.name, type, name, value);
+        const inserted = await sql`
+          INSERT INTO node (
+              type_id,
+              name,
+              value
+          ) VALUES (
+            (
+              SELECT id
+              FROM node_type
+              WHERE tag = ${type}
+            ),
+            ${name},
+            ${value}
+          ) returning id
+        `;
+        // console.log(inserted);
+        const nodeId = inserted[0]!.id;
+        // console.log(nodeId, parentId, next_position);
+        // throw ';';
+        // const nextAttachment = await sql`
+        //   SELECT next_position
+        //   FROM node_attachment_next
+        //   WHERE parent_id = ${parentId}
+        // `;
+
+        // if (nextAttachment.length === 0) {
+        //   throw 'Uh oh...';
+        // }
+
+        // console.log(node.name, node.value, node.node_type, parentId, nodeId, next_position);
+
+        await sql`
+          INSERT INTO node_attachment
+            (parent_id, child_id, position)
+          VALUES
+            (${parentId}, ${nodeId}, ${next_position})
+        `
+
+        // console.log(c);
+
+        const children: any[] = node?.children || [];
+        for (let i = 0; i < children.length; i++) {
+          // console.log(nodeId, i);
+          await insertNode(children[i], nodeId, i);
+        }
+
+        // children.map(v => await insertNode(v, nodeId));
+      }
+
+      const nextAttachment = await sql`
+        SELECT next_position
+        FROM node_attachment_next
+        WHERE parent_id = ${domain.id}
+      `;
+
+      if (nextAttachment.length === 0) {
+        throw 'Uh oh...';
+      }
+
+      await insertNode(body, domain.id, nextAttachment[0]!.next_position);
+    // });
+
 
     // let organized = null;
     // let organizedClean = null;

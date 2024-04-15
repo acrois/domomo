@@ -1,4 +1,4 @@
-INSERT INTO public.node_type
+INSERT INTO node_type
   (id,tag,description) VALUES
   (1,'ELEMENT','Element'),
   (2,'ATTRIBUTE','Attribute'),

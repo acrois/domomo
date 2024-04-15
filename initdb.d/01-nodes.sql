@@ -1,11 +1,11 @@
-CREATE TABLE public.node_type (
+CREATE TABLE node_type (
 	id int2 NOT NULL,
 	tag varchar NOT NULL,
 	description varchar NULL,
 	CONSTRAINT node_type_pk PRIMARY KEY (id)
 );
 
-CREATE TABLE public.node (
+CREATE TABLE node (
 	id uuid DEFAULT gen_random_uuid() NOT NULL,
 	type_id int2 NOT NULL,
 	"name" varchar NULL,
@@ -14,7 +14,7 @@ CREATE TABLE public.node (
 	CONSTRAINT node_node_type_fk FOREIGN KEY (type_id) REFERENCES public.node_type(id) ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
-CREATE TABLE public.node_attachment (
+CREATE TABLE node_attachment (
 	id uuid DEFAULT gen_random_uuid() NOT NULL,
 	parent_id uuid NOT NULL,
 	child_id uuid NOT NULL,

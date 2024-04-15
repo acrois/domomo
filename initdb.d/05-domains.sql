@@ -10,6 +10,7 @@ select
 	dm.id,
 	dm.type_id,
 	dm.name,
+	c.id as document_attachment_id,
 	doc.id as document_id,
 	doc.type_id as document_type_id,
 	doc.name as document_name
