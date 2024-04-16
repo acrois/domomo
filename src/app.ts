@@ -1,8 +1,10 @@
 import { Elysia, NotFoundError, ParseError } from "elysia";
 import { Pool, Client } from "pg";
 import { astToHTML, parseToAST, rowsToParents, rowsToTree } from "./util";
-import { JwksClient } from "jwks-rsa";
-import jwt from "jsonwebtoken";
+// import { JwksClient } from "jwks-rsa";
+// import jwt from "jsonwebtoken";
+// import { jwt } from '@elysiajs/jwt'
+import * as jose from "jose";
 import { SQL } from "sql-template-strings";
 // import diff from "microdiff";
 
@@ -26,24 +28,52 @@ import { SQL } from "sql-template-strings";
 // console.log('loud');
 
 
-Client.prototype.dispose = function() {
-  console.log('heyo');
-}
+// Client.prototype.dispose = function() {
+//   console.log('heyo');
+// }
 
 const app = (env: any) => {
   const AUD = env.CFZT_AUDIENCE;
   const TEAM_DOMAIN = env.CFZT_TEAM;
-  const CERTS_URL = `${TEAM_DOMAIN}/cdn-cgi/access/certs`;
+  const CERTS_URL = new URL(`${TEAM_DOMAIN}/cdn-cgi/access/certs`);
 
-  const client = new JwksClient({
-    jwksUri: CERTS_URL
-  });
+  const JWKS = jose.createRemoteJWKSet(CERTS_URL);
+  // console.log(CERTS_URL);
+  // const client = new JwksClient({
+  //   jwksUri: CERTS_URL
+  // });
 
-  const getKey = (header, callback) => {
-    client.getSigningKey(header.kid, function (err, key) {
-      callback(err, key?.getPublicKey());
-    });
+  // const getKey = (header, callback) => {
+  //   client.getSigningKey(header.kid, function (err, key) {
+  //     callback(err, key?.getPublicKey());
+  //   });
+  // }
+  const options = {
+    // issuer: TEAM_DOMAIN,
+    audience: AUD,
   }
+  const verify = async (jwt: string) => {
+    return await jose
+      .jwtVerify(jwt, JWKS, options)
+      .catch(async (error) => {
+        // console.log(error);
+        if (error?.code === 'ERR_JWKS_MULTIPLE_MATCHING_KEYS') {
+          for await (const publicKey of error) {
+            try {
+              return await jose.jwtVerify(jwt, publicKey, options)
+            } catch (innerError) {
+              if (innerError?.code === 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED') {
+                continue
+              }
+              throw innerError
+            }
+          }
+          throw new jose.errors.JWSSignatureVerificationFailed()
+        }
+
+        throw error
+      })
+  };
 
   const pgUri: string = env.PG_URI || env.POSTGRES_URI || env.POSTGRES_URL
     || env.DB_URI || env.DB_URL || env.PG_URL
@@ -86,12 +116,12 @@ const app = (env: any) => {
       let decodedJwt = null;
 
       if (cfAuth && cfAuth.value) {
-        decodedJwt = await jwt.verify(cfAuth.value, getKey, { audience: AUD });
+        decodedJwt = await verify(cfAuth.value);
       }
 
       return {
         bearer: basicAuth?.startsWith('Bearer ') ? basicAuth.slice(7) : null,
-        jwt: decodedJwt,
+        jwt: decodedJwt !== null ? decodedJwt?.payload : null,
       }
     })
     // parse

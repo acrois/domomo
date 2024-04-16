@@ -27,6 +27,8 @@ services:
   domomo:
     image: ${REGISTRY}domomo:${IMAGE_TAG:-latest}
     environment:
+      CFZT_AUDIENCE: ${CFZT_AUDIENCE}
+      CFZT_TEAM: ${CFZT_TEAM}
       POSTGRES_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     ports:
       # - 3000:3000
