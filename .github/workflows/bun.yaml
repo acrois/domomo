@@ -68,18 +68,12 @@ jobs:
       # TODO move workflow
       - name: Publish to Cloudflare Pages
         id: pages-action
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: ${{ github.event.repository.name }}
-          directory: build
-          # Optional: Enable this if you want to have GitHub Deployments triggered
-          # gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          # Optional: Switch what branch you are publishing to.
-          # By default this will be the branch which triggered this workflow
-          branch: ${{ github.head_ref || github.ref_name }}
-          # Enable Wrangler v3
+          workingDirectory: build
+          command: pages deploy --branch "${{ github.head_ref || github.ref_name }}" --project-name="${{ github.event.repository.name }}"
           wranglerVersion: '3'
       - name: Comment PR
         if: github.event_name == 'pull_request'
@@ -92,7 +86,7 @@ jobs:
             | Key                     | Value |
             | ----------------------- | ----- |
             | **Last commit:**        | ${{ github.event.pull_request.head.sha || github.event.workflow_run.head_sha || github.sha }} |
-            | **Preview URL**:        | ${{ steps.pages-action.outputs.url }} |
+            | **Preview URL**:        | ${{ steps.pages-action.outputs.deployment-url }} |
             | **Branch Preview URL**: | https://${{ github.head_ref || github.ref_name }}.${{ github.event.repository.name }}.pages.dev |
           comment_tag: deployment
           mode: upsert

@@ -21,6 +21,8 @@ join documents doc
 	on doc.id = c.child_id
 ;
 
+INSERT INTO public.node_type (id,tag,description) VALUES
+	 (0,'DOMAIN','Domain Root');
 INSERT INTO public.node (id,type_id,"name",value) VALUES
 	 ('6354fab5-cdeb-4172-883f-90f4a8a8b0c3',0,'localhost',NULL);
 INSERT INTO public.node_attachment (id,parent_id,child_id,"position") VALUES
