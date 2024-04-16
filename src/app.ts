@@ -23,7 +23,7 @@ import jwt from "jsonwebtoken";
 // }
 // console.log(content);
 
-const app = (env: any): Elysia => {
+const app = (env: any) => {
   const AUD = env.CFZT_AUDIENCE;
   const TEAM_DOMAIN = env.CFZT_TEAM;
   const CERTS_URL = `${TEAM_DOMAIN}/cdn-cgi/access/certs`;
@@ -387,7 +387,6 @@ const app = (env: any): Elysia => {
         throw new NotFoundError();
       })
     )
-    ;
 }
 
 export default app;
