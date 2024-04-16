@@ -1,8 +1,9 @@
 import { Elysia, NotFoundError, ParseError } from "elysia";
-import postgres from 'postgres'
+import { Pool } from "pg";
 import { astToHTML, parseToAST, rowsToParents, rowsToTree } from "./util";
 import { JwksClient } from "jwks-rsa";
 import jwt from "jsonwebtoken";
+import { SQL } from "sql-template-strings";
 // import diff from "microdiff";
 
 // client-side script to connect websocket for bidirectional async updates
@@ -41,20 +42,24 @@ const app = (env: any) => {
   const pgUri: string = env.PG_URI || env.POSTGRES_URI || env.POSTGRES_URL
     || env.DB_URI || env.DB_URL || env.PG_URL
     || `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@localhost:5432/${env.POSTGRES_DB}`;
-  const sql = postgres(pgUri);
+  // const sql = postgres(pgUri);
   const encoder = new TextEncoder();
   return new Elysia({
     aot: false,
   })
-    .derive(async ({ headers, request }) => {
+    .decorate('pool', new Pool({
+      connectionString: pgUri,
+    }))
+    .derive(async ({ headers, request, pool }) => {
+      const db = await pool.connect();
       const uri = new URL(request.url);
       const domain = uri.hostname;
       // console.log(domain);
-      const t = await sql`SELECT id FROM domains WHERE name = ${domain}`
+      const t = await db.query(SQL`SELECT id FROM domains WHERE name = ${domain}`)
 
-      if (t.length > 0) {
+      if (t.rowCount && t.rowCount > 0) {
         return {
-          domain: t[0],
+          domain: t.rows[0],
         }
       }
 
@@ -142,49 +147,51 @@ const app = (env: any) => {
         domain
       };
     })
-    .get("*", async ({ params, domain }) => {
+    .get("*", async ({ params, domain, pool }) => {
+      const db = await pool.connect();
       if (!domain) {
         throw new NotFoundError();
       }
 
       // console.log(params);
       const path = `/${params['*']}`
-      const document = await sql`
-      SELECT
-        document_id AS id
-      FROM domain_documents
-      WHERE id = ${domain.id}
-        AND document_name = ${path}
-    `;
+      const document = await db.query(SQL`
+        SELECT
+          document_id AS id
+        FROM domain_documents
+        WHERE id = ${domain.id}
+          AND document_name = ${path}
+      `);
 
       let organized = null;
 
-      if (document.length > 0) {
-        const doc = document[0];
+      if (document.rowCount && document.rowCount > 0) {
+        const doc = document.rows[0];
         // console.log(doc);
-        const tree = await sql`
-        SELECT
-          id,
-          node_type,
-          name,
-          value,
-          position,
-          parent
-        FROM document_tree
-        WHERE root = ${doc!.id}
-      `;
+        const tree = await db.query(SQL`
+          SELECT
+            id,
+            node_type,
+            name,
+            value,
+            position,
+            parent
+          FROM document_tree
+          WHERE root = ${doc!.id}
+        `);
         // console.log(tree);
-        organized = rowsToTree(tree);
+        organized = rowsToTree(tree.rows);
         // console.log(JSON.stringify(organized));
       }
 
-      if (document.length === 0 || organized === null || organized === undefined || organized.children.length === 0) {
+      if (!document.rowCount || document.rowCount === 0 || organized === null || organized === undefined || organized.children.length === 0) {
         throw new NotFoundError();
       }
 
       return organized.children[0];
     })
-    .put('*', async ({ params, domain, body }) => {
+    .put('*', async ({ params, domain, body, pool }) => {
+      const db = await pool.connect();
       if (!domain) {
         throw new NotFoundError();
       }
@@ -197,20 +204,20 @@ const app = (env: any) => {
 
       // console.log(params);
       const path = `/${params['*']}`
-      const document = await sql`
-      SELECT
-        document_attachment_id
-      FROM domain_documents
-      WHERE id = ${domain.id}
-        AND document_name = ${path}
-    `;
+      const document = await db.query(SQL`
+        SELECT
+          document_attachment_id
+        FROM domain_documents
+        WHERE id = ${domain.id}
+          AND document_name = ${path}
+      `);
 
       // await sql.begin(async sql => {
-      if (document.length !== 0) {
-        await sql`
+      if (document.rowCount !== 0) {
+        await db.query(SQL`
           DELETE FROM node_attachment
-          WHERE id = ${document[0]!.document_attachment_id}
-        `;
+          WHERE id = ${document.rows[0]!.document_attachment_id}
+        `);
       }
 
       const insertNode = async (node: any, parentId: string, next_position: number = 0) => {
@@ -234,7 +241,7 @@ const app = (env: any) => {
             : null
         }
         // console.log(node.name, type, name, value);
-        const inserted = await sql`
+        const inserted = await db.query(SQL`
           INSERT INTO node (
               type_id,
               name,
@@ -248,9 +255,9 @@ const app = (env: any) => {
             ${name},
             ${value}
           ) returning id
-        `;
+        `);
         // console.log(inserted);
-        const nodeId = inserted[0]!.id;
+        const nodeId = inserted.rows[0]!.id;
         // console.log(nodeId, parentId, next_position);
         // throw ';';
         // const nextAttachment = await sql`
@@ -265,12 +272,12 @@ const app = (env: any) => {
 
         // console.log(node.name, node.value, node.node_type, parentId, nodeId, next_position);
 
-        await sql`
+        await db.query(SQL`
           INSERT INTO node_attachment
             (parent_id, child_id, position)
           VALUES
             (${parentId}, ${nodeId}, ${next_position})
-        `
+        `)
 
         // console.log(c);
 
@@ -283,17 +290,17 @@ const app = (env: any) => {
         // children.map(v => await insertNode(v, nodeId));
       }
 
-      const nextAttachment = await sql`
+      const nextAttachment = await db.query(SQL`
         SELECT next_position
         FROM node_attachment_next
         WHERE parent_id = ${domain.id}
-      `;
+      `);
 
-      if (nextAttachment.length === 0) {
+      if (!nextAttachment.rowCount || nextAttachment.rowCount === 0) {
         throw 'Uh oh...';
       }
 
-      await insertNode(body, domain.id, nextAttachment[0]!.next_position);
+      await insertNode(body, domain.id, nextAttachment.rows[0]!.next_position);
       // });
 
 
@@ -332,50 +339,52 @@ const app = (env: any) => {
       // return organized;
     })
     .guard({}, (app) => app
-      .resolve(async ({ domain, params: { document, fragment } }) => {
+      .resolve(async ({ domain, pool, params: { document, fragment } }) => {
+        const db = await pool.connect();
         if (!domain) {
           throw new NotFoundError();
         }
         // console.log(domain, document);
-        const doc = await sql`
-        SELECT
-          *
-        FROM domain_documents
-        WHERE id = ${domain.id}
-        AND document_id = ${document}
-      `;
+        const doc = await db.query(SQL`
+          SELECT
+            *
+          FROM domain_documents
+          WHERE id = ${domain.id}
+          AND document_id = ${document}
+        `);
 
-        const frag = await sql`
-        SELECT
-          *
-        FROM node
-        WHERE id = ${fragment}
-      `;
+        const frag = await db.query(SQL`
+          SELECT
+            *
+          FROM node
+          WHERE id = ${fragment}
+        `);
 
-        if (doc.length === 0 || frag.length === 0) {
+        if (!doc.rowCount || doc.rowCount === 0 || !frag.rowCount || frag.rowCount === 0) {
           throw new NotFoundError();
         }
 
         return {
-          document: doc[0],
-          fragment: frag[0],
+          document: doc.rows[0],
+          fragment: frag.rows[0],
         };
       })
-      .get("/:document/:fragment", async ({ document, fragment }) => {
+      .get("/:document/:fragment", async ({ document, fragment, pool }) => {
+        const db = await pool.connect();
         // console.log(document, fragment);
-        const tree = await sql`
-        SELECT
-          id,
-          node_type,
-          name,
-          value,
-          position,
-          parent
-        FROM document_tree
-        WHERE root = ${document.document_id}
-      `;
+        const tree = await db.query(SQL`
+          SELECT
+            id,
+            node_type,
+            name,
+            value,
+            position,
+            parent
+          FROM document_tree
+          WHERE root = ${document.document_id}
+        `);
         // console.log(tree);
-        const parents = rowsToParents(tree);
+        const parents = rowsToParents(tree.rows);
         // console.log(parents);
 
         for (const parent of parents) {
