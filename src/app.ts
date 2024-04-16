@@ -24,13 +24,6 @@ import { SQL } from "sql-template-strings";
 //   const e = diff(cd, content[uri.pathname]);
 //   console.log(e);
 // }
-// console.log(content);
-// console.log('loud');
-
-
-// Client.prototype.dispose = function() {
-//   console.log('heyo');
-// }
 
 const app = (env: any) => {
   const AUD = env.CFZT_AUDIENCE;
@@ -39,15 +32,6 @@ const app = (env: any) => {
 
   const JWKS = jose.createRemoteJWKSet(CERTS_URL);
   // console.log(CERTS_URL);
-  // const client = new JwksClient({
-  //   jwksUri: CERTS_URL
-  // });
-
-  // const getKey = (header, callback) => {
-  //   client.getSigningKey(header.kid, function (err, key) {
-  //     callback(err, key?.getPublicKey());
-  //   });
-  // }
   const options = {
     // issuer: TEAM_DOMAIN,
     audience: AUD,
@@ -78,7 +62,6 @@ const app = (env: any) => {
   const pgUri: string = env.PG_URI || env.POSTGRES_URI || env.POSTGRES_URL
     || env.DB_URI || env.DB_URL || env.PG_URL
     || `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@localhost:5432/${env.POSTGRES_DB}`;
-  // const sql = postgres(pgUri);
   const encoder = new TextEncoder();
   return new Elysia({
     aot: false,
@@ -135,7 +118,6 @@ const app = (env: any) => {
           return ast;
         })();
       }
-      // else if ()
     })
     // mapResponse
     .onAfterHandle(({ query, response, set, headers }) => {
@@ -238,159 +220,172 @@ const app = (env: any) => {
         db.release();
       }
     })
-    .put('*', async ({ params, domain, body, pool }) => {
-      const db = await pool.connect();
-      try {
-        if (!domain) {
-          throw new NotFoundError();
+    .guard({
+      beforeHandle({ set, jwt }) {
+        if (!jwt
+            || !jwt.email
+            || !jwt.email.endsWith('@kinetech.llc')
+        ) {
+          console.log('nonono');
+          return (set.status = 'Unauthorized');
         }
+      },
+    }, (app) => app
+      .get('_', () => 'ok')
+      .put('*', async ({ params, domain, body, pool }) => {
+        const db = await pool.connect();
+        try {
+          if (!domain) {
+            throw new NotFoundError();
+          }
 
-        if (!body) {
-          throw new ParseError();
-        }
+          if (!body) {
+            throw new ParseError();
+          }
 
-        // console.log(JSON.stringify(body));
+          // console.log(JSON.stringify(body));
 
-        // console.log(params);
-        const path = `/${params['*']}`
-        const document = await db.query(SQL`
-          SELECT
-            document_attachment_id
-          FROM domain_documents
-          WHERE id = ${domain.id}
-            AND document_name = ${path}
-        `);
-
-        // await sql.begin(async sql => {
-        if (document.rowCount !== 0) {
-          await db.query(SQL`
-            DELETE FROM node_attachment
-            WHERE id = ${document.rows[0]!.document_attachment_id}
+          // console.log(params);
+          const path = `/${params['*']}`
+          const document = await db.query(SQL`
+            SELECT
+              document_attachment_id
+            FROM domain_documents
+            WHERE id = ${domain.id}
+              AND document_name = ${path}
           `);
-        }
 
-        const insertNode = async (node: any, parentId: string, next_position: number = 0) => {
-          // console.log(node);
-          const type = node.node_type;
-          let name = node.name;
+          // await sql.begin(async sql => {
+          if (document.rowCount !== 0) {
+            await db.query(SQL`
+              DELETE FROM node_attachment
+              WHERE id = ${document.rows[0]!.document_attachment_id}
+            `);
+          }
 
-          if (name === null || name === undefined) {
-            name = type === 'DOCUMENT_TYPE'
-              ? '!doctype'
-              : type === 'DOCUMENT'
-                ? path
+          const insertNode = async (node: any, parentId: string, next_position: number = 0) => {
+            // console.log(node);
+            const type = node.node_type;
+            let name = node.name;
+
+            if (name === null || name === undefined) {
+              name = type === 'DOCUMENT_TYPE'
+                ? '!doctype'
+                : type === 'DOCUMENT'
+                  ? path
+                  : null
+            }
+
+            let value = node.value;
+
+            if (value === null || value === undefined) {
+              value = type === 'DOCUMENT_TYPE'
+                ? '!DOCTYPE html'
                 : null
+            }
+            // console.log(node.name, type, name, value);
+            const inserted = await db.query(SQL`
+              INSERT INTO node (
+                  type_id,
+                  name,
+                  value
+              ) VALUES (
+                (
+                  SELECT id
+                  FROM node_type
+                  WHERE tag = ${type}
+                ),
+                ${name},
+                ${value}
+              ) returning id
+            `);
+            // console.log(inserted);
+            const nodeId = inserted.rows[0]!.id;
+            // console.log(nodeId, parentId, next_position);
+            // throw ';';
+            // const nextAttachment = await sql`
+            //   SELECT next_position
+            //   FROM node_attachment_next
+            //   WHERE parent_id = ${parentId}
+            // `;
+
+            // if (nextAttachment.length === 0) {
+            //   throw 'Uh oh...';
+            // }
+
+            // console.log(node.name, node.value, node.node_type, parentId, nodeId, next_position);
+
+            await db.query(SQL`
+              INSERT INTO node_attachment
+                (parent_id, child_id, position)
+              VALUES
+                (${parentId}, ${nodeId}, ${next_position})
+            `)
+
+            // console.log(c);
+
+            const children: any[] = node?.children || [];
+            for (let i = 0; i < children.length; i++) {
+              // console.log(nodeId, i);
+              await insertNode(children[i], nodeId, i);
+            }
+
+            // children.map(v => await insertNode(v, nodeId));
           }
 
-          let value = node.value;
-
-          if (value === null || value === undefined) {
-            value = type === 'DOCUMENT_TYPE'
-              ? '!DOCTYPE html'
-              : null
-          }
-          // console.log(node.name, type, name, value);
-          const inserted = await db.query(SQL`
-            INSERT INTO node (
-                type_id,
-                name,
-                value
-            ) VALUES (
-              (
-                SELECT id
-                FROM node_type
-                WHERE tag = ${type}
-              ),
-              ${name},
-              ${value}
-            ) returning id
+          const nextAttachment = await db.query(SQL`
+            SELECT next_position
+            FROM node_attachment_next
+            WHERE parent_id = ${domain.id}
           `);
-          // console.log(inserted);
-          const nodeId = inserted.rows[0]!.id;
-          // console.log(nodeId, parentId, next_position);
-          // throw ';';
-          // const nextAttachment = await sql`
-          //   SELECT next_position
-          //   FROM node_attachment_next
-          //   WHERE parent_id = ${parentId}
-          // `;
 
-          // if (nextAttachment.length === 0) {
-          //   throw 'Uh oh...';
+          if (!nextAttachment.rowCount || nextAttachment.rowCount === 0) {
+            throw 'Uh oh...';
+          }
+
+          await insertNode(body, domain.id, nextAttachment.rows[0]!.next_position);
+          // });
+
+
+          // let organized = null;
+          // let organizedClean = null;
+
+          // if (document.length > 0) {
+          //   const doc = document[0];
+          //   // console.log(doc);
+          //   const tree = await sql`
+          //     SELECT
+          //       id,
+          //       node_type,
+          //       name,
+          //       value,
+          //       position,
+          //       parent
+          //     FROM document_tree
+          //     WHERE root = ${doc.id}
+          //   `;
+          //   // console.log(tree);
+          //   organized = rowsToTree(tree);
+
+          //   if (organized) {
+          //     organized = organized;
+          //     organizedClean = cleanTree(organized);
+          //   }
+          //   // console.log(JSON.stringify(organized));
           // }
 
-          // console.log(node.name, node.value, node.node_type, parentId, nodeId, next_position);
+          // console.log(organized, organizedClean);
+          // const d = diff(organizedClean ?? {}, body ?? {});
+          // console.log(JSON.stringify(d));
+          // const c = sql``
 
-          await db.query(SQL`
-            INSERT INTO node_attachment
-              (parent_id, child_id, position)
-            VALUES
-              (${parentId}, ${nodeId}, ${next_position})
-          `)
-
-          // console.log(c);
-
-          const children: any[] = node?.children || [];
-          for (let i = 0; i < children.length; i++) {
-            // console.log(nodeId, i);
-            await insertNode(children[i], nodeId, i);
-          }
-
-          // children.map(v => await insertNode(v, nodeId));
+          // return organized;
         }
-
-        const nextAttachment = await db.query(SQL`
-          SELECT next_position
-          FROM node_attachment_next
-          WHERE parent_id = ${domain.id}
-        `);
-
-        if (!nextAttachment.rowCount || nextAttachment.rowCount === 0) {
-          throw 'Uh oh...';
+        finally{
+          db.release();
         }
-
-        await insertNode(body, domain.id, nextAttachment.rows[0]!.next_position);
-        // });
-
-
-        // let organized = null;
-        // let organizedClean = null;
-
-        // if (document.length > 0) {
-        //   const doc = document[0];
-        //   // console.log(doc);
-        //   const tree = await sql`
-        //     SELECT
-        //       id,
-        //       node_type,
-        //       name,
-        //       value,
-        //       position,
-        //       parent
-        //     FROM document_tree
-        //     WHERE root = ${doc.id}
-        //   `;
-        //   // console.log(tree);
-        //   organized = rowsToTree(tree);
-
-        //   if (organized) {
-        //     organized = organized;
-        //     organizedClean = cleanTree(organized);
-        //   }
-        //   // console.log(JSON.stringify(organized));
-        // }
-
-        // console.log(organized, organizedClean);
-        // const d = diff(organizedClean ?? {}, body ?? {});
-        // console.log(JSON.stringify(d));
-        // const c = sql``
-
-        // return organized;
-      }
-      finally{
-        db.release();
-      }
-    })
+      })
+    )
     .guard({}, (app) => app
       .resolve(async ({ domain, pool, params: { document, fragment } }) => {
         const db = await pool.connect();
