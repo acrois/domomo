@@ -23,9 +23,8 @@ import jwt from "jsonwebtoken";
 // }
 // console.log(content);
 
-// TODO env
-const AUD = 'da2b88366aa5a356fe89d72cc01699701bb89a01d32f75ddedd512923e57647a';
-const TEAM_DOMAIN = '';
+const AUD = process.env.CFZT_AUDIENCE;
+const TEAM_DOMAIN = process.env.CFZT_TEAM;
 const CERTS_URL = `${TEAM_DOMAIN}/cdn-cgi/access/certs`;
 
 const client = new JwksClient({
@@ -39,13 +38,10 @@ const getKey = (header, callback) => {
 }
 
 const name = 'Nodula';
-const sql = postgres({
-  user: 'domomo',
-  password: 'developer',
-  database: 'domomo',
-  host: 'localhost',
-  port: 5432,
-});
+const pgUri: string = process.env.PG_URI || process.env.POSTGRES_URI || process.env.POSTGRES_URL
+  || process.env.DB_URI || process.env.DB_URL || process.env.PG_URL
+  || `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@localhost:5432/${process.env.POSTGRES_DB}`;
+const sql = postgres(pgUri);
 const encoder = new TextEncoder();
 const app = new Elysia()
   .derive(async ({ headers, request }) => {
