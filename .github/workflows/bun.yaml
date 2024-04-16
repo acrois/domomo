@@ -73,9 +73,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: build
-          command: >-
-            pages deploy
-              --project-name="${{ github.event.repository.name }}"
+          command: pages deploy --branch "${{ github.head_ref || github.ref_name }}" --project-name="${{ github.event.repository.name }}"
           wranglerVersion: '3'
       - name: Comment PR
         if: github.event_name == 'pull_request'
