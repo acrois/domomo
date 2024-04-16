@@ -129,6 +129,13 @@ const app = new Elysia()
     // console.log(code);
     return estr;
   })
+  .get('-', async ({ bearer, jwt, domain }) => {
+    return {
+      bearer,
+      jwt,
+      domain
+    };
+  })
   .get("*", async ({ params, domain }) => {
     if (!domain) {
       throw new NotFoundError();
