@@ -76,20 +76,24 @@ const app = new Elysia({
       jwt: decodedJwt,
     }
   })
+  // parse
   .onParse(({ request }, contentType) => {
+    // console.log('test');
     if (contentType == 'text/html') {
       return (async () => {
         const ast = parseToAST(await request.text())
         ast.name = new URL(request.url).pathname
+        // console.log(ast);
         return ast;
       })();
     }
     // else if ()
   })
-  .mapResponse(({ query, response, set, headers }) => {
+  // mapResponse
+  .onAfterHandle(({ query, response, set, headers }) => {
     let type = headers['Content-Type'] ?? 'text/plain';
     let text = typeof response === 'string' ? response : '';
-
+    // console.log(type);
     if (response !== null && typeof response === 'object') {
       // id and children in object is a good indicator of tree
       //   TODO find a better one
@@ -385,13 +389,4 @@ const app = new Elysia({
   // .listen(3000)
   ;
 
-interface Env {
-  // ASSETS: Fetcher;
-}
-
-export default {
-  async fetch(request: Request, env: Env, ctx: any): Promise<Response> {
-    return app.fetch(request);
-  },
-};
-// export default app;
+export default app;
