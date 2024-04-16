@@ -32,25 +32,26 @@ const client = new JwksClient({
 });
 
 const getKey = (header, callback) => {
-  client.getSigningKey(header.kid, function(err, key) {
+  client.getSigningKey(header.kid, function (err, key) {
     callback(err, key?.getPublicKey());
   });
 }
 
-const name = 'Nodula';
 const pgUri: string = process.env.PG_URI || process.env.POSTGRES_URI || process.env.POSTGRES_URL
   || process.env.DB_URI || process.env.DB_URL || process.env.PG_URL
   || `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@localhost:5432/${process.env.POSTGRES_DB}`;
 const sql = postgres(pgUri);
 const encoder = new TextEncoder();
-const app = new Elysia()
+const app = new Elysia({
+  aot: false,
+})
   .derive(async ({ headers, request }) => {
     const uri = new URL(request.url);
     const domain = uri.hostname;
     // console.log(domain);
     const t = await sql`SELECT id FROM domains WHERE name = ${domain}`
 
-    if (t.length > 0 ) {
+    if (t.length > 0) {
       return {
         domain: t[0],
       }
@@ -200,35 +201,35 @@ const app = new Elysia()
     `;
 
     // await sql.begin(async sql => {
-      if (document.length !== 0) {
-        await sql`
+    if (document.length !== 0) {
+      await sql`
           DELETE FROM node_attachment
           WHERE id = ${document[0]!.document_attachment_id}
         `;
+    }
+
+    const insertNode = async (node: any, parentId: string, next_position: number = 0) => {
+      // console.log(node);
+      const type = node.node_type;
+      let name = node.name;
+
+      if (name === null || name === undefined) {
+        name = type === 'DOCUMENT_TYPE'
+          ? '!doctype'
+          : type === 'DOCUMENT'
+            ? path
+            : null
       }
 
-      const insertNode = async (node: any, parentId: string, next_position: number = 0) => {
-        // console.log(node);
-        const type = node.node_type;
-        let name = node.name;
+      let value = node.value;
 
-        if (name === null || name === undefined) {
-          name = type === 'DOCUMENT_TYPE'
-            ? '!doctype'
-            : type === 'DOCUMENT'
-              ? path
-              : null
-        }
-
-        let value = node.value;
-
-        if (value === null || value === undefined) {
-          value = type === 'DOCUMENT_TYPE'
-            ? '!DOCTYPE html'
-            : null
-        }
-        // console.log(node.name, type, name, value);
-        const inserted = await sql`
+      if (value === null || value === undefined) {
+        value = type === 'DOCUMENT_TYPE'
+          ? '!DOCTYPE html'
+          : null
+      }
+      // console.log(node.name, type, name, value);
+      const inserted = await sql`
           INSERT INTO node (
               type_id,
               name,
@@ -243,51 +244,51 @@ const app = new Elysia()
             ${value}
           ) returning id
         `;
-        // console.log(inserted);
-        const nodeId = inserted[0]!.id;
-        // console.log(nodeId, parentId, next_position);
-        // throw ';';
-        // const nextAttachment = await sql`
-        //   SELECT next_position
-        //   FROM node_attachment_next
-        //   WHERE parent_id = ${parentId}
-        // `;
+      // console.log(inserted);
+      const nodeId = inserted[0]!.id;
+      // console.log(nodeId, parentId, next_position);
+      // throw ';';
+      // const nextAttachment = await sql`
+      //   SELECT next_position
+      //   FROM node_attachment_next
+      //   WHERE parent_id = ${parentId}
+      // `;
 
-        // if (nextAttachment.length === 0) {
-        //   throw 'Uh oh...';
-        // }
+      // if (nextAttachment.length === 0) {
+      //   throw 'Uh oh...';
+      // }
 
-        // console.log(node.name, node.value, node.node_type, parentId, nodeId, next_position);
+      // console.log(node.name, node.value, node.node_type, parentId, nodeId, next_position);
 
-        await sql`
+      await sql`
           INSERT INTO node_attachment
             (parent_id, child_id, position)
           VALUES
             (${parentId}, ${nodeId}, ${next_position})
         `
 
-        // console.log(c);
+      // console.log(c);
 
-        const children: any[] = node?.children || [];
-        for (let i = 0; i < children.length; i++) {
-          // console.log(nodeId, i);
-          await insertNode(children[i], nodeId, i);
-        }
-
-        // children.map(v => await insertNode(v, nodeId));
+      const children: any[] = node?.children || [];
+      for (let i = 0; i < children.length; i++) {
+        // console.log(nodeId, i);
+        await insertNode(children[i], nodeId, i);
       }
 
-      const nextAttachment = await sql`
+      // children.map(v => await insertNode(v, nodeId));
+    }
+
+    const nextAttachment = await sql`
         SELECT next_position
         FROM node_attachment_next
         WHERE parent_id = ${domain.id}
       `;
 
-      if (nextAttachment.length === 0) {
-        throw 'Uh oh...';
-      }
+    if (nextAttachment.length === 0) {
+      throw 'Uh oh...';
+    }
 
-      await insertNode(body, domain.id, nextAttachment[0]!.next_position);
+    await insertNode(body, domain.id, nextAttachment[0]!.next_position);
     // });
 
 
@@ -384,4 +385,13 @@ const app = new Elysia()
   // .listen(3000)
   ;
 
-export default app;
+interface Env {
+  // ASSETS: Fetcher;
+}
+
+export default {
+  async fetch(request: Request, env: Env, ctx: any): Promise<Response> {
+    return app.fetch(request);
+  },
+};
+// export default app;
