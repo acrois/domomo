@@ -79,14 +79,14 @@ const app = (env: any) => {
         db.release();
       }
     })
-    .derive(({ headers, cookie }) => {
+    .derive(async ({ headers, cookie }) => {
       const basicAuth = headers['authorization'] ?? headers['Authorization']
       const cfAuth = cookie['CF_Authorization'] ?? headers['cf_authorization']
 
       let decodedJwt = null;
 
       if (cfAuth && cfAuth.value) {
-        decodedJwt = jwt.verify(cfAuth.value, getKey, { audience: AUD });
+        decodedJwt = await jwt.verify(cfAuth.value, getKey, { audience: AUD });
       }
 
       return {
