@@ -1,0 +1,13 @@
+services:
+  postgres:
+    restart: unless-stopped
+    volumes:
+      - ./initdb.d:/docker-entrypoint-initdb.d
+  domomo:
+    build:
+      context: ./
+      args:
+        REGISTRY: ${REGISTRY}
+        TAG: ${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    command: [ "bun", "watch" ]
