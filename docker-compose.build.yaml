@@ -6,8 +6,10 @@ services:
   domomo:
     build:
       context: ./
-      args:
-        REGISTRY: ${REGISTRY}
-        TAG: ${IMAGE_TAG:-latest}
+    pull_policy: build
     restart: unless-stopped
     command: [ "bun", "watch" ]
+    volumes:
+      - ./src:/app/src
+      - ./test:/app/test
+      - ./sample:/app/sample

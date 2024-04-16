@@ -24,7 +24,7 @@ services:
       - postgres:/var/lib/postgresql/data
     ports:
       - 5432:5432
-  backend:
+  domomo:
     image: ${REGISTRY}domomo:${IMAGE_TAG:-latest}
     environment:
       POSTGRES_URI: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}

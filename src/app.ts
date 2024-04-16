@@ -23,7 +23,7 @@ import { SQL } from "sql-template-strings";
 //   console.log(e);
 // }
 // console.log(content);
-
+// console.log('loud');
 const app = (env: any) => {
   const AUD = env.CFZT_AUDIENCE;
   const TEAM_DOMAIN = env.CFZT_TEAM;
