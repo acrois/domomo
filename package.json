@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "docker compose up -d && bun --watch src/index.ts",
-    "build": "bun build src/index.ts --target node --outdir ./build && docker compose build",
+    "build": "bun build src/_worker.ts --target node --outdir ./build && docker compose build",
     "clean": "docker compose down -v",
     "start": "NODE_ENV=production bun src/index.ts",
     "test": "bun test"
