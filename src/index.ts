@@ -381,9 +381,7 @@ const app = new Elysia()
       throw new NotFoundError();
     })
   )
-  .listen(3000)
+  // .listen(3000)
   ;
 
-console.log(
-  `🦊 ${name} is running at ${app.server?.hostname}:${app.server?.port}`
-);
+export default app;
