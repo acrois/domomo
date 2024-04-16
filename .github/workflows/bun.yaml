@@ -74,7 +74,7 @@ jobs:
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: build
           command: >-
-            pages deploy
+            pages deploy ./build
               --branch "${{ github.head_ref || github.ref_name }}"
               --project-name="${{ github.event.repository.name }}"
           wranglerVersion: '3'
