@@ -84,6 +84,20 @@ const app = (env: any) => {
           }
         }
 
+        const newDomain = await db.query(SQL`INSERT INTO node (
+          type_id,
+          name
+        ) VALUES (
+          (SELECT id FROM node_type WHERE tag = 'DOMAIN'),
+          ${domain}
+        ) returning id`);
+
+        if (newDomain.rowCount && newDomain.rowCount > 0) {
+          return {
+            domain: newDomain.rows[0],
+          }
+        }
+
         return {
           domain: null,
         }
@@ -226,7 +240,7 @@ const app = (env: any) => {
             || !jwt.email
             || !jwt.email.endsWith('@kinetech.llc')
         ) {
-          console.log('nonono');
+          // console.log('nonono');
           return (set.status = 'Unauthorized');
         }
       },
