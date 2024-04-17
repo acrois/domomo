@@ -200,11 +200,13 @@ export const renameProperty = (obj: AnyObject, oldProp: string, newProp: string)
     const newObj: AnyObject = {};
     for (const key in obj) {
       const value = obj[key];
+      // CHEAP HACK to disable type/node_type confusion
+      const newValue = key === 'properties' ? value : renameProperty(value, oldProp, newProp);
       // If the current key matches the old property name, rename it
       if (key === oldProp) {
-        newObj[newProp] = renameProperty(value, oldProp, newProp);
+        newObj[newProp] = newValue;
       } else {
-        newObj[key] = renameProperty(value, oldProp, newProp);
+        newObj[key] = newValue;
       }
     }
     return newObj;

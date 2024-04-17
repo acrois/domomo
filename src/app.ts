@@ -1,5 +1,5 @@
 import { Elysia, NotFoundError, ParseError } from "elysia";
-import { Pool, Client } from "pg";
+import { Pool } from "pg";
 import { astToHTML, parseToAST, rowsToParents, rowsToTree } from "./util";
 // import { JwksClient } from "jwks-rsa";
 // import jwt from "jsonwebtoken";
@@ -195,7 +195,8 @@ const app = (env: any) => {
         domain
       };
     })
-    .get("*", async ({ params, domain, pool }) => {
+    .get("*", async ({ params, domain, pool, headers }) => {
+      console.log(headers);
       const db = await pool.connect();
 
       try {
