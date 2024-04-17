@@ -69,11 +69,11 @@ const app = (env: any) => {
     .decorate('pool', new Pool({
       connectionString: pgUri,
     }))
-    .derive(async ({ headers, request, pool }) => {
+    .derive(async ({ headers, request, pool,  }) => {
       const db = await pool.connect();
+      const uri = new URL(request.url);
 
       try {
-        const uri = new URL(request.url);
         const domain = uri.hostname;
         // console.log(domain);
         const t = await db.query(SQL`SELECT id, name FROM domains WHERE name = ${domain}`)
@@ -81,6 +81,7 @@ const app = (env: any) => {
         if (t.rowCount && t.rowCount > 0) {
           return {
             domain: t.rows[0],
+            uri,
           }
         }
 
@@ -95,16 +96,17 @@ const app = (env: any) => {
         if (newDomain.rowCount && newDomain.rowCount > 0) {
           return {
             domain: newDomain.rows[0],
+            uri,
           }
-        }
-
-        return {
-          domain: null,
-          name: domain,
         }
       }
       finally{
         db.release();
+      }
+
+      return {
+        domain: null,
+        uri,
       }
     })
     .derive(async ({ headers, cookie }) => {
@@ -246,7 +248,12 @@ const app = (env: any) => {
       }
     })
     .guard({
-      beforeHandle({ set, jwt, path, domain }) {
+      beforeHandle({ set, jwt, path, domain, uri }) {
+        // allow localhost changes :)
+        if (uri.hostname.match(/.*\.?localhost/) !== null) {
+          return;
+        }
+
         if (!jwt
             || !jwt.email
             || !jwt.email.endsWith('@kinetech.llc')
@@ -350,12 +357,13 @@ const app = (env: any) => {
             `)
 
             // console.log(c);
-
             const children: any[] = node?.children || [];
+
             for (let i = 0; i < children.length; i++) {
               // console.log(nodeId, i);
               await insertNode(children[i], nodeId, i);
             }
+
 
             // children.map(v => await insertNode(v, nodeId));
           }

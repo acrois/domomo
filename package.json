@@ -8,10 +8,13 @@
     "build": "bun build src/_worker.ts --target node --outdir ./build && docker compose build",
     "clean": "docker compose down -v",
     "start": "NODE_ENV=production bun src/index.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "test:watch": "bun --watch test"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "@types/pg": "^8.11.5",
+    "@types/unist": "^3.0.2"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -20,8 +23,6 @@
     "@elysiajs/jwt": "^1.0.2",
     "@elysiajs/stream": "^1.0.2",
     "@mobily/ts-belt": "^3.13.1",
-    "@types/pg": "^8.11.5",
-    "@types/unist": "^3.0.2",
     "cookie-parser": "^1.4.6",
     "dom-serializer": "^2.0.0",
     "elysia": "^1.0.13",
