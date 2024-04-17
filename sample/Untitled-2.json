@@ -1,0 +1,104 @@
+{
+  "node_type": "DOCUMENT",
+  "children": [
+    {
+      "node_type": "DOCUMENT_TYPE"
+    },
+    {
+      "node_type": "ELEMENT",
+      "name": "html",
+      "properties": {},
+      "children": [
+        {
+          "node_type": "ELEMENT",
+          "name": "head",
+          "properties": {},
+          "children": [
+            {
+              "node_type": "TEXT",
+              "value": "  "
+            },
+            {
+              "node_type": "ELEMENT",
+              "name": "title",
+              "properties": {},
+              "children": [
+                {
+                  "node_type": "TEXT",
+                  "value": "Test Document"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "node_type": "ELEMENT",
+          "name": "body",
+          "properties": {},
+          "children": [
+            {
+              "node_type": "TEXT",
+              "value": "  "
+            },
+            {
+              "node_type": "ELEMENT",
+              "name": "div",
+              "properties": {},
+              "children": [
+                {
+                  "node_type": "TEXT",
+                  "value": "    "
+                },
+                {
+                  "node_type": "ELEMENT",
+                  "name": "h1",
+                  "properties": {},
+                  "children": [
+                    {
+                      "node_type": "TEXT",
+                      "value": "Hello, Worlder!"
+                    }
+                  ]
+                },
+                {
+                  "node_type": "TEXT",
+                  "value": "    "
+                },
+                {
+                  "node_type": "ELEMENT",
+                  "name": "p",
+                  "properties": {},
+                  "children": [
+                    {
+                      "node_type": "TEXT",
+                      "value": "This is a test paragraph."
+                    }
+                  ]
+                },
+                {
+                  "node_type": "TEXT",
+                  "value": "  "
+                },
+                {
+                  "node_type": "ATTRIBUTE",
+                  "name": "id",
+                  "value": "main"
+                },
+                {
+                  "node_type": "ATTRIBUTE",
+                  "name": "className",
+                  "value": [
+                    "container"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "data": {
+    "quirksMode": false
+  }
+}
