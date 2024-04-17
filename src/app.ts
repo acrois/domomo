@@ -76,7 +76,7 @@ const app = (env: any) => {
         const uri = new URL(request.url);
         const domain = uri.hostname;
         // console.log(domain);
-        const t = await db.query(SQL`SELECT id FROM domains WHERE name = ${domain}`)
+        const t = await db.query(SQL`SELECT id, name FROM domains WHERE name = ${domain}`)
 
         if (t.rowCount && t.rowCount > 0) {
           return {
@@ -90,7 +90,7 @@ const app = (env: any) => {
         ) VALUES (
           (SELECT id FROM node_type WHERE tag = 'DOMAIN'),
           ${domain}
-        ) returning id`);
+        ) returning id, name`);
 
         if (newDomain.rowCount && newDomain.rowCount > 0) {
           return {
@@ -100,6 +100,7 @@ const app = (env: any) => {
 
         return {
           domain: null,
+          name: domain,
         }
       }
       finally{
@@ -160,11 +161,15 @@ const app = (env: any) => {
 
       set.headers['Content-Encoding'] = 'gzip'
       set.headers['Content-Type'] = `${type}; charset=utf-8`
+      // console.log(set.
 
       return new Response(
         Bun.gzipSync(
           encoder.encode(text)
         ),
+        // {
+        //   status: set.status
+        // }
       );
     })
     .onError(({ code, error, set }) => {
@@ -173,6 +178,11 @@ const app = (env: any) => {
       if (code === 'NOT_FOUND' || estr === 'NOT_FOUND') {
         set.status = 404
         return ''
+      }
+
+      if (estr === 'UNAUTHORIZED_REDIRECT') {
+        set.status = 303;
+        // set.redirect = '';
       }
 
       // console.log(code);
@@ -235,13 +245,15 @@ const app = (env: any) => {
       }
     })
     .guard({
-      beforeHandle({ set, jwt }) {
+      beforeHandle({ set, jwt, path, domain }) {
         if (!jwt
             || !jwt.email
             || !jwt.email.endsWith('@kinetech.llc')
         ) {
-          // console.log('nonono');
-          return (set.status = 'Unauthorized');
+          const redirect = `${TEAM_DOMAIN}/cdn-cgi/access/login/${domain.name}?kid=${AUD}&redirect_url=${path}&meta={}`;
+          // console.log('nonono', path, domain, redirect);
+          set.redirect = redirect;
+          throw 'UNAUTHORIZED_REDIRECT';
         }
       },
     }, (app) => app
