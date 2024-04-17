@@ -1,0 +1,15 @@
+services:
+  postgres:
+    restart: unless-stopped
+    volumes:
+      - ./initdb.d:/docker-entrypoint-initdb.d
+  domomo:
+    build:
+      context: ./
+    pull_policy: build
+    restart: unless-stopped
+    command: [ "bun", "watch" ]
+    volumes:
+      - ./src:/app/src
+      - ./test:/app/test
+      - ./sample:/app/sample

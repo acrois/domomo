@@ -3,7 +3,8 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "dev": "docker compose up -d && bun --watch src/index.ts",
+    "dev": "docker compose up -d",
+    "watch": "bun --watch src/index.ts",
     "build": "bun build src/_worker.ts --target node --outdir ./build && docker compose build",
     "clean": "docker compose down -v",
     "start": "NODE_ENV=production bun src/index.ts",
@@ -16,6 +17,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@elysiajs/jwt": "^1.0.2",
     "@mobily/ts-belt": "^3.13.1",
     "@types/pg": "^8.11.5",
     "@types/unist": "^3.0.2",
@@ -24,6 +26,7 @@
     "elysia": "^1.0.13",
     "hast-util-to-dom": "^4.0.0",
     "htmlparser2": "^9.1.0",
+    "jose": "^5.2.4",
     "jsonwebtoken": "^9.0.2",
     "jwks-rsa": "^3.1.0",
     "microdiff": "^1.4.0",
