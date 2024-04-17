@@ -263,3 +263,62 @@ exports[`html to node 2`] = `
   "value": null,
 }
 `;
+
+exports[`node to html 2`] = `"<!doctype html><html><head><title>Test Document</title></head><body><p>Test Document</p></body></html>"`;
+
+exports[`html to node 3`] = `
+{
+  "children": [
+    {
+      "node_type": "DOCUMENT_TYPE",
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "node_type": "TEXT",
+                  "value": "Test Document",
+                },
+              ],
+              "name": "title",
+              "node_type": "ELEMENT",
+              "properties": {},
+            },
+          ],
+          "name": "head",
+          "node_type": "ELEMENT",
+          "properties": {},
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "node_type": "TEXT",
+                  "value": "Test Document",
+                },
+              ],
+              "name": "p",
+              "node_type": "ELEMENT",
+              "properties": {},
+            },
+          ],
+          "name": "body",
+          "node_type": "ELEMENT",
+          "properties": {},
+        },
+      ],
+      "name": "html",
+      "node_type": "ELEMENT",
+      "properties": {},
+    },
+  ],
+  "data": {
+    "quirksMode": false,
+  },
+  "node_type": "DOCUMENT",
+}
+`;

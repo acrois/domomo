@@ -80,11 +80,52 @@ export const rowsToTree = (treeRows: any[]): DatabaseNode => {
   return parents[0]!;
 }
 
+export const nodesToProperties = (node: any) => {
+  // console.log(node);
+  return {
+    ...node,
+    children: node?.children?.filter(v => v.type.toUpperCase() !== 'ATTRIBUTE')?.map(nodesToProperties),
+    properties: Object.fromEntries(
+      node?.children
+        ?.filter(v => v.type.toUpperCase() === 'ATTRIBUTE')
+        ?.map(v => [
+          v.tagName,
+          v.tagName == 'className'
+            ? JSON.parse("[" + v.value.slice(1, v.value.length-1) + "]")
+            : v.value,
+        ])
+      ?? {}
+    ),
+  }
+}
+
+export const propertiesToNodes = (node: any) => {
+  if (node.properties) {
+    for (const key in node.properties) {
+      if (!node.children) { node.children = [] }
+      node.children.push({
+        node_type: 'ATTRIBUTE',
+        name: key,
+        value: node.properties[key],
+      });
+      delete node.properties[key];
+    }
+  }
+
+  if (node.children) {
+    for (const child of node.children) {
+      propertiesToNodes(child);
+    }
+  }
+
+  return node;
+}
+
 export const astToHTML = (ast: any) => {
   const trans = transformPropertyValue(
     renameProperty(
       renameProperty(
-        ast,
+        removeKeys(ast, ['position']),
         'node_type', // from
         'type' // to
       ),
@@ -94,9 +135,15 @@ export const astToHTML = (ast: any) => {
     'type',
     v => v == 'DOCUMENT' ? 'root' : v == 'DOCUMENT_TYPE' ? 'doctype' : v.toLowerCase()
   );
+  const fin =
+    // trans
+    nodesToProperties(trans)
+  ;
+  // console.log(ast, JSON.stringify(fin));
   return unified()
     .use(rehypeStringify)
-    .stringify(trans);
+    .stringify(fin)
+    ;
 }
 
 export const parseToAST = (html: string, fragment: boolean = false) => {
@@ -126,7 +173,12 @@ export const parseToAST = (html: string, fragment: boolean = false) => {
     root.node_type = 'DOCUMENT';
   }
 
-  return root;
+  const fin =
+    // root
+    propertiesToNodes(root)
+  ;
+  // console.log(JSON.stringify(fin));
+  return fin;
 }
 
 export const htmlToDocument = (path: string, html: string): BasicNode[] => {
