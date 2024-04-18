@@ -35,8 +35,9 @@ const fetcher = (fetch) => {
       throw 'Invalid document.';
     }
 
-    // stream.event = 'initial';
-    stream.send(astPrepareForRehype(initial));
+    let initialPrep = astPrepareForRehype(initial);
+    stream.event = 'init';
+    stream.send(initialPrep);
 
     let connected = true;
     while (connected) {
@@ -48,14 +49,19 @@ const fetcher = (fetch) => {
         throw 'Invalid document';
       }
 
-      const d = diff(initial, renewed);
+      const prep = astPrepareForRehype(renewed);
+      const d = diff(initialPrep, prep);
 
       // console.log(d);
       // stream.send(d.length > 0 ? renewed : []);
 
       if (d && d.length > 0) {
-        stream.send(astPrepareForRehype(renewed));
+        // console.log(JSON.stringify(d), JSON.stringify(prep), JSON.stringify(diff(astPrepareForRehype(initial), prep)));
+        stream.event = 'step';
+        // console.log(d);
+        stream.send(d);
         initial = renewed;
+        initialPrep = prep;
       }
     }
 
