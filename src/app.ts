@@ -39,7 +39,7 @@ const fetcher = (fetch) => {
 
     let connected = true;
     while (connected) {
-      await stream.wait(5000)
+      await stream.wait(2000)
       // TODO LISTEN postgres pubsub this stuff only when it is actually edited.
       const renewed = await fetch();
 
@@ -233,53 +233,46 @@ const app = (env: any) => {
       };
     })
     .get("*", async ({ params, domain, pool, headers }) => {
-      const db = await pool.connect();
-
-      try {
-        if (!domain) {
-          throw new NotFoundError();
-        }
-
-        // console.log(params);
-        const path = `/${params['*']}`
-
-        const fetch = async () => {
-          const tree = await pool.query(SQL`
-            SELECT
-              dt.id,
-              dt.node_type,
-              dt.name,
-              dt.value,
-              dt.position,
-              dt.parent
-            FROM document_tree dt
-            JOIN domain_documents dd
-              ON dd.document_id = dt.root
-            WHERE dd.id = ${domain.id}
-              AND dd.document_name = ${path}
-          `);
-          // console.log(tree);
-          const organized = rowsToTree(tree.rows);
-
-          if (organized === null || organized === undefined || organized.children.length === 0) {
-            throw 'Disorganized.';
-          }
-
-          return organized.children[0];
-        }
-
-        const accept = headers['accept'];
-
-        if (accept === 'text/event-stream') {
-          // db.release();
-          return fetcher(fetch);
-        }
-
-        return fetch();
+      if (!domain) {
+        throw new NotFoundError();
       }
-      finally{
-        db.release();
+
+      // console.log(params);
+      const path = `/${params['*']}`
+
+      const fetch = async () => {
+        const tree = await pool.query(SQL`
+          SELECT
+            dt.id,
+            dt.node_type,
+            dt.name,
+            dt.value,
+            dt.position,
+            dt.parent
+          FROM document_tree dt
+          JOIN domain_documents dd
+            ON dd.document_id = dt.root
+          WHERE dd.id = ${domain.id}
+            AND dd.document_name = ${path}
+        `);
+        // console.log(tree);
+        const organized = rowsToTree(tree.rows);
+
+        if (organized === null || organized === undefined || organized.children.length === 0) {
+          throw 'Disorganized.';
+        }
+
+        return organized.children[0];
       }
+
+      const accept = headers['accept'];
+
+      if (accept === 'text/event-stream') {
+        // db.release();
+        return fetcher(fetch);
+      }
+
+      return fetch();
     })
     .guard({
       beforeHandle({ set, jwt, path, domain, uri }) {
