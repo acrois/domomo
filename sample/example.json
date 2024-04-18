@@ -1,0 +1,305 @@
+{
+    "id": "d79292f9-6843-47ce-b1c4-a8776ff54b14",
+    "type": "root",
+    "tagName": "/",
+    "value": null,
+    "parent": null,
+    "children": [
+        {
+            "id": "119cd42c-d1bd-44dd-801f-c76ae9d9041d",
+            "type": "doctype",
+            "tagName": "!doctype",
+            "value": "!DOCTYPE html",
+            "parent": "d79292f9-6843-47ce-b1c4-a8776ff54b14",
+            "children": [],
+            "properties": {}
+        },
+        {
+            "id": "8baa650a-8a32-46f9-bd3a-06f2c466f48e",
+            "type": "element",
+            "tagName": "html",
+            "value": null,
+            "parent": "d79292f9-6843-47ce-b1c4-a8776ff54b14",
+            "children": [
+                {
+                    "id": "78dfc12a-78a3-4d19-984a-f837a153dc55",
+                    "type": "element",
+                    "tagName": "head",
+                    "value": null,
+                    "parent": "8baa650a-8a32-46f9-bd3a-06f2c466f48e",
+                    "children": [
+                        {
+                            "id": "73161cb0-419f-42f2-bed0-2e9c424f4613",
+                            "type": "text",
+                            "tagName": null,
+                            "value": "    ",
+                            "parent": "78dfc12a-78a3-4d19-984a-f837a153dc55",
+                            "children": [],
+                            "properties": {}
+                        },
+                        {
+                            "id": "4e3266ce-a942-4824-9176-a8c3c8fd56c5",
+                            "type": "element",
+                            "tagName": "title",
+                            "value": null,
+                            "parent": "78dfc12a-78a3-4d19-984a-f837a153dc55",
+                            "children": [
+                                {
+                                    "id": "77b7430e-7192-46ea-93e3-21fecd8aece8",
+                                    "type": "text",
+                                    "tagName": null,
+                                    "value": "Exampler Domain",
+                                    "parent": "4e3266ce-a942-4824-9176-a8c3c8fd56c5",
+                                    "children": [],
+                                    "properties": {}
+                                }
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "id": "696d4f43-c3f5-499d-ae7e-09f5cc2ec5da",
+                            "type": "text",
+                            "tagName": null,
+                            "value": "    ",
+                            "parent": "78dfc12a-78a3-4d19-984a-f837a153dc55",
+                            "children": [],
+                            "properties": {}
+                        },
+                        {
+                            "id": "24e2cb6e-06fb-48b0-adeb-e3b95cff0b6f",
+                            "type": "element",
+                            "tagName": "script",
+                            "value": null,
+                            "parent": "78dfc12a-78a3-4d19-984a-f837a153dc55",
+                            "children": [
+                                {
+                                    "id": "32c948bf-00bf-4ddf-b1d3-992cea52173b",
+                                    "type": "text",
+                                    "tagName": null,
+                                    "value": "      import {toDom} from 'https://esm.sh/hast-util-to-dom@4?bundle';      import {toHtml} from \"https://esm.sh/hast-util-to-html@9?bundle\";      if (!window.es) {        window.es = new EventSource(window.location.href, {          withCredentials: true,        });        es.addEventListener(\"open\", ev => {          console.log(ev);        });        es.addEventListener(\"message\", ev => {          const decoded = JSON.parse(ev.data);          if (decoded) {            const tree = toDom(decoded, {});            document.body = tree.body;          }        });        es.addEventListener(\"error\", ev => {          console.log(ev);        });      }    ",
+                                    "parent": "24e2cb6e-06fb-48b0-adeb-e3b95cff0b6f",
+                                    "children": [],
+                                    "properties": {}
+                                }
+                            ],
+                            "properties": {
+                                "type": "module"
+                            }
+                        },
+                        {
+                            "id": "7aec7ef9-1992-43f6-b029-bbb5a249c502",
+                            "type": "text",
+                            "tagName": null,
+                            "value": "    ",
+                            "parent": "78dfc12a-78a3-4d19-984a-f837a153dc55",
+                            "children": [],
+                            "properties": {}
+                        },
+                        {
+                            "id": "a2560671-1649-4460-8a78-35f5243b749b",
+                            "type": "element",
+                            "tagName": "meta",
+                            "value": null,
+                            "parent": "78dfc12a-78a3-4d19-984a-f837a153dc55",
+                            "children": [],
+                            "properties": {
+                                "charSet": "utf-8"
+                            }
+                        },
+                        {
+                            "id": "9ca3b996-f78f-4ee8-b0e6-8086b7942737",
+                            "type": "text",
+                            "tagName": null,
+                            "value": "    ",
+                            "parent": "78dfc12a-78a3-4d19-984a-f837a153dc55",
+                            "children": [],
+                            "properties": {}
+                        },
+                        {
+                            "id": "dd1cefbb-e70b-4a2a-9b73-d57a2423b6a3",
+                            "type": "element",
+                            "tagName": "meta",
+                            "value": null,
+                            "parent": "78dfc12a-78a3-4d19-984a-f837a153dc55",
+                            "children": [],
+                            "properties": {
+                                "httpEquiv": "{\"Content-type\"}",
+                                "content": "text/html; charset=utf-8"
+                            }
+                        },
+                        {
+                            "id": "781de357-1916-4e7b-8cb8-903cf7064ceb",
+                            "type": "text",
+                            "tagName": null,
+                            "value": "    ",
+                            "parent": "78dfc12a-78a3-4d19-984a-f837a153dc55",
+                            "children": [],
+                            "properties": {}
+                        },
+                        {
+                            "id": "bfd189b2-0752-4f37-b5be-488c9a700018",
+                            "type": "element",
+                            "tagName": "meta",
+                            "value": null,
+                            "parent": "78dfc12a-78a3-4d19-984a-f837a153dc55",
+                            "children": [],
+                            "properties": {
+                                "name": "viewport",
+                                "content": "width=device-width, initial-scale=1"
+                            }
+                        },
+                        {
+                            "id": "c961b365-c86f-4de2-8501-3a2469eed6e4",
+                            "type": "text",
+                            "tagName": null,
+                            "value": "    ",
+                            "parent": "78dfc12a-78a3-4d19-984a-f837a153dc55",
+                            "children": [],
+                            "properties": {}
+                        },
+                        {
+                            "id": "1bdd0a46-4885-451d-9530-b209f048f9b8",
+                            "type": "element",
+                            "tagName": "style",
+                            "value": null,
+                            "parent": "78dfc12a-78a3-4d19-984a-f837a153dc55",
+                            "children": [
+                                {
+                                    "id": "dbe1cd53-74c2-4932-b683-5c2c5517595e",
+                                    "type": "text",
+                                    "tagName": null,
+                                    "value": "    body {        background-color: #f0f0f2;        margin: 0;        padding: 0;        font-family: -apple-system, system-ui, BlinkMacSystemFont, \"Segoe UI\", \"Open Sans\", \"Helvetica Neue\", Helvetica, Arial, sans-serif;    }    div {        width: 600px;        margin: 5em auto;        padding: 2em;        background-color: #fdfdff;        border-radius: 0.5em;        box-shadow: 2px 3px 7px 2px rgba(0,0,0,0.02);    }    a:link, a:visited {        color: #38488f;        text-decoration: none;    }    @media (max-width: 700px) {        div {            margin: 0 auto;            width: auto;        }    }    ",
+                                    "parent": "1bdd0a46-4885-451d-9530-b209f048f9b8",
+                                    "children": [],
+                                    "properties": {}
+                                }
+                            ],
+                            "properties": {
+                                "type": "text/css"
+                            }
+                        }
+                    ],
+                    "properties": {}
+                },
+                {
+                    "id": "73a84a65-498e-4d67-9531-34f8fc2bd278",
+                    "type": "element",
+                    "tagName": "body",
+                    "value": null,
+                    "parent": "8baa650a-8a32-46f9-bd3a-06f2c466f48e",
+                    "children": [
+                        {
+                            "id": "591a6fe8-a55d-4abe-8679-f79acf26236a",
+                            "type": "element",
+                            "tagName": "div",
+                            "value": null,
+                            "parent": "73a84a65-498e-4d67-9531-34f8fc2bd278",
+                            "children": [
+                                {
+                                    "id": "07d52e6a-dc3e-4c5e-a01c-b7a0aba3500f",
+                                    "type": "text",
+                                    "tagName": null,
+                                    "value": "    ",
+                                    "parent": "591a6fe8-a55d-4abe-8679-f79acf26236a",
+                                    "children": [],
+                                    "properties": {}
+                                },
+                                {
+                                    "id": "5e84cc2d-ccf4-44e4-b1e8-c9ea1fdba03a",
+                                    "type": "element",
+                                    "tagName": "h1",
+                                    "value": null,
+                                    "parent": "591a6fe8-a55d-4abe-8679-f79acf26236a",
+                                    "children": [
+                                        {
+                                            "id": "0353ba4a-116a-4218-8a43-4905506d77a3",
+                                            "type": "text",
+                                            "tagName": null,
+                                            "value": "Example Domain",
+                                            "parent": "5e84cc2d-ccf4-44e4-b1e8-c9ea1fdba03a",
+                                            "children": [],
+                                            "properties": {}
+                                        }
+                                    ],
+                                    "properties": {}
+                                },
+                                {
+                                    "id": "1bc11d73-0c45-4261-94fd-2e9e70803e94",
+                                    "type": "text",
+                                    "tagName": null,
+                                    "value": "    ",
+                                    "parent": "591a6fe8-a55d-4abe-8679-f79acf26236a",
+                                    "children": [],
+                                    "properties": {}
+                                },
+                                {
+                                    "id": "c33a7802-bd98-4323-9e31-c5fa3f52ca52",
+                                    "type": "element",
+                                    "tagName": "p",
+                                    "value": null,
+                                    "parent": "591a6fe8-a55d-4abe-8679-f79acf26236a",
+                                    "children": [
+                                        {
+                                            "id": "221a7f51-44b8-48a6-95fd-83cd7ab546f5",
+                                            "type": "text",
+                                            "tagName": null,
+                                            "value": "This domain is for use in illustrative examples in documents. You may use this    domain in literature without prior coordination or asking for permission.",
+                                            "parent": "c33a7802-bd98-4323-9e31-c5fa3f52ca52",
+                                            "children": [],
+                                            "properties": {}
+                                        }
+                                    ],
+                                    "properties": {}
+                                },
+                                {
+                                    "id": "349b7b3e-3ae9-4ac4-a184-754c6a942024",
+                                    "type": "text",
+                                    "tagName": null,
+                                    "value": "    ",
+                                    "parent": "591a6fe8-a55d-4abe-8679-f79acf26236a",
+                                    "children": [],
+                                    "properties": {}
+                                },
+                                {
+                                    "id": "49a67152-be7b-4406-9afa-a744e074b1ca",
+                                    "type": "element",
+                                    "tagName": "p",
+                                    "value": null,
+                                    "parent": "591a6fe8-a55d-4abe-8679-f79acf26236a",
+                                    "children": [
+                                        {
+                                            "id": "f8338982-f5fc-467a-bcad-224966341d8e",
+                                            "type": "element",
+                                            "tagName": "a",
+                                            "value": null,
+                                            "parent": "49a67152-be7b-4406-9afa-a744e074b1ca",
+                                            "children": [
+                                                {
+                                                    "id": "7c7da7a6-0e15-44ef-88d9-46f9b68dd758",
+                                                    "type": "text",
+                                                    "tagName": null,
+                                                    "value": "More information...",
+                                                    "parent": "f8338982-f5fc-467a-bcad-224966341d8e",
+                                                    "children": [],
+                                                    "properties": {}
+                                                }
+                                            ],
+                                            "properties": {
+                                                "href": "https://www.iana.org/domains/example"
+                                            }
+                                        }
+                                    ],
+                                    "properties": {}
+                                }
+                            ],
+                            "properties": {}
+                        }
+                    ],
+                    "properties": {}
+                }
+            ],
+            "properties": {}
+        }
+    ],
+    "properties": {}
+}
