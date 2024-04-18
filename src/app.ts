@@ -29,12 +29,13 @@ import diff from "microdiff";
 
 const fetcher = (fetch) => {
   return new Stream(async (stream) => {
-    const initial = await fetch();
+    let initial = await fetch();
 
     if (!initial) {
       throw 'Invalid document.';
     }
 
+    // stream.event = 'initial';
     stream.send(astPrepareForRehype(initial));
 
     let connected = true;
@@ -47,10 +48,15 @@ const fetcher = (fetch) => {
         throw 'Invalid document';
       }
 
-      // const d = diff(initial, renewed);
+      const d = diff(initial, renewed);
+
       // console.log(d);
       // stream.send(d.length > 0 ? renewed : []);
-      stream.send(astPrepareForRehype(renewed));
+
+      if (d && d.length > 0) {
+        stream.send(astPrepareForRehype(renewed));
+        initial = renewed;
+      }
     }
 
     stream.close()
