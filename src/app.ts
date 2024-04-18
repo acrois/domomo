@@ -8,7 +8,6 @@ import * as jose from "jose";
 import { SQL } from "sql-template-strings";
 import Stream from "@elysiajs/stream";
 import diff from "microdiff";
-// import diff from "microdiff";
 
 // client-side script to connect websocket for bidirectional async updates
 // update nodes
@@ -41,7 +40,7 @@ const fetcher = (fetch) => {
 
     let connected = true;
     while (connected) {
-      await stream.wait(300)
+      await stream.wait(1500)
       // TODO LISTEN postgres pubsub this stuff only when it is actually edited.
       const renewed = await fetch();
 
@@ -261,7 +260,7 @@ const app = (env: any) => {
             dt.value,
             dt.position,
             dt.parent
-          FROM document_tree dt
+          FROM document_tree_mat dt
           JOIN domain_documents dd
             ON dd.document_id = dt.root
           WHERE dd.id = ${domain.id}
