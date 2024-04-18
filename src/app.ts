@@ -40,7 +40,7 @@ const fetcher = (fetch) => {
 
     let connected = true;
     while (connected) {
-      await stream.wait(350)
+      await stream.wait(150)
       // TODO LISTEN postgres pubsub this stuff only when it is actually edited.
       const renewed = await fetch();
 
