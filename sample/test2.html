@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Test Document</title>
+  <script type="module">
+    import {toDom} from 'https://esm.sh/hast-util-to-dom@4?bundle';
+    import {toHtml} from "https://esm.sh/hast-util-to-html@9?bundle";
+
+    if (!window.es) {
+      window.es = new EventSource(window.location.href, {
+        withCredentials: true,
+      });
+      es.addEventListener("open", ev => {
+        console.log(ev);
+      });
+      es.addEventListener("message", ev => {
+        const decoded = JSON.parse(ev.data);
+        if (decoded) {
+          const tree = toDom(decoded, {});
+          document.body = tree.body;
+        }
+      });
+      es.addEventListener("error", ev => {
+        console.log(ev);
+      });
+    }
+  </script>
+</head>
+
+<body>
+  <div id="main" class="container">
+    <h1>Hello, Worlder!</h1>
+    <p>This is a test paragraph on a dynamic page.</p>
+  </div>
+</body>
+
+</html>

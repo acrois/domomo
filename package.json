@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@elysiajs/jwt": "^1.0.2",
+    "@elysiajs/stream": "^1.0.2",
     "@mobily/ts-belt": "^3.13.1",
     "cookie-parser": "^1.4.6",
     "dom-serializer": "^2.0.0",

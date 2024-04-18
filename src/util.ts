@@ -121,28 +121,28 @@ export const propertiesToNodes = (node: any) => {
   return node;
 }
 
-export const astToHTML = (ast: any) => {
-  const trans = transformPropertyValue(
-    renameProperty(
+export const astPrepareForRehype = (ast: any) => {
+  return nodesToProperties(
+    transformPropertyValue(
       renameProperty(
-        removeKeys(ast, ['position']),
-        'node_type', // from
-        'type' // to
+        renameProperty(
+          removeKeys(ast, ['position']),
+          'node_type', // from
+          'type' // to
+        ),
+        'name', // from
+        'tagName' // to
       ),
-      'name', // from
-      'tagName' // to
-    ),
-    'type',
-    v => v == 'DOCUMENT' ? 'root' : v == 'DOCUMENT_TYPE' ? 'doctype' : v.toLowerCase()
+      'type',
+      v => v == 'DOCUMENT' ? 'root' : v == 'DOCUMENT_TYPE' ? 'doctype' : v.toLowerCase()
+    )
   );
-  const fin =
-    // trans
-    nodesToProperties(trans)
-  ;
-  // console.log(ast, JSON.stringify(fin));
+}
+
+export const astToHTML = (ast: any) => {
   return unified()
     .use(rehypeStringify)
-    .stringify(fin)
+    .stringify(astPrepareForRehype(ast))
     ;
 }
 
@@ -252,11 +252,13 @@ export const renameProperty = (obj: AnyObject, oldProp: string, newProp: string)
     const newObj: AnyObject = {};
     for (const key in obj) {
       const value = obj[key];
+      // CHEAP HACK to disable type/node_type confusion
+      const newValue = key === 'properties' ? value : renameProperty(value, oldProp, newProp);
       // If the current key matches the old property name, rename it
       if (key === oldProp) {
-        newObj[newProp] = renameProperty(value, oldProp, newProp);
+        newObj[newProp] = newValue;
       } else {
-        newObj[key] = renameProperty(value, oldProp, newProp);
+        newObj[key] = newValue;
       }
     }
     return newObj;
