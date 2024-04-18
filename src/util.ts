@@ -121,28 +121,28 @@ export const propertiesToNodes = (node: any) => {
   return node;
 }
 
-export const astToHTML = (ast: any) => {
-  const trans = transformPropertyValue(
-    renameProperty(
+export const astPrepareForRehype = (ast: any) => {
+  return nodesToProperties(
+    transformPropertyValue(
       renameProperty(
-        removeKeys(ast, ['position']),
-        'node_type', // from
-        'type' // to
+        renameProperty(
+          removeKeys(ast, ['position']),
+          'node_type', // from
+          'type' // to
+        ),
+        'name', // from
+        'tagName' // to
       ),
-      'name', // from
-      'tagName' // to
-    ),
-    'type',
-    v => v == 'DOCUMENT' ? 'root' : v == 'DOCUMENT_TYPE' ? 'doctype' : v.toLowerCase()
+      'type',
+      v => v == 'DOCUMENT' ? 'root' : v == 'DOCUMENT_TYPE' ? 'doctype' : v.toLowerCase()
+    )
   );
-  const fin =
-    // trans
-    nodesToProperties(trans)
-  ;
-  // console.log(ast, JSON.stringify(fin));
+}
+
+export const astToHTML = (ast: any) => {
   return unified()
     .use(rehypeStringify)
-    .stringify(fin)
+    .stringify(astPrepareForRehype(ast))
     ;
 }
 

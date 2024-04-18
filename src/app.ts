@@ -1,11 +1,13 @@
 import { Elysia, NotFoundError, ParseError } from "elysia";
 import { Pool } from "pg";
-import { astToHTML, parseToAST, rowsToParents, rowsToTree } from "./util";
+import { astPrepareForRehype, astToHTML, parseToAST, rowsToParents, rowsToTree } from "./util";
 // import { JwksClient } from "jwks-rsa";
 // import jwt from "jsonwebtoken";
 // import { jwt } from '@elysiajs/jwt'
 import * as jose from "jose";
 import { SQL } from "sql-template-strings";
+import Stream from "@elysiajs/stream";
+import diff from "microdiff";
 // import diff from "microdiff";
 
 // client-side script to connect websocket for bidirectional async updates
@@ -24,6 +26,36 @@ import { SQL } from "sql-template-strings";
 //   const e = diff(cd, content[uri.pathname]);
 //   console.log(e);
 // }
+
+const fetcher = (fetch) => {
+  return new Stream(async (stream) => {
+    const initial = await fetch();
+
+    if (!initial) {
+      throw 'Invalid document.';
+    }
+
+    stream.send(astPrepareForRehype(initial));
+
+    let connected = true;
+    while (connected) {
+      await stream.wait(5000)
+      // TODO LISTEN postgres pubsub this stuff only when it is actually edited.
+      const renewed = await fetch();
+
+      if (!renewed) {
+        throw 'Invalid document';
+      }
+
+      // const d = diff(initial, renewed);
+      // console.log(d);
+      // stream.send(d.length > 0 ? renewed : []);
+      stream.send(astPrepareForRehype(renewed));
+    }
+
+    stream.close()
+  })
+}
 
 const app = (env: any) => {
   const AUD = env.CFZT_AUDIENCE;
@@ -150,6 +182,9 @@ const app = (env: any) => {
           type = 'text/html'
           text = astToHTML(response);
         }
+        else if (response instanceof Stream) {
+          return response;
+        }
         else if (response instanceof Response) {
           text = response.toString()
         }
@@ -198,7 +233,6 @@ const app = (env: any) => {
       };
     })
     .get("*", async ({ params, domain, pool, headers }) => {
-      console.log(headers);
       const db = await pool.connect();
 
       try {
@@ -208,40 +242,40 @@ const app = (env: any) => {
 
         // console.log(params);
         const path = `/${params['*']}`
-        const document = await db.query(SQL`
-          SELECT
-            document_id AS id
-          FROM domain_documents
-          WHERE id = ${domain.id}
-            AND document_name = ${path}
-        `);
 
-        let organized = null;
-
-        if (document.rowCount && document.rowCount > 0) {
-          const doc = document.rows[0];
-          // console.log(doc);
-          const tree = await db.query(SQL`
+        const fetch = async () => {
+          const tree = await pool.query(SQL`
             SELECT
-              id,
-              node_type,
-              name,
-              value,
-              position,
-              parent
-            FROM document_tree
-            WHERE root = ${doc!.id}
+              dt.id,
+              dt.node_type,
+              dt.name,
+              dt.value,
+              dt.position,
+              dt.parent
+            FROM document_tree dt
+            JOIN domain_documents dd
+              ON dd.document_id = dt.root
+            WHERE dd.id = ${domain.id}
+              AND dd.document_name = ${path}
           `);
           // console.log(tree);
-          organized = rowsToTree(tree.rows);
-          // console.log(JSON.stringify(organized));
+          const organized = rowsToTree(tree.rows);
+
+          if (organized === null || organized === undefined || organized.children.length === 0) {
+            throw 'Disorganized.';
+          }
+
+          return organized.children[0];
         }
 
-        if (!document.rowCount || document.rowCount === 0 || organized === null || organized === undefined || organized.children.length === 0) {
-          throw new NotFoundError();
+        const accept = headers['accept'];
+
+        if (accept === 'text/event-stream') {
+          // db.release();
+          return fetcher(fetch);
         }
 
-        return organized.children[0];
+        return fetch();
       }
       finally{
         db.release();
