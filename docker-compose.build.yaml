@@ -1,5 +1,10 @@
 services:
   postgres:
+    build:
+      context: ./
+      dockerfile: postgres.Dockerfile
+      args:
+        DATABASE_TAG: ${DATABASE_TAG:-16.2-alpine3.19}
     restart: unless-stopped
     volumes:
       - ./initdb.d:/docker-entrypoint-initdb.d
