@@ -1,13 +1,12 @@
 import { Elysia, NotFoundError, ParseError } from "elysia";
-import { Client, Pool } from "pg";
+import { Pool } from "pg";
+import { cron, Patterns } from '@elysiajs/cron'
 import { astPrepareForRehype, astToHTML, parseToAST, rowsToParents, rowsToTree } from "./util";
-// import { JwksClient } from "jwks-rsa";
-// import jwt from "jsonwebtoken";
-// import { jwt } from '@elysiajs/jwt'
-import * as jose from "jose";
 import { SQL } from "sql-template-strings";
 import Stream from "@elysiajs/stream";
 import diff from "microdiff";
+import codecPlugin from "./encoder";
+import authPlugin from "./auth";
 
 // client-side script to connect websocket for bidirectional async updates
 // update nodes
@@ -69,50 +68,36 @@ const fetcher = (fetch) => {
 }
 
 const app = (env: any) => {
-  const AUD = env.CFZT_AUDIENCE;
-  const TEAM_DOMAIN = env.CFZT_TEAM;
-  const CERTS_URL = new URL(`${TEAM_DOMAIN}/cdn-cgi/access/certs`);
-
-  const JWKS = jose.createRemoteJWKSet(CERTS_URL);
-  // console.log(CERTS_URL);
-  const options = {
-    // issuer: TEAM_DOMAIN,
-    audience: AUD,
-  }
-  const verify = async (jwt: string) => {
-    return await jose
-      .jwtVerify(jwt, JWKS, options)
-      .catch(async (error) => {
-        // console.log(error);
-        if (error?.code === 'ERR_JWKS_MULTIPLE_MATCHING_KEYS') {
-          for await (const publicKey of error) {
-            try {
-              return await jose.jwtVerify(jwt, publicKey, options)
-            } catch (innerError) {
-              if (innerError?.code === 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED') {
-                continue
-              }
-              throw innerError
-            }
-          }
-          throw new jose.errors.JWSSignatureVerificationFailed()
-        }
-
-        throw error
-      })
-  };
-
   const pgUri: string = env.PG_URI || env.POSTGRES_URI || env.POSTGRES_URL
     || env.DB_URI || env.DB_URL || env.PG_URL
     || `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@localhost:5432/${env.POSTGRES_DB}`;
-  const encoder = new TextEncoder();
+
   return new Elysia({
-    aot: false,
+    // aot: false, // false for cloudflare worker
   })
+    .use(authPlugin(env))
+    .use(codecPlugin)
+    .onError(({ code, error, set }) => {
+      const estr = error?.toString();
+
+      if (code === 'NOT_FOUND' || estr === 'NOT_FOUND') {
+        set.status = 404;
+        return '';
+      }
+    })
     .decorate('pool', new Pool({
       connectionString: pgUri,
     }))
-    .derive(async ({ headers, request, pool,  }) => {
+    .use(
+      cron({
+        name: 'heartbeat',
+        pattern: Patterns.everySecond(),
+        run() {
+          console.log("Heartbeat")
+        }
+      })
+    )
+    .derive(async ({ headers, request, pool, }) => {
       const db = await pool.connect();
       const uri = new URL(request.url);
 
@@ -143,7 +128,7 @@ const app = (env: any) => {
           }
         }
       }
-      finally{
+      finally {
         db.release();
       }
 
@@ -152,7 +137,7 @@ const app = (env: any) => {
         uri,
       }
     })
-    .derive(async ({ headers, cookie }) => {
+    /*.derive(async ({ headers, cookie }) => {
       const basicAuth = headers['authorization'] ?? headers['Authorization']
       const cfAuth = cookie['CF_Authorization'] ?? headers['cf_authorization']
 
@@ -166,61 +151,8 @@ const app = (env: any) => {
         bearer: basicAuth?.startsWith('Bearer ') ? basicAuth.slice(7) : null,
         jwt: decodedJwt !== null ? decodedJwt?.payload : null,
       }
-    })
-    // parse
-    .onParse(({ request }, contentType) => {
-      // console.log('test');
-      if (contentType == 'text/html') {
-        return (async () => {
-          const ast = parseToAST(await request.text())
-          ast.name = new URL(request.url).pathname
-          // console.log(ast);
-          return ast;
-        })();
-      }
-    })
-    // mapResponse
-    .onAfterHandle(({ query, response, set, headers }) => {
-      let type = headers['Content-Type'] ?? 'text/plain';
-      let text = typeof response === 'string' ? response : '';
-      // console.log(type);
-      if (response !== null && typeof response === 'object') {
-        // id and children in object is a good indicator of tree
-        //   TODO find a better one
-        // also, we did not request the raw (server default) response
-        //   raw is useful for debugging and as an escape hatch
-        if ('id' in response && 'children' in response && !('raw' in query)) {
-          type = 'text/html'
-          text = astToHTML(response);
-        }
-        else if (response instanceof Stream) {
-          return response;
-        }
-        else if (response instanceof Response) {
-          text = response.toString()
-        }
-        else {
-          type = 'application/json'
-          text = JSON.stringify(response)
-        }
-      }
-
-      // console.log(response);
-
-      set.headers['Content-Encoding'] = 'gzip'
-      set.headers['Content-Type'] = `${type}; charset=utf-8`
-      // console.log(set.
-
-      return new Response(
-        Bun.gzipSync(
-          encoder.encode(text)
-        ),
-        // {
-        //   status: set.status
-        // }
-      );
-    })
-    .onError(({ code, error, set }) => {
+    })*/
+    /*.onError(({ code, error, set }) => {
       const estr = error?.toString();
 
       if (code === 'NOT_FOUND' || estr === 'NOT_FOUND') {
@@ -235,14 +167,14 @@ const app = (env: any) => {
 
       // console.log(code);
       return estr;
-    })
-    .get('-', async ({ bearer, jwt, domain }) => {
+    })*/
+    /*.get('-', async ({ bearer, jwt, domain }) => {
       return {
         bearer,
         jwt,
         domain
       };
-    })
+    })*/
     .get("*", async ({ params, domain, pool, headers }) => {
       if (!domain) {
         throw new NotFoundError();
@@ -286,15 +218,15 @@ const app = (env: any) => {
       return fetch();
     })
     .guard({
-      beforeHandle({ set, jwt, path, domain, uri }) {
+      beforeHandle({ set, auth, path, domain, uri }) {
         // allow localhost changes :)
         if (uri.hostname.match(/.*\.?localhost/) !== null) {
           return;
         }
 
-        if (!jwt
-            || !jwt.email
-            || !jwt.email.endsWith('@kinetech.llc')
+        if (!auth
+          || !auth.email
+          || !auth.email.endsWith('@kinetech.llc')
         ) {
           const redirect = `${TEAM_DOMAIN}/cdn-cgi/access/login/${domain.name}?kid=${AUD}&redirect_url=${path}&meta={}`;
           // console.log('nonono', path, domain, redirect);
@@ -303,7 +235,7 @@ const app = (env: any) => {
         }
       },
     }, (app) => app
-      .get('_', () => 'ok')
+      // .get('_', () => 'ok')
       .put('*', async ({ params, domain, body, pool }) => {
         const db = await pool.connect();
         try {
@@ -459,7 +391,7 @@ const app = (env: any) => {
           // await db.query('ROLLBACK');
           throw e;
         }
-        finally{
+        finally {
           db.release();
         }
       })
@@ -496,7 +428,7 @@ const app = (env: any) => {
             fragment: frag.rows[0],
           };
         }
-        finally{
+        finally {
           db.release();
         }
       })
@@ -528,7 +460,7 @@ const app = (env: any) => {
 
           throw new NotFoundError();
         }
-        finally{
+        finally {
           db.release();
         }
       })

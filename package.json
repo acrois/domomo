@@ -20,8 +20,10 @@
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
+  "trustedDependencies": ["@elysiajs/jwt"],
   "dependencies": {
-    "@elysiajs/jwt": "^1.0.2",
+    "@elysiajs/cron": "^1.0.3",
+    "@elysiajs/jwt": "github:kinetechsolutions/elysia-jwt#jwk-signature",
     "@elysiajs/stream": "^1.0.2",
     "@mobily/ts-belt": "^3.13.1",
     "cookie-parser": "^1.4.6",
