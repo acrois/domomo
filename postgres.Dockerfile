@@ -4,12 +4,11 @@ RUN apk add --no-cache --virtual .build-deps \
   git \
   make \
   gcc \
-  clang-dev \
-  file \
-  build-base \
   llvm15-dev \
-  llvm \
-  clang15
+  clang-dev \
+  clang15 \
+  file \
+  build-base
 RUN git clone https://github.com/eulerto/wal2json.git && \
   cd wal2json && \
   make && \

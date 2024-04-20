@@ -1,5 +1,5 @@
 import { Elysia, NotFoundError, ParseError } from "elysia";
-import { Pool } from "pg";
+import { Client, Pool } from "pg";
 import { astPrepareForRehype, astToHTML, parseToAST, rowsToParents, rowsToTree } from "./util";
 // import { JwksClient } from "jwks-rsa";
 // import jwt from "jsonwebtoken";
@@ -260,7 +260,7 @@ const app = (env: any) => {
             dt.value,
             dt.position,
             dt.parent
-          FROM document_tree_mat dt
+          FROM document_tree dt
           JOIN domain_documents dd
             ON dd.document_id = dt.root
           WHERE dd.id = ${domain.id}
@@ -327,7 +327,8 @@ const app = (env: any) => {
               AND document_name = ${path}
           `);
 
-          // await sql.begin(async sql => {
+          // await db.query('BEGIN');
+
           if (document.rowCount !== 0) {
             await db.query(SQL`
               DELETE FROM node_attachment
@@ -394,14 +395,13 @@ const app = (env: any) => {
                 (${parentId}, ${nodeId}, ${next_position})
             `)
 
-            // console.log(c);
+            // console.log();
             const children: any[] = node?.children || [];
 
             for (let i = 0; i < children.length; i++) {
               // console.log(nodeId, i);
               await insertNode(children[i], nodeId, i);
             }
-
 
             // children.map(v => await insertNode(v, nodeId));
           }
@@ -453,6 +453,11 @@ const app = (env: any) => {
           // const c = sql``
 
           // return organized;
+          // await db.query('COMMIT');
+        }
+        catch (e) {
+          // await db.query('ROLLBACK');
+          throw e;
         }
         finally{
           db.release();

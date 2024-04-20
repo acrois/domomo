@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "docker compose up -d",
     "watch": "bun --watch src/index.ts",
+    "watch:example": "./example.sh",
     "build": "bun build src/_worker.ts --target node --outdir ./build && docker compose build",
     "clean": "docker compose down -v",
     "start": "NODE_ENV=production bun src/index.ts",
