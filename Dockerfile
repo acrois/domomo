@@ -5,9 +5,10 @@ WORKDIR /app
 COPY package.json .
 COPY bun.lockb .
 
-RUN bun install --production
+RUN alias npm="bun" && bun install --production
 
 COPY src src
+COPY static static
 COPY tsconfig.json .
 # COPY public public
 

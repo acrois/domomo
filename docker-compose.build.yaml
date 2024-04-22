@@ -1,5 +1,11 @@
 services:
   postgres:
+    build:
+      context: ./
+      dockerfile: postgres.Dockerfile
+      args:
+        DATABASE_TAG: ${DATABASE_TAG:-16.2-alpine3.19}
+    pull_policy: build
     restart: unless-stopped
     volumes:
       - ./initdb.d:/docker-entrypoint-initdb.d
@@ -13,3 +19,8 @@ services:
       - ./src:/app/src
       - ./test:/app/test
       - ./sample:/app/sample
+      - ./static:/app/static
+    ports:
+      - 9229:9229
+    expose:
+      - 9229

@@ -2,8 +2,10 @@ version: "3.7"
 services:
   postgres:
     restart: unless-stopped
+    pull_policy: never
 
   domomo:
     restart: unless-stopped
+    pull_policy: never
     # deploy:
     #   replicas: 2
