@@ -1,6 +1,12 @@
-import { Elysia } from 'elysia';
+import { Elysia, error } from 'elysia';
 import { createRemoteJWKSet } from "jose";
 import jwt from "@elysiajs/jwt";
+
+export class AuthError extends Error {
+  constructor () {
+    super('Authentication Required');
+  }
+}
 
 const authPlugin = (env: any) => {
   const AUD = env.JWKS_AUDIENCE;
@@ -34,28 +40,39 @@ const authPlugin = (env: any) => {
         auth,
       };
     })
+    .error({
+      AuthError,
+    })
+    .onError({
+      as: 'global',
+    }, ({ code, error, set, request, path }) => {
+      const uri = new URL(request.url);
+      const domain = uri.hostname;
+      // console.log(error, code);
+      if (code == 'AuthError') {
+        set.status = 303;
+        const redirect = `${TEAM_DOMAIN}/cdn-cgi/access/login/${domain}?kid=${AUD}&redirect_url=${path}&meta={}`;
+        set.redirect = redirect;
+        // console.log('Authenticate', set.redirect);
+        return '';
+      }
+    })
     .guard({
-      beforeHandle({ set, jwt, path, request }) {
+      beforeHandle({ jwt, request }) {
         const uri = new URL(request.url);
-        const domain = uri.hostname;
+        // console.log(request);
+
         // allow localhost changes :)
         if (uri.hostname.match(/.*\.?localhost/) !== null) {
           return;
         }
 
         if (!jwt || !('email' in jwt) || !jwt.email) {
-          const redirect = `${TEAM_DOMAIN}/cdn-cgi/access/login/${domain}?kid=${AUD}&redirect_url=${path}&meta={}`;
-          set.redirect = redirect;
-          throw 'UNAUTHORIZED_REDIRECT';
+          throw new AuthError()
         }
       },
     }, (app) => app
       .get('_', () => 'ok')
     )
-    .onError(({ error, set }) => {
-      if (error?.toString() === 'UNAUTHORIZED_REDIRECT') {
-        set.status = 303;
-      }
-    })
 };
 export default authPlugin;

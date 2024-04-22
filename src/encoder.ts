@@ -12,7 +12,7 @@ const codecPlugin = new Elysia({
     // console.log('test');
     if (contentType == 'text/html') {
       return (async () => {
-        const ast = parseToAST(await request.text())
+        const ast = await parseToAST(await request.text())
         ast.name = new URL(request.url).pathname
         // console.log(ast);
         return ast;

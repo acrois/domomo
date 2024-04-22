@@ -2,6 +2,7 @@ import { DomHandler, Parser } from "htmlparser2";
 import { unified } from 'unified';
 import rehypeParse from 'rehype-parse';
 import rehypeStringify from 'rehype-stringify';
+import rehypePresetMinify from 'rehype-preset-minify';
 
 export enum NodeType {
   WINDOW,
@@ -139,24 +140,39 @@ export const astPrepareForRehype = (ast: any) => {
   );
 }
 
-export const astToHTML = (ast: any) => {
-  return unified()
-    .use(rehypeStringify)
-    .stringify(astPrepareForRehype(ast))
-    ;
+const processor = (fragment?: boolean) => unified()
+  .use(rehypePresetMinify)
+  .use(rehypeStringify)
+  .use(rehypeParse, {
+    fragment,
+    verbose: false,
+  })
+  ;
+
+export const cleanAST = (ast: any, fragment?: boolean) => {
+  return processor(fragment).run(ast);
 }
 
-export const parseToAST = (html: string, fragment: boolean = false) => {
+export const cleanHTML = (html: string, fragment?: boolean) => {
+  return processor(fragment).process(html);
+}
+
+export const htmlToAST = (html: string, fragment?: boolean) => {
+  return cleanAST(processor().parse(html), fragment);
+}
+
+export const astToHTML = (ast: any, fragment?: boolean) => {
+  return processor(fragment).stringify(astPrepareForRehype(ast));
+}
+
+export const parseToAST = async (html: string, fragment?: boolean) => {
+  const ast = await htmlToAST(html, fragment);
+  // console.log(ast);
   const root = transformPropertyValue(
     renameProperty(
       renameProperty(
         removeKeys(
-          unified()
-            .use(rehypeParse, {
-              fragment,
-              verbose: false,
-            })
-            .parse(html),
+          ast,
           ['position'] // remove
         ),
         'type', // from
