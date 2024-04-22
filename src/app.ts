@@ -144,8 +144,8 @@ const app = (env: any) => {
     .decorate('pool', new Pool({
       connectionString: pgUri,
     }))
-    .onStop(({ decorator: { pool } }) => {
-      pool.end();
+    .onStop(async ({ decorator: { pool } }) => {
+      await pool.end();
     })
     .use(
       cron({
