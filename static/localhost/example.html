@@ -155,6 +155,33 @@
       // console.log(e.type, e.type, e);
     };
 
+    // Rename a tag (change tag type). Ex, <div> -> <a>
+    const renameTag = (target, newNode) => {
+      // copy attributes
+      for (var i = 0; i < target.attributes.length; i++) {
+        newNode.setAttribute(
+          target.attributes[i].nodeName,
+          target.attributes[i].nodeValue
+        );
+      }
+
+      // move children. firstChild is a live API so we can 'while' on that
+      while (target.firstChild) {
+        newNode.appendChild(target.firstChild);
+      }
+
+      // copy in-line styles
+      if (target.style.length > 0) {
+        newNode.style.cssText = target.style.cssText;
+      }
+
+      if (target.contentEditable !== undefined) {
+        newNode.contentEditable = target.contentEditable;
+      }
+
+      return target.parentNode.replaceChild(newNode, target);
+    }
+
     for (const key in target) {
       if (/^on/.test(key)) {
         const eventType = key.substr(2);
@@ -177,8 +204,10 @@
         e.target.draggable = true;
       }
     });
-    const goodTags = ['P', 'SPAN', 'A', 'PRE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
+    const goodTags = ['SPAN', 'A', 'PRE', 'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
+    const incrTags = ['P', 'H6', 'H5', 'H4', 'H3', 'H2', 'H1'];
     document.addEventListener('keydown', e => {
+      console.log(e);
       if (!['HTML', 'BODY'].includes(e.target.tagName) && e.shiftKey) {
         e.target.classList.add('selected');
         e.target.draggable = true;
@@ -191,22 +220,32 @@
       if (e.key === 'Enter'
         && !e.ctrlKey
         && !e.shiftKey
-        && e.target.isContentEditable
         && goodTags.includes(e.target.tagName)
       ) {
-        e.preventDefault();
-
-        if (e.target.tagName == 'PRE') {
-          const selection = window.getSelection();
-          const range = selection.getRangeAt(0);
-          console.log(selection, range);
-          // range.insertNode(br);
-          // range.setStartAfter(br);
-          // selection.removeAllRanges();
-          // selection.addRange(range);
+        console.log('good tags');
+        if (e.target.isContentEditable) {
+          e.preventDefault();
+          if (e.target.tagName == 'PRE') {
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+            console.log(selection, range);
+            // range.insertNode(br);
+            // range.setStartAfter(br);
+            // selection.removeAllRanges();
+            // selection.addRange(range);
+          }
+          else {
+            e.target.removeAttribute('contentEditable');
+          }
         }
-        else {
-          e.target.removeAttribute('contentEditable');
+        else if (document.designMode == 'on') {
+          console.log('designer');
+          if (e.target.tagName == 'PRE') {
+            console.log(e.target.tagName);
+
+            e.preventDefault();
+            e.stopImmediatePropagation();
+          }
         }
       }
     });
@@ -221,10 +260,30 @@
         e.preventDefault();
 
         // console.log(e.target);
-        if (goodTags.includes(e.target.tagName)) {
+        if (incrTags.includes(e.target.tagName)) {
           console.log(e.target.tagName, e.keyCode, e.code, e.key);
-          if (e.code == 'Equal') {
+          const curIdx = incrTags.indexOf(e.target.tagName);
+          const upOrDown = e.code == 'Equal'
+            ? 1
+            : e.code == 'Minus'
+              ? -1 : 0
+          ;
+          const fixedKey = (55 - e.keyCode);
+          const newIdx = (upOrDown === 0 ? fixedKey : curIdx + upOrDown);
+          const nextIdx = Math.max(
+            Math.min(
+              newIdx,
+              incrTags.length - 1
+            ),
+            0
+          );
+          const nextTag = incrTags[nextIdx];
+          console.log(upOrDown, fixedKey, newIdx, curIdx, nextTag, nextIdx)
 
+          if (nextTag != e.target.tagName) {
+            const newElement = document.createElement(nextTag);
+            renameTag(e.target, newElement);
+            newElement.focus();
           }
         }
       }
@@ -290,14 +349,19 @@
       event.dataTransfer.dropEffect = "move";
     });
     document.addEventListener('dragstart', e => {
-      event.dataTransfer.effectAllowed = "copyMove";
+      if (!['HTML', 'BODY'].includes(e.target.tagName) && (
+        document.designMode == 'on'
+        || e.shiftKey
+      )) {
+        event.dataTransfer.effectAllowed = "copyMove";
 
-      if (!e.target.id) {
-        e.target.id = crypto.randomUUID();
+        if (!e.target.id) {
+          e.target.id = crypto.randomUUID();
+        }
+
+        e.dataTransfer.setData('text/plain', e.target.id);
+        e.dataTransfer.setDragImage(e.target, 10, 10);
       }
-
-      e.dataTransfer.setData('text/plain', e.target.id);
-      e.dataTransfer.setDragImage(e.target, 10, 10);
     });
     document.addEventListener('dragover', e => {
       e.preventDefault();
@@ -320,8 +384,13 @@
       ) {
         const dragElement = document.getElementById(d);
         if (dragElement != e.target) {
-          dragElement.removeAttribute('draggable');
-          e.target.appendChild(dragElement);
+          if (dragElement) {
+            dragElement.removeAttribute('draggable');
+            e.target.appendChild(dragElement);
+          }
+          else {
+            e.target.append(d);
+          }
         }
       }
 
