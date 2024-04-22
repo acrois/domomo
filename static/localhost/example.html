@@ -111,9 +111,41 @@
       }
     }
 
+    .design-mode * {
+      position: relative;
+      outline: 1px dotted rgba(0, 213, 255, 0.5);
+      /* Example style */
+    }
+
+    /* Example to show a pencil icon on hover using CSS when in design mode */
+    .design-mode .selected:hover::after {
+      content: '✏️';
+      position: absolute;
+      top: 0.01rem;
+      right: 0.01rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
     .selected {
       /* box-sizing: border-box; */
       outline: 2px solid rgba(0, 68, 150, 0.571);
+    }
+
+    .dropper.left {
+      border-left: 5px solid rgba(0, 0, 0, 1);
+    }
+
+    .dropper.right {
+      border-right: 5px solid rgba(0, 0, 0, 1);
+    }
+
+    .dropper.above {
+      border-top: 5px solid rgba(0, 0, 0, 1);
+    }
+
+    .dropper.below {
+      border-bottom: 5px solid rgba(0, 0, 0, 1);
     }
 
     .dropper {
@@ -203,15 +235,32 @@
         e.target.classList.add('selected');
         e.target.draggable = true;
       }
-    });
+    }, true);
+    function getCurrentEditingElement() {
+      const selection = window.getSelection();
+      // Check if there is a selection or if the cursor is placed within some content
+      if (!selection.rangeCount) return null; // No active selection
+
+      const range = selection.getRangeAt(0); // Get the first range of the selection
+      let element = range.startContainer;
+
+      // If the starting container of the range is a text node, get its parent element
+      if (element.nodeType === Node.TEXT_NODE) {
+        element = element.parentNode;
+      }
+
+      return element;
+    }
     const goodTags = ['SPAN', 'A', 'PRE', 'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
     const incrTags = ['P', 'H6', 'H5', 'H4', 'H3', 'H2', 'H1'];
     document.addEventListener('keydown', e => {
-      console.log(e);
+      // console.log(e);
       if (!['HTML', 'BODY'].includes(e.target.tagName) && e.shiftKey) {
         e.target.classList.add('selected');
         e.target.draggable = true;
       }
+
+      const tgt = e.target.tagName == 'BODY' ? getCurrentEditingElement() : e.target;
 
       if (e.ctrlKey && e.shiftKey) {
         e.preventDefault();
@@ -220,12 +269,12 @@
       if (e.key === 'Enter'
         && !e.ctrlKey
         && !e.shiftKey
-        && goodTags.includes(e.target.tagName)
+        && goodTags.includes(tgt.tagName)
       ) {
         console.log('good tags');
-        if (e.target.isContentEditable) {
+        if (tgt.hasAttribute('contentEditable')) {
           e.preventDefault();
-          if (e.target.tagName == 'PRE') {
+          if (tgt.tagName == 'PRE') {
             const selection = window.getSelection();
             const range = selection.getRangeAt(0);
             console.log(selection, range);
@@ -235,39 +284,43 @@
             // selection.addRange(range);
           }
           else {
-            e.target.removeAttribute('contentEditable');
+            tgt.removeAttribute('contentEditable');
           }
         }
         else if (document.designMode == 'on') {
-          console.log('designer');
-          if (e.target.tagName == 'PRE') {
-            console.log(e.target.tagName);
-
+          if (tgt.tagName != 'P') {
             e.preventDefault();
+          }
+
+          // TODO find selection area and insert paragraph cleanly
+          console.log('designer', tgt);
+
+          if (tgt.tagName == 'PRE') {
             e.stopImmediatePropagation();
           }
         }
       }
-    });
+    }, true);
     document.addEventListener('keyup', e => {
-      // console.log(e.target);
       if (!['HTML', 'BODY'].includes(e.target.tagName) && e.shiftKey) {
         e.target.classList.remove('selected');
         e.target.removeAttribute('draggable');
       }
 
+      const tgt = e.target.tagName == 'BODY' ? getCurrentEditingElement() : e.target;
+
       if (e.ctrlKey && e.shiftKey) {
         e.preventDefault();
 
-        // console.log(e.target);
-        if (incrTags.includes(e.target.tagName)) {
-          console.log(e.target.tagName, e.keyCode, e.code, e.key);
-          const curIdx = incrTags.indexOf(e.target.tagName);
+        // console.log(tgt);
+        if (incrTags.includes(tgt.tagName)) {
+          // console.log(tgt.tagName, e.keyCode, e.code, e.key);
+          const curIdx = incrTags.indexOf(tgt.tagName);
           const upOrDown = e.code == 'Equal'
             ? 1
             : e.code == 'Minus'
               ? -1 : 0
-          ;
+            ;
           const fixedKey = (55 - e.keyCode);
           const newIdx = (upOrDown === 0 ? fixedKey : curIdx + upOrDown);
           const nextIdx = Math.max(
@@ -278,16 +331,19 @@
             0
           );
           const nextTag = incrTags[nextIdx];
-          console.log(upOrDown, fixedKey, newIdx, curIdx, nextTag, nextIdx)
+          // console.log(upOrDown, fixedKey, newIdx, curIdx, nextTag, nextIdx)
 
-          if (nextTag != e.target.tagName) {
+          if (nextTag != tgt.tagName) {
             const newElement = document.createElement(nextTag);
-            renameTag(e.target, newElement);
-            newElement.focus();
+            renameTag(tgt, newElement);
+            if (newElement.isContentEditable) {
+              newElement.focus();
+            }
+            // use selection API otherwise
           }
         }
       }
-    });
+    }, true);
     document.addEventListener('keyup', e => {
       const when = new Date().getTime();
       // console.log(e);
@@ -312,10 +368,14 @@
 
           if (document.designMode == 'off') {
             document.querySelectorAll('[class=selected]').forEach(c => c.classList.remove('selected'));
+            document.body.classList.remove('design-mode');
+          }
+          else {
+            document.body.classList.add('design-mode');
           }
         }
       }
-    });
+    }, true);
     document.addEventListener('click', e => {
       if (document.designMode == 'off') {
         document.querySelectorAll('[contenteditable]').forEach(c => {
@@ -331,6 +391,11 @@
       //   e.target.focus();
       // }
     });
+    document.addEventListener('click', e => {
+      if (document.designMode == 'on') {
+        console.log(e);
+      }
+    }, true);
     document.addEventListener('dblclick', e => {
       if (document.designMode == 'off' && e.target.tagName !== 'HTML') {
 
@@ -344,10 +409,29 @@
       // console.log(e.type, e.target);
       e.target.classList.remove('selected');
       e.target.removeAttribute('draggable');
-    });
+    }, true);
+    const dragDropTarget = (e) => {
+      const rect = e.target.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const horizontalThreshold = rect.width / 2;
+      const verticalThreshold = rect.height / 2;
+
+      if (x < horizontalThreshold && x < y && x < (rect.height - y)) {
+        return 'left';
+      } else if (x >= horizontalThreshold && (rect.width - x) < y && (rect.width - x) < (rect.height - y)) {
+        return 'right';
+      } else if (y < verticalThreshold && y < x && y < (rect.width - x)) {
+        return 'above';
+      } else if (y >= verticalThreshold && (rect.height - y) < x && (rect.height - y) < (rect.width - x)) {
+        return 'below';
+      }
+
+      return 'inside';
+    }
     document.addEventListener('dragenter', e => {
       event.dataTransfer.dropEffect = "move";
-    });
+    }, true);
     document.addEventListener('dragstart', e => {
       if (!['HTML', 'BODY'].includes(e.target.tagName) && (
         document.designMode == 'on'
@@ -362,7 +446,7 @@
         e.dataTransfer.setData('text/plain', e.target.id);
         e.dataTransfer.setDragImage(e.target, 10, 10);
       }
-    });
+    }, true);
     document.addEventListener('dragover', e => {
       e.preventDefault();
       const canMoveTo = !['BODY', 'HTML'].includes(e.target.tagName);
@@ -374,7 +458,7 @@
           c.classList.remove('dropper');
         }
       })
-    });
+    }, true);
     document.addEventListener('drop', e => {
       e.preventDefault();
       const d = e.dataTransfer.getData('text/plain');
@@ -395,7 +479,7 @@
       }
 
       document.querySelectorAll('.dropper').forEach(c => c.classList.remove('dropper'))
-    });
+    }, true);
 
     const mutation = (mutationList, observer) => {
       for (const mutation of mutationList) {
@@ -404,11 +488,12 @@
         // } else if (mutation.type === "attributes") {
         //   console.log(`The ${mutation.attributeName} attribute was modified.`);
         // }
-        console.log(mutation);
+
+        // console.log(mutation);
       }
     };
     const observer = new MutationObserver(mutation);
-    observer.observe(document.body, {
+    observer.observe(document, {
       attributes: true,
       childList: true,
       subtree: true,

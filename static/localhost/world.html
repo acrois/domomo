@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Editable Content Example</title>
+<style>
+  .pencil-icon {
+    display: none; /* Initially hidden */
+    position: fixed;
+    padding: 5px;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 2000; /* Ensure it's above other content */
+  }
+
+  .dialog {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    border: 1px solid #ccc;
+    background-color: white;
+    z-index: 1000;
+  }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+</style>
+</head>
+<body>
+
+<div>Hover over me to edit!</div>
+<p>Another element to test editing functionality.</p>
+<p>More text here to hover over and display editing icon.</p>
+
+<div class="overlay"></div>
+<div class="dialog">Placeholder for HTML content.</div>
+<span class="pencil-icon">✏️</span>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const pencilIcon = document.querySelector('.pencil-icon');
+  const dialog = document.querySelector('.dialog');
+  const overlay = document.querySelector('.overlay');
+
+  document.body.addEventListener('mousemove', function(e) {
+    if (e.target !== document.body && e.target !== pencilIcon) {
+      const rect = e.target.getBoundingClientRect();
+      pencilIcon.style.top = `${rect.top + window.scrollY}px`; // Correct for scrolling
+      pencilIcon.style.left = `${rect.right + window.scrollX - 25}px`; // Adjust based on your icon size
+      pencilIcon.style.display = 'block';
+    }
+  });
+
+  document.body.addEventListener('mouseout', function(e) {
+    if (!e.relatedTarget || e.relatedTarget.nodeName === "HTML") {
+      pencilIcon.style.display = 'none'; // Hide when the mouse is out of any element
+    }
+  });
+
+  pencilIcon.addEventListener('click', function() {
+    if (document.activeElement) {
+      const htmlContent = document.activeElement.outerHTML;
+      dialog.textContent = htmlContent; // Showing the HTML of the active element
+      dialog.style.display = 'block';
+      overlay.style.display = 'block';
+    }
+  });
+
+  overlay.addEventListener('click', function() {
+    dialog.style.display = 'none';
+    overlay.style.display = 'none';
+  });
+});
+</script>
+</body>
+</html>
