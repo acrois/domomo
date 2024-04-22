@@ -118,16 +118,18 @@
     }
 
     /* Example to show a pencil icon on hover using CSS when in design mode */
-    .design-mode .selected:hover::after {
-      content: '✏️';
+    .selected:hover::after {
+      content: '≡';
       position: absolute;
-      top: 0.01rem;
-      right: 0.01rem;
+      top: 0;
+      right: 0.25rem;
       font-size: 0.8rem;
-      cursor: pointer;
+      cursor: grab;
+      padding: 0.025rem;
     }
 
     .selected {
+      position: relative;
       /* box-sizing: border-box; */
       outline: 2px solid rgba(0, 68, 150, 0.571);
     }
@@ -449,13 +451,24 @@
     }, true);
     document.addEventListener('dragover', e => {
       e.preventDefault();
+      const targetDirection = dragDropTarget(e);
       const canMoveTo = !['BODY', 'HTML'].includes(e.target.tagName);
+      const directions = ['left', 'right', 'above', 'below'];
+      let removeDirections = directions;
       e.dataTransfer.dropEffect = canMoveTo ? 'move' : 'none';
-      e.target.classList.add('dropper');
+
+      if (canMoveTo) {
+        e.target.classList.add('dropper', targetDirection);
+        removeDirections = directions.filter(v => v !== targetDirection ? v : undefined)
+        // console.log(targetDirection);
+      }
 
       document.querySelectorAll('.dropper').forEach(c => {
         if (e.target !== c) {
-          c.classList.remove('dropper');
+          c.classList.remove('dropper', ...directions);
+        }
+        else {
+          c.classList.remove(...removeDirections);
         }
       })
     }, true);
