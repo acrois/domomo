@@ -153,7 +153,7 @@
   <div>
     <h1>Editable Web Page Demo</h1>
     <p>Hi there. This is a message from your cats. We are here to tell you that this domain is for use in illustrative
-      examples in documents. You may use this
+      examples in documents. You may not use this
       domain in literature without prior coordination or asking for permission.</p>
     <p>If you want more, <a href="https://www.iana.org/domains/example">More information...</a></p>
     <pre>
@@ -168,7 +168,7 @@
        |  | (   |            | /
        )  |  \  `.___________|/
        `--'   `--'
-      </pre>
+    </pre>
   </div>
   <script type="module">
     const goodTags = ['SPAN', 'A', 'PRE', 'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
@@ -195,6 +195,19 @@
       sel.removeAllRanges();
       sel.addRange(range);
     }
+    const toggleDesignMode  = () => {
+      document.designMode = document.designMode == 'on' ? 'off' : 'on';
+      document.body.removeAttribute('data-cmd');
+      document.querySelectorAll('[contenteditable]').forEach(c => c.removeAttribute('contentEditable'));
+
+      if (document.designMode == 'off') {
+        document.querySelectorAll('[class=selected]').forEach(c => c.classList.remove('selected'));
+        document.body.classList.remove('design-mode');
+      }
+      else {
+        document.body.classList.add('design-mode');
+      }
+    };
     // Rename a tag (change tag type). Ex, <div> -> <a>
     const renameTag = (target, newNode) => {
       // copy attributes
@@ -380,17 +393,7 @@
           document.body.setAttribute('data-cmd', when + '')
         }
         else {
-          document.designMode = document.designMode == 'on' ? 'off' : 'on';
-          document.body.removeAttribute('data-cmd');
-          document.querySelectorAll('[contenteditable]').forEach(c => c.removeAttribute('contentEditable'));
-
-          if (document.designMode == 'off') {
-            document.querySelectorAll('[class=selected]').forEach(c => c.classList.remove('selected'));
-            document.body.classList.remove('design-mode');
-          }
-          else {
-            document.body.classList.add('design-mode');
-          }
+          toggleDesignMode();
         }
       }
     }, true);

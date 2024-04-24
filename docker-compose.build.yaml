@@ -24,3 +24,10 @@ services:
       - 9229:9229
     expose:
       - 9229
+  domomo-tester:
+    image: ${REGISTRY}domomo:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    command: [ "bun", "test:watch" ]
+    volumes:
+      - ./src:/app/src
+      - ./test:/app/test

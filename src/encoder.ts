@@ -1,5 +1,5 @@
 import { Elysia } from 'elysia';
-import { astToHTML, parseToAST } from './util';
+import { astToHTML, htmlToAST } from './util';
 import Stream from '@elysiajs/stream';
 
 const encoder = new TextEncoder();
@@ -8,15 +8,10 @@ const codecPlugin = new Elysia({
 })
   .onParse({
     as: 'global',
-  }, ({ request }, contentType) => {
+  }, async ({ request }, contentType) => {
     // console.log('test');
     if (contentType == 'text/html') {
-      return (async () => {
-        const ast = await parseToAST(await request.text())
-        ast.name = new URL(request.url).pathname
-        // console.log(ast);
-        return ast;
-      })();
+      return await htmlToAST(await request.text());
     }
     // return request;
   })

@@ -1,0 +1,19 @@
+// Bun Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`node to html 1`] = `"<!doctypehtml><title>Test Document</title><p>Test Document"`;
+
+exports[`html to node 1`] = `Promise {}`;
+
+exports[`Convert AST to DB rows 1`] = `
+{
+  "attachments": [],
+  "rows": [
+    {
+      "id": "5116aa8d-5a10-431a-9644-ce3ff9c480d7",
+      "name": undefined,
+      "type_id": 1,
+      "value": null,
+    },
+  ],
+}
+`;

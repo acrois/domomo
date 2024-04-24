@@ -1,7 +1,7 @@
-import { Elysia, NotFoundError, ParseError, error } from "elysia";
-import { Pool } from "pg";
+import { Elysia, NotFoundError, ParseError } from "elysia";
+import { ClientBase, Pool } from "pg";
 import { cron, Patterns } from '@elysiajs/cron'
-import { astPrepareForRehype, astToHTML, parseToAST, rowsToParents, rowsToTree } from "./util";
+import { astPrepareForRehype, diffTreeWithHTML, rowsToParents, rowsToTree } from "./util";
 import { SQL } from "sql-template-strings";
 import Stream from "@elysiajs/stream";
 import diff from "microdiff";
@@ -19,6 +19,7 @@ import { readdir } from "node:fs/promises";
 
 // curl http://localhost:3000/
 // curl -X PUT -H "Content-Type: text/html" -d @sample/test.html http://localhost:3000/spoke
+// curl -X PATCH -H "Content-Type: text/html" -d @static/localhost/example.html http://localhost/example
 
 // content[uri.pathname] = htmlToJson(await (await request.blob()).text());
 // if (cd !== undefined) {
@@ -80,7 +81,32 @@ const loadFileByRelativePath = async (handle: any, event: any, filename: string)
   }
 }
 
-const fetcher = (fetch) => {
+const fetchTree = async (client: ClientBase, domainId: string, documentPath: string) => {
+  const tree = await client.query(SQL`
+    SELECT
+      dt.id,
+      dt.node_type,
+      dt.name,
+      dt.value,
+      dt.position,
+      dt.parent
+    FROM document_tree dt
+    JOIN domain_documents dd
+      ON dd.document_id = dt.root
+    WHERE dd.id = ${domainId}
+      AND dd.document_name = ${documentPath}
+  `);
+  // console.log(tree);
+  const organized = rowsToTree(tree.rows);
+
+  if (organized === null || organized === undefined || organized.children.length === 0) {
+    throw new NotFoundError();
+  }
+
+  return organized.children[0];
+}
+
+const fetcher = (fetch: () => Promise<any>) => {
   return new Stream(async (stream) => {
     let initial = await fetch();
 
@@ -206,43 +232,17 @@ const app = (env: any) => {
 
       // console.log(params);
       const path = `/${params['*']}`
-
-      const fetch = async () => {
-        const tree = await pool.query(SQL`
-          SELECT
-            dt.id,
-            dt.node_type,
-            dt.name,
-            dt.value,
-            dt.position,
-            dt.parent
-          FROM document_tree dt
-          JOIN domain_documents dd
-            ON dd.document_id = dt.root
-          WHERE dd.id = ${domain.id}
-            AND dd.document_name = ${path}
-        `);
-        // console.log(tree);
-        const organized = rowsToTree(tree.rows);
-
-        if (organized === null || organized === undefined || organized.children.length === 0) {
-          throw new NotFoundError();
-        }
-
-        return organized.children[0];
-      }
-
       const accept = headers['accept'];
+      const boundFetcher = () => fetchTree(pool, domain.id, path);
 
       if (accept === 'text/event-stream') {
-        // db.release();
-        return fetcher(fetch);
+        return fetcher(boundFetcher);
       }
 
-      return fetch();
+      return boundFetcher();
     })
     .guard({
-      beforeHandle({ set, auth, path, domain, uri }) {
+      beforeHandle({ auth, uri }) {
         // allow localhost changes :)
         if (uri.hostname.match(/.*\.?localhost/) !== null) {
           return;
@@ -256,7 +256,6 @@ const app = (env: any) => {
         }
       },
     }, (app) => app
-      // .get('_', () => 'ok')
       .put('*', async ({ params, domain, body, pool }) => {
         const db = await pool.connect();
         try {
@@ -280,7 +279,7 @@ const app = (env: any) => {
               AND document_name = ${path}
           `);
 
-          // await db.query('BEGIN');
+          await db.query('BEGIN');
 
           if (document.rowCount !== 0) {
             await db.query(SQL`
@@ -290,32 +289,32 @@ const app = (env: any) => {
           }
 
           const insertNode = async (node: any, parentId: string, next_position: number = 0) => {
-            // console.log(node);
-            const type = node.node_type;
-            let name = node.name;
-
-            if (name === null || name === undefined) {
-              name = type === 'DOCUMENT_TYPE'
-                ? '!doctype'
-                : type === 'DOCUMENT'
-                  ? path
-                  : null
-            }
-
-            let value = node.value;
-
-            if (value === null || value === undefined) {
-              value = type === 'DOCUMENT_TYPE'
-                ? '!DOCTYPE html'
+            const type = (
+              node.type === 'root'
+                ? 'document'
+                : node.type === 'doctype'
+                  ? 'document_type'
+                  : node.type
+            ).toUpperCase()
+            const name = node.name ?? type === 'DOCUMENT_TYPE'
+              ? '!doctype'
+              : type === 'DOCUMENT'
+                ? path
                 : null
-            }
-            // console.log(node.name, type, name, value);
+            const value = node.value ?? type === 'DOCUMENT_TYPE'
+              ? '!DOCTYPE html'
+              : null
+            // console.log(type, name, value, node);
+            const id = node?.id || crypto.randomUUID()
+            // TODO: prepare
             const inserted = await db.query(SQL`
               INSERT INTO node (
-                  type_id,
-                  name,
-                  value
+                id,
+                type_id,
+                name,
+                value
               ) VALUES (
+                ${id},
                 (
                   SELECT id
                   FROM node_type
@@ -323,8 +322,13 @@ const app = (env: any) => {
                 ),
                 ${name},
                 ${value}
-              ) returning id
+              ) ON CONFLICT (id) DO UPDATE SET
+                name = EXCLUDED.name,
+                type_id = EXCLUDED.type_id,
+                value = EXCLUDED.value
+              returning id
             `);
+
             // console.log(inserted);
             const nodeId = inserted.rows[0]!.id;
             // console.log(nodeId, parentId, next_position);
@@ -346,6 +350,11 @@ const app = (env: any) => {
                 (parent_id, child_id, position)
               VALUES
                 (${parentId}, ${nodeId}, ${next_position})
+              ON CONFLICT (id) DO UPDATE
+              SET
+                parent_id = EXCLUDED.parent_id,
+                child_id = EXCLUDED.child_id,
+                position = EXCLUDED.position
             `)
 
             // console.log();
@@ -406,10 +415,55 @@ const app = (env: any) => {
           // const c = sql``
 
           // return organized;
+          await db.query('COMMIT');
+        }
+        catch (e) {
+          console.error(e);
+          await db.query('ROLLBACK');
+          throw e;
+        }
+        finally {
+          db.release();
+        }
+      })
+      .patch('*', async ({ params, domain, body, pool }) => {
+        const db = await pool.connect();
+
+        try {
+          if (!domain) {
+            throw new NotFoundError();
+          }
+
+          if (!body) {
+            throw new ParseError();
+          }
+
+          // console.log(JSON.stringify(body));
+          // console.log(params);
+          const path = `/${params['*']}`
+          let initialTree = null;
+
+          try {
+            initialTree = await fetchTree(db, domain.id, path);
+          }
+          catch (ex) {
+            if (ex instanceof NotFoundError || ex?.code === 'NOT_FOUND') {
+              // allow it to be empty.
+            }
+          }
+
+          if (!initialTree) {
+
+          }
+          console.log(initialTree, body);
+          // const d = await diffTreeWithHTML(initialTree, body);
+          // console.log(d);
+
           // await db.query('COMMIT');
         }
         catch (e) {
           // await db.query('ROLLBACK');
+          console.error(e);
           throw e;
         }
         finally {
