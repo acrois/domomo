@@ -6,6 +6,7 @@ on:
       - master
       - main
       - trunk
+      - put-diff
 concurrency: deliver-production
 jobs:
   deploy:
