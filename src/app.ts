@@ -10,6 +10,7 @@ import authPlugin, { AuthError } from "./auth";
 import { watch } from "fs";
 import { readdir } from "node:fs/promises";
 import { rowsToTree } from "./dbeautiful";
+import type { BunFile } from "bun";
 
 // client-side script to connect websocket for bidirectional async updates
 // update nodes
@@ -28,6 +29,27 @@ import { rowsToTree } from "./dbeautiful";
 //   const e = diff(cd, content[uri.pathname]);
 //   console.log(e);
 // }
+
+const serveStaticDirectory = (directory: string) => {
+  return async ({ params, set }) => {
+    const path = `/${directory}/${params['*']}`
+    const f = Bun.file(`./static/_${path}`);
+    return await serveStaticFile(f)({ params, set });
+  }
+}
+
+const serveStaticFile = (f: BunFile) => {
+  return async ({ params, set }) => {
+    const exists = await f.exists();
+
+    if (!exists) {
+      throw new NotFoundError();
+    }
+
+    set.headers['Content-Type'] = f.type;
+    return f.arrayBuffer();
+  }
+}
 
 function convertFileUrlToHttp(url: URL): string {
   // Extract the pathname and split into segments
@@ -163,7 +185,7 @@ const app = (env: any) => {
       // console.error(error, code);
       const estr = typeof error === 'string' ? error : 'toString' in error ? error?.toString() : '';
 
-      if (code === 'NOT_FOUND' || estr === 'NOT_FOUND') {
+      if (code === 'NOT_FOUND' || estr === 'NOT_FOUND' || estr.includes('ENOENT')) {
         set.status = 404;
         return '';
       }
@@ -226,21 +248,9 @@ const app = (env: any) => {
         uri,
       }
     })
-    .get('/m/*', async ({ params, set }) => {
-      const path = `/${params['*']}`
-      const f = Bun.file('./static/_/m' + path);
-      // const exists = await f.exists();
-
-      // if (!exists) {
-      //   throw new NotFoundError();
-      // }
-
-      set.headers['Content-Type'] = f.type;
-      return f.arrayBuffer();
-    })
-    .get('/s/*', () => {
-      console.log('test');
-    })
+    .get('/m/*', serveStaticDirectory('m'))
+    .get('/s/*', serveStaticDirectory('s'))
+    .get('favicon.ico', serveStaticFile(Bun.file('./static/_/favicon.ico')))
     .get("*", async ({ params, domain, pool, headers }) => {
       if (!domain) {
         throw new NotFoundError();
