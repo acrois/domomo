@@ -1,7 +1,13 @@
 import { Elysia } from 'elysia';
-import { astToHTML, htmlToAST } from './util';
 import Stream from '@elysiajs/stream';
+import { astToHTML, htmlToAST } from './util';
 
+type ValidGZIPType = string | ArrayBuffer | Uint8Array
+const checkResponseType = (response: any): response is ValidGZIPType  =>
+  typeof response === 'string'
+    || response instanceof ArrayBuffer
+    || response instanceof Uint8Array
+;
 const encoder = new TextEncoder();
 const codecPlugin = new Elysia({
   // name: 'html-codec',
@@ -18,45 +24,63 @@ const codecPlugin = new Elysia({
   // mapResponse
   .onAfterHandle({
     as: 'global',
-  }, ({ query, response, set, headers }) => {
-    let type = headers['Content-Type'] ?? 'text/plain';
-    let text = typeof response === 'string' ? response : '';
+  }, async ({ query, response, set }) => {
+    // console.log(headers);
+    let type = set.headers['Content-Type']
+      ?? 'text/plain; charset=utf-8';
+    let dat = checkResponseType(response)
+      ? response
+      : '';
+
     // console.log(type);
-    if (response !== null && typeof response === 'object') {
+    if (response !== null
+      && typeof response === 'object'
+      && !(response instanceof Response)
+      && dat === ''
+    ) {
       // id and children in object is a good indicator of tree
       //   TODO find a better one
       // also, we did not request the raw (server default) response
       //   raw is useful for debugging and as an escape hatch
       if ('id' in response && 'children' in response && !('raw' in query)) {
-        type = 'text/html'
-        text = astToHTML(response);
+        type = 'text/html; charset=utf-8'
+        dat = astToHTML(response);
       }
       else if (response instanceof Stream) {
         return response;
       }
-      else if (response instanceof Response) {
-        text = response.toString()
+      else if (response instanceof File) {
+        dat = await response.arrayBuffer();
       }
       else {
-        type = 'application/json'
-        text = JSON.stringify(response)
+        type = 'application/json; charset=utf-8'
+        dat = JSON.stringify(response)
       }
     }
 
     // console.log(response);
+    // const isTextContent = type.startsWith('text/') || type.includes('charset=');
 
-    set.headers['Content-Encoding'] = 'gzip'
-    set.headers['Content-Type'] = `${type}; charset=utf-8`
-    // console.log(set.
+    if (dat !== null
+      && dat !== undefined
+      && checkResponseType(dat)
+      // && (
+      //   // if it is a string, length > 0
+      //   (typeof dat === 'string' && dat.length > 0)
+      //   // if it is not a string
+      //   || (typeof dat !== 'string')
+      // )
+    ) {
+      set.headers['Content-Encoding'] = 'gzip'
+      set.headers['Content-Type'] = type;
+      return Bun.gzipSync(
+        typeof dat === 'string'
+          ? encoder.encode(dat)
+          : dat
+      );
+    }
 
-    return new Response(
-      Bun.gzipSync(
-        encoder.encode(text)
-      ),
-      // {
-      //   status: set.status
-      // }
-    );
+    return response;
   });
 
 export default codecPlugin;

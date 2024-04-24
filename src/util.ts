@@ -122,7 +122,9 @@ export const htmlToAST = (html: string, fragment?: boolean) => {
 }
 
 export const astToHTML = (ast: any, fragment?: boolean) => {
-  return processor(fragment).stringify(astPrepareForRehype(ast));
+  const t = astPrepareForRehype(ast);
+  // console.log(JSON.stringify(t));
+  return processor(fragment).stringify(t);
 }
 
 export const diffTreeWithHTML = async (oldTree: any, newTree: string) => {

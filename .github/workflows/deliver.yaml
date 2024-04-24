@@ -21,14 +21,14 @@ jobs:
       #     repo-token: ${{ secrets.GITHUB_TOKEN }}
       #     wait-interval: 10
       - name: Deliver Application to Environment
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         env:
-          PROJECT_NAME: ${{ github.repository }}_${{ github.head_ref || github.ref_name }}
+          PROJECT_NAME: ${{ github.repository_id }}_${{ github.head_ref || github.ref_name }}
         with:
           github-token: ${{ secrets.SVC_CLI_BOT_GITHUB_TOKEN }}
           script: |
             return github.rest.actions.createWorkflowDispatch({
-              owner: 'kinetechsolutions',
+              owner: 'KinetechSolutions',
               repo: 'magictent',
               workflow_id: 'deploy.yaml',
               ref: 'trunk',

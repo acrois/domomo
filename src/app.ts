@@ -1,7 +1,7 @@
 import { Elysia, NotFoundError, ParseError } from "elysia";
 import { ClientBase, Pool } from "pg";
 import { cron, Patterns } from '@elysiajs/cron'
-import { astPrepareForRehype, diffTreeWithHTML, rowsToParents, rowsToTree } from "./util";
+import { astPrepareForRehype } from "./util";
 import { SQL } from "sql-template-strings";
 import Stream from "@elysiajs/stream";
 import diff from "microdiff";
@@ -9,6 +9,7 @@ import codecPlugin from "./encoder";
 import authPlugin, { AuthError } from "./auth";
 import { watch } from "fs";
 import { readdir } from "node:fs/promises";
+import { rowsToTree } from "./dbeautiful";
 
 // client-side script to connect websocket for bidirectional async updates
 // update nodes
@@ -99,11 +100,11 @@ const fetchTree = async (client: ClientBase, domainId: string, documentPath: str
   // console.log(tree);
   const organized = rowsToTree(tree.rows);
 
-  if (organized === null || organized === undefined || organized.children.length === 0) {
+  if (organized === null || organized === undefined || organized.length === 0) {
     throw new NotFoundError();
   }
 
-  return organized.children[0];
+  return organized[0]!.children[0];
 }
 
 const fetcher = (fetch: () => Promise<any>) => {
@@ -224,6 +225,21 @@ const app = (env: any) => {
         domain: null,
         uri,
       }
+    })
+    .get('/m/*', async ({ params, set }) => {
+      const path = `/${params['*']}`
+      const f = Bun.file('./static/_/m' + path);
+      // const exists = await f.exists();
+
+      // if (!exists) {
+      //   throw new NotFoundError();
+      // }
+
+      set.headers['Content-Type'] = f.type;
+      return f.arrayBuffer();
+    })
+    .get('/s/*', () => {
+      console.log('test');
     })
     .get("*", async ({ params, domain, pool, headers }) => {
       if (!domain) {
@@ -524,7 +540,7 @@ const app = (env: any) => {
             WHERE root = ${document.document_id}
           `);
           // console.log(tree);
-          const parents = rowsToParents(tree.rows);
+          const parents = rowsToTree(tree.rows);
           // console.log(parents);
 
           for (const parent of parents) {

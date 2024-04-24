@@ -1,0 +1,44 @@
+.design-mode * {
+  position: relative;
+  outline: 1px dotted rgba(0, 213, 255, 0.5);
+  /* Example style */
+  resize: both;
+}
+
+.selected:hover::after {
+  content: '≡';
+  position: absolute;
+  top: 0;
+  right: 0.25rem;
+  font-size: 0.8rem;
+  cursor: grab;
+  padding: 0.025rem;
+}
+
+.selected {
+  position: relative;
+  /* box-sizing: border-box; */
+  outline: 2px solid rgba(0, 68, 150, 0.571);
+}
+
+.dropper.left {
+  /* border-left: 5px solid rgba(0, 0, 0, 1); */
+  box-shadow: inset 5px 0px 0px 0px rgba(150, 0, 47, 0.25);
+}
+
+.dropper.right {
+  box-shadow: inset -5px 0px 0px 0px rgba(150, 0, 47, 0.25);
+}
+
+.dropper.above {
+  box-shadow: inset 0px 5px 0px 0px rgba(150, 0, 47, 0.25);
+}
+
+.dropper.below {
+  box-shadow: inset 0px -5px 0px 0px rgba(150, 0, 47, 0.25);
+}
+
+.dropper {
+  /* box-sizing: border-box; */
+  outline: 2px solid rgba(150, 0, 47, 0.75);
+}

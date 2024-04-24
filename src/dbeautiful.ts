@@ -14,19 +14,31 @@ export const rowsToTree = (treeRows: any[]) => {
   ];
 
   for (let i = 0; i < treeRows.length; i++) {
-    const p = {
+    console.log(i, treeRows[i])
+    const parentNode = {
       ...treeRows[i],
       children: [],
     };
-    parents.push(p);
+
+    parentNode.type = parentNode.node_type.toLowerCase();
+    parentNode.type = (
+      parentNode.type === 'document'
+      ? 'root'
+      : parentNode.type === 'document_type'
+        ? 'doctype'
+        : parentNode.type
+    )
+    parents.push(parentNode);
+
     for (const parent of parents) {
       if (parent.id === treeRows[i].parent) {
-        parent.children.splice(treeRows[i].position, 0, p);
+        // TODO determine attribute
+        parent.children.splice(treeRows[i].position, 0);
       }
     }
   }
 
-  return parents[0]!;
+  return parents;
 }
 
 export const treeToRows = (node: Node, documentPath?: string) => {
