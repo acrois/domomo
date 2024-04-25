@@ -1,18 +1,103 @@
 // Bun Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`node to html 1`] = `"<!doctypehtml><title>Test Document</title><p>Test Document"`;
-
-exports[`html to node 1`] = `Promise {}`;
-
 exports[`Convert AST to DB rows 1`] = `
 {
-  "attachments": [],
+  "attachments": [
+    {
+      "child_id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
+      "parent_id": "79455613-836f-44cb-9036-de551c6c0d23",
+      "position": 0,
+    },
+    {
+      "child_id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+      "parent_id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+      "position": 0,
+    },
+    {
+      "child_id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+      "parent_id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+      "position": 0,
+    },
+    {
+      "child_id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+      "parent_id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "position": 0,
+    },
+    {
+      "child_id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
+      "parent_id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
+      "position": 0,
+    },
+    {
+      "child_id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
+      "parent_id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+      "position": 0,
+    },
+    {
+      "child_id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+      "parent_id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "position": 1,
+    },
+    {
+      "child_id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "parent_id": "79455613-836f-44cb-9036-de551c6c0d23",
+      "position": 1,
+    },
+  ],
   "rows": [
     {
-      "id": "5116aa8d-5a10-431a-9644-ce3ff9c480d7",
+      "id": "79455613-836f-44cb-9036-de551c6c0d23",
+      "name": "/",
+      "type": "DOCUMENT",
+      "value": undefined,
+    },
+    {
+      "id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
+      "name": "!doctype",
+      "type": "DOCUMENT_TYPE",
+      "value": "!DOCTYPE html",
+    },
+    {
+      "id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "name": "html",
+      "type": "ELEMENT",
+      "value": undefined,
+    },
+    {
+      "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+      "name": "head",
+      "type": "ELEMENT",
+      "value": undefined,
+    },
+    {
+      "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+      "name": "title",
+      "type": "ELEMENT",
+      "value": undefined,
+    },
+    {
+      "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
       "name": undefined,
-      "type_id": 1,
-      "value": null,
+      "type": undefined,
+      "value": "text",
+    },
+    {
+      "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+      "name": "body",
+      "type": "ELEMENT",
+      "value": undefined,
+    },
+    {
+      "id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
+      "name": "p",
+      "type": "ELEMENT",
+      "value": undefined,
+    },
+    {
+      "id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
+      "name": undefined,
+      "type": undefined,
+      "value": "test",
     },
   ],
 }

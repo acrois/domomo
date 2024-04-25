@@ -1,4 +1,4 @@
-import { type Node } from "unist";
+import type { Root, Doctype, Element, Literals, Text, Comment, Parent, Node } from 'hast'
 
 export const rowsToTree = (treeRows: any[]) => {
   const parents = [
@@ -23,17 +23,18 @@ export const rowsToTree = (treeRows: any[]) => {
     parentNode.type = parentNode.node_type.toLowerCase();
     parentNode.type = (
       parentNode.type === 'document'
-      ? 'root'
-      : parentNode.type === 'document_type'
-        ? 'doctype'
-        : parentNode.type
+        ? 'root'
+        : parentNode.type === 'document_type'
+          ? 'doctype'
+          : parentNode.type
     )
     parents.push(parentNode);
 
     for (const parent of parents) {
       if (parent.id === treeRows[i].parent) {
+        parent.children.push(parentNode);
         // TODO determine attribute
-        parent.children.splice(treeRows[i].position, 0);
+        // parent.children.splice(treeRows[i].position, 0);
       }
     }
   }
@@ -41,34 +42,54 @@ export const rowsToTree = (treeRows: any[]) => {
   return parents;
 }
 
-export const treeToRows = (node: Node, documentPath?: string) => {
+export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Function) => {
+  // console.log(idGenerator);
+  const id = node?.id
+    || idGenerator !== undefined
+    ? idGenerator()
+    : crypto.randomUUID()
+  let type: string | undefined
+  let name: string | undefined
+  let value: string | undefined
+
+  switch (node.type) {
+    case 'root':
+      const r = (node as Root);
+      type = 'DOCUMENT';
+      name = documentPath;
+      break;
+    case 'doctype':
+      const dt = (node as Doctype);
+      type = 'DOCUMENT_TYPE';
+      name = '!doctype';
+      value = '!DOCTYPE html';
+      break;
+    case 'element':
+      const e = (node as Element);
+      type = 'ELEMENT';
+      name = e.tagName;
+      break;
+    case 'comment':
+    case 'text':
+      const l = (node as Literals);
+      value = l.value;
+      break;
+    default:
+      type = node.type.toUpperCase();
+      break;
+  }
+
   // TODO resolve type -> id
   /*
   SELECT id
   FROM node_type
   WHERE tag = ${type}
   */
-  const type = (
-    node.type === 'root'
-      ? 'document'
-      : node.type === 'doctype'
-        ? 'document_type'
-        : node.type
-  ).toUpperCase()
-  const name = node.name ?? type === 'DOCUMENT_TYPE'
-    ? '!doctype'
-    : type === 'DOCUMENT'
-      ? documentPath
-      : null
-  const value = node.value ?? type === 'DOCUMENT_TYPE'
-    ? '!DOCTYPE html'
-    : null
-  const id = node?.id || crypto.randomUUID()
 
-  const rows = [
+  const rows: any[] = [
     {
       id,
-      type_id: 1, // TODO resolve type -> id
+      type: type, // TODO resolve type -> id
       name,
       value,
     },
@@ -76,12 +97,37 @@ export const treeToRows = (node: Node, documentPath?: string) => {
 
   const attachments: any[] = [];
 
-  if (node.children) {
-    // rows.push(node.children.flatMap(c => treeToRows(tree, c)));
+  if ('children' in node && node.children) {
+    (node as Parent).children
+      .flatMap(c => treeToRows(c, documentPath, idGenerator))
+      .map(ttr => {
+        rows.push(...ttr.rows);
+        attachments.push(
+          ...ttr.attachments,
+        );
+
+        attachments.push(
+          {
+            parent_id: id,
+            child_id: ttr.rows[0].id,
+            position: attachments.filter(pv => pv.parent_id == id).length
+          },
+        );
+      });
   }
 
-  if (node.attributes) {
-
+  if (node.type === 'element') {
+    const props = (node as Element).properties;
+    for (const k in props) {
+      const t = props[k];
+      console.log(t);
+    }
+    // (node as Parent).properties
+    //   .flatMap(c => treeToRows(c, documentPath))
+    //   .map(tree => {
+    //     rows.push(tree.rows);
+    //     attachments.push(tree.attachments);
+    //   });
   }
 
   return {

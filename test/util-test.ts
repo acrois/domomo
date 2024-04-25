@@ -129,7 +129,7 @@ test("node to html", () => {
   ).toMatchSnapshot();
 });
 
-test("html to node", () => {
+test("html to node", async () => {
   // expect(htmlToDocument('/', `<!DOCTYPE html>
   // <html>
 
@@ -151,7 +151,7 @@ test("html to node", () => {
   //     '<!DOCTYPE html><html data-guid="5bbc6a6c-fde2-4947-a449-0ead50b2356d"><head data-guid="7d907b80-061f-4984-bafc-465ed363a5c7"><title data-guid="c5014d95-9c0d-4c33-8770-beea58ae74d1">Test Document</title></head><body data-guid="40c0753c-2f6f-47a8-80b2-5f10a5dfc1b3"><p data-guid="37680211-1548-4ab5-9551-36fa0a4e346c">Test Document</p></body></html>'
   //   )
   // ).toMatchSnapshot();
-  const t = parseToAST("<!doctype html><html><head><title>Test Document</title></head><body><p>Test Document</p></body></html>");
+  const t = await parseToAST("<!doctype html><html><head><title>Test Document</title></head><body><p>Test Document</p></body></html>");
   // console.log(t);
   expect(t).toMatchSnapshot();
 });

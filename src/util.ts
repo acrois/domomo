@@ -1,9 +1,6 @@
-import { DomHandler, Parser } from "htmlparser2";
-import { unified } from 'unified';
-import rehypeParse from 'rehype-parse';
-import rehypeStringify from 'rehype-stringify';
 import rehypePresetMinify from 'rehype-preset-minify';
 import diff from "unist-diff";
+import { rehype } from 'rehype';
 
 export enum NodeType {
   ROOT,
@@ -100,13 +97,14 @@ export const astPrepareForRehype = (ast: any) => {
   );
 }
 
-const processor = (fragment?: boolean) => unified()
-  .use(rehypePresetMinify)
-  .use(rehypeStringify)
-  .use(rehypeParse, {
-    fragment,
+const processor = (fragment?: boolean) => rehype()
+  .data('settings', {
+    fragment: fragment,
     verbose: false,
+    emitParseErrors: true,
+    abruptDoctypePublicIdentifier: false,
   })
+  .use(rehypePresetMinify)
   ;
 
 export const cleanAST = (ast: any, fragment?: boolean) => {
@@ -118,7 +116,9 @@ export const cleanHTML = (html: string, fragment?: boolean) => {
 }
 
 export const htmlToAST = (html: string, fragment?: boolean) => {
-  return cleanAST(processor().parse(html), fragment);
+  const proc = processor(fragment)
+  const parsed = proc.parse(html)
+  return proc.run(parsed);
 }
 
 export const astToHTML = (ast: any, fragment?: boolean) => {

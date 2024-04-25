@@ -36,6 +36,7 @@
     "jwks-rsa": "^3.1.0",
     "microdiff": "^1.4.0",
     "pg": "^8.11.5",
+    "rehype": "^13.0.1",
     "rehype-minify-json-script": "^4.0.0",
     "rehype-minify-whitespace": "^6.0.0",
     "rehype-parse": "^9.0.0",
