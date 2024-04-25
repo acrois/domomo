@@ -1,48 +1,79 @@
 import type { Root, Doctype, Element, Literals, Text, Comment, Parent, Node } from 'hast'
 
-export const rowsToTree = ({
+export const rowsToTrees = ({
   rows,
   attachments
 }) => {
-  const nodes: Node[] = [];
-
-  for (const r of rows) {
+  // const attrs = {};
+  const nodes: Node[] = rows.map(r => {
     let type = r.type;
 
-    if (type === 'DOCUMENT_TYPE') {
-      type = 'doctype';
+    const rowNode = {
+      id: r.id,
     }
-    else if (type === 'DOCUMENT') {
+
+    if (type === 'DOCUMENT') {
       type = 'root';
+    }
+    else if (type === 'DOCUMENT_TYPE') {
+      type = 'doctype';
     }
     else {
       type = type.toLowerCase();
     }
 
-    const rowNode = {
-      id: r.id,
-      type: type,
-      tagName: r.name ?? null,
-      value: r.value ?? null,
-      children: [],
-      properties: {},
+    rowNode.type = type;
+
+    switch (rowNode.type) {
+      case 'root':
+        rowNode.children = [];
+        break;
+      case 'element':
+        rowNode.tagName = r.name;
+        rowNode.children = [];
+        rowNode.properties = {};
+        break;
+      // will not actually get added as a child
+      case 'attribute':
+        rowNode.tagName = r.name;
+        rowNode.value = r.value;
+        break;
+      case 'comment':
+      case 'text':
+        rowNode.value = r.value;
+        break;
+      default:
+        // console.error(r);
+        break;
     }
 
-    nodes.push(rowNode);
-  }
+    return rowNode;
+  });
 
-  for (const a of attachments) {
+  // console.log(nodes);
+
+  attachments?.map(a => {
     nodes
       .filter(n => n.id === a.parent_id)
-      .map(n =>
-        n?.children?.splice(
-          a.position || 0,
-          0,
-          ...nodes.filter(n2 => n2?.id === a.child_id)
-        )
-      );
-  }
+      .map(n => {
+        const filt = nodes.filter(n2 => n2?.id === a.child_id);
+        const srcAttr = filt.at(0)!; // we expect to find 1 result
 
+        // map attributes to properties instead of children
+        if (n.type === 'element' && srcAttr.type === 'attribute') {
+          n.properties[srcAttr.tagName] = srcAttr.value;
+        }
+        else {
+          n?.children?.splice(
+            a.position || 0,
+            0,
+            srcAttr
+          )
+        }
+      })
+  })
+
+  // console.log(JSON.stringify(nodes[0], undefined, 2));
   return nodes;
 }
 
@@ -90,22 +121,23 @@ export const rowsToTree = ({
 
 export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Function) => {
   // console.log(idGenerator);
+  const idg = idGenerator !== undefined
+    ? idGenerator
+    : crypto.randomUUID;
   const id = node?.id
-    || idGenerator !== undefined
-    ? idGenerator()
-    : crypto.randomUUID()
+    || idg()
   let type: string | undefined
   let name: string | undefined
   let value: string | undefined
 
   switch (node.type) {
     case 'root':
-      const r = (node as Root);
+      // const r = (node as Root);
       type = 'DOCUMENT';
       name = documentPath;
       break;
     case 'doctype':
-      const dt = (node as Doctype);
+      // const dt = (node as Doctype);
       type = 'DOCUMENT_TYPE';
       name = '!doctype';
       value = '!DOCTYPE html';
@@ -137,8 +169,8 @@ export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Func
     {
       id,
       type: type, // TODO resolve type -> id
-      name,
-      value,
+      name: name || null,
+      value: value || null,
     },
   ];
 
@@ -157,7 +189,7 @@ export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Func
           {
             parent_id: id,
             child_id: ttr.rows[0].id,
-            position: attachments.filter(pv => pv.parent_id == id).length
+            position: attachments.filter(pv => pv.parent_id == id).length,
           },
         );
       });
@@ -165,8 +197,21 @@ export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Func
 
   if (node.type === 'element') {
     const props = (node as Element).properties;
+
     for (const k in props) {
-      const t = props[k];
+      const attr = {
+        id: idg(),
+        type: 'ATTRIBUTE',
+        name: k,
+        value: props[k],
+      };
+      rows.push(attr);
+      attachments.push({
+        parent_id: id,
+        child_id: attr.id,
+        position: attachments.filter(pv => pv.parent_id == id).length,
+      });
+
       // console.log(t);
     }
     // (node as Parent).properties

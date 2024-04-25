@@ -1,5 +1,5 @@
-import { expect, test, mock } from "bun:test";
-import { treeToRows, rowsToTree } from "../src/dbeautiful";
+import { expect, test } from "bun:test";
+import { treeToRows, rowsToTrees } from "../src/dbeautiful";
 import { astToHTML, htmlToAST } from "../src/util";
 
 const uuidMock = function* () {
@@ -113,24 +113,45 @@ const uuidNext = () => {
   }
 }
 
+const testy = `<!doctype html>
+<html>
+  <head>
+    <title>text</title>
+  </head>
+  <body>
+    <p class="cancel-culture">test</p>
+  </body>
+</html>`;
+
 test('Convert AST to DB rows', async () => {
-  const test = '<!doctypehtml><html><head><title>text</title></head><body><p>test</p></body></html>';
-  const ast = await htmlToAST(test);
+  const ast = await htmlToAST(testy);
+  expect(ast).toMatchSnapshot();
   // console.log(JSON.stringify(ast));
   const rows = treeToRows(ast, '/', uuidNext());
   // console.log(JSON.stringify(rows));
   expect(rows).toMatchSnapshot();
 });
 
+test('Convert HTML to AST and back', async () => {
+  const ast = await htmlToAST(testy);
+  expect(ast).toMatchSnapshot();
+  // console.log(ast);
+  const html = await astToHTML(ast);
+  // console.log(html);
+  expect(html).toMatchSnapshot();
+});
+
 test('Convert DB rows to AST', async () => {
-  const test = '<!doctypehtml><html><head><title>text</title></head><body><p>test</p></body></html>';
-  const ast = await htmlToAST(test);
+  const ast = await htmlToAST(testy);
+  expect(ast).toMatchSnapshot();
   // console.log(JSON.stringify(ast));
   const rows = treeToRows(ast, '/', uuidNext());
   // console.log(JSON.stringify(rows));
   expect(rows).toMatchSnapshot();
-  const tree = rowsToTree(rows);
+  const tree = rowsToTrees(rows);
   expect(tree).toMatchSnapshot();
+  // console.log(JSON.stringify(tree[0]));
   const html = astToHTML(tree[0]);
+  // console.log(JSON.stringify(tree[0]));
   expect(html).toMatchSnapshot();
 });

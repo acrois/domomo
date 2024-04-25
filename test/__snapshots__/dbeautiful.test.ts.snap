@@ -2,108 +2,174 @@
 
 exports[`Convert AST to DB rows 1`] = `
 {
-  "attachments": [
+  "children": [
     {
-      "child_id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
-      "parent_id": "79455613-836f-44cb-9036-de551c6c0d23",
-      "position": 0,
+      "position": {
+        "end": {
+          "column": 16,
+          "line": 1,
+          "offset": 15,
+        },
+        "start": {
+          "column": 1,
+          "line": 1,
+          "offset": 0,
+        },
+      },
+      "type": "doctype",
     },
     {
-      "child_id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
-      "parent_id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
-      "position": 0,
-    },
-    {
-      "child_id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
-      "parent_id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
-      "position": 0,
-    },
-    {
-      "child_id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
-      "parent_id": "06e18375-1962-47be-b8d1-b272b0013bea",
-      "position": 0,
-    },
-    {
-      "child_id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
-      "parent_id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
-      "position": 0,
-    },
-    {
-      "child_id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
-      "parent_id": "0d8afb3f-416a-48bc-8631-61872af9e880",
-      "position": 0,
-    },
-    {
-      "child_id": "0d8afb3f-416a-48bc-8631-61872af9e880",
-      "parent_id": "06e18375-1962-47be-b8d1-b272b0013bea",
-      "position": 1,
-    },
-    {
-      "child_id": "06e18375-1962-47be-b8d1-b272b0013bea",
-      "parent_id": "79455613-836f-44cb-9036-de551c6c0d23",
-      "position": 1,
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "position": {
+                    "end": {
+                      "column": 16,
+                      "line": 4,
+                      "offset": 47,
+                    },
+                    "start": {
+                      "column": 12,
+                      "line": 4,
+                      "offset": 43,
+                    },
+                  },
+                  "type": "text",
+                  "value": "text",
+                },
+              ],
+              "position": {
+                "end": {
+                  "column": 24,
+                  "line": 4,
+                  "offset": 55,
+                },
+                "start": {
+                  "column": 5,
+                  "line": 4,
+                  "offset": 36,
+                },
+              },
+              "properties": {},
+              "tagName": "title",
+              "type": "element",
+            },
+          ],
+          "position": {
+            "end": {
+              "column": 10,
+              "line": 5,
+              "offset": 65,
+            },
+            "start": {
+              "column": 3,
+              "line": 3,
+              "offset": 25,
+            },
+          },
+          "properties": {},
+          "tagName": "head",
+          "type": "element",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "position": {
+                    "end": {
+                      "column": 35,
+                      "line": 7,
+                      "offset": 109,
+                    },
+                    "start": {
+                      "column": 31,
+                      "line": 7,
+                      "offset": 105,
+                    },
+                  },
+                  "type": "text",
+                  "value": "test",
+                },
+              ],
+              "position": {
+                "end": {
+                  "column": 39,
+                  "line": 7,
+                  "offset": 113,
+                },
+                "start": {
+                  "column": 5,
+                  "line": 7,
+                  "offset": 79,
+                },
+              },
+              "properties": {
+                "className": [
+                  "cancel-culture",
+                ],
+              },
+              "tagName": "p",
+              "type": "element",
+            },
+          ],
+          "position": {
+            "end": {
+              "column": 10,
+              "line": 8,
+              "offset": 123,
+            },
+            "start": {
+              "column": 3,
+              "line": 6,
+              "offset": 68,
+            },
+          },
+          "properties": {},
+          "tagName": "body",
+          "type": "element",
+        },
+      ],
+      "position": {
+        "end": {
+          "column": 8,
+          "line": 9,
+          "offset": 131,
+        },
+        "start": {
+          "column": 1,
+          "line": 2,
+          "offset": 16,
+        },
+      },
+      "properties": {},
+      "tagName": "html",
+      "type": "element",
     },
   ],
-  "rows": [
-    {
-      "id": "79455613-836f-44cb-9036-de551c6c0d23",
-      "name": "/",
-      "type": "DOCUMENT",
-      "value": undefined,
+  "data": {
+    "quirksMode": false,
+  },
+  "position": {
+    "end": {
+      "column": 8,
+      "line": 9,
+      "offset": 131,
     },
-    {
-      "id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
-      "name": "!doctype",
-      "type": "DOCUMENT_TYPE",
-      "value": "!DOCTYPE html",
+    "start": {
+      "column": 1,
+      "line": 1,
+      "offset": 0,
     },
-    {
-      "id": "06e18375-1962-47be-b8d1-b272b0013bea",
-      "name": "html",
-      "type": "ELEMENT",
-      "value": undefined,
-    },
-    {
-      "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
-      "name": "head",
-      "type": "ELEMENT",
-      "value": undefined,
-    },
-    {
-      "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
-      "name": "title",
-      "type": "ELEMENT",
-      "value": undefined,
-    },
-    {
-      "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
-      "name": undefined,
-      "type": "TEXT",
-      "value": "text",
-    },
-    {
-      "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
-      "name": "body",
-      "type": "ELEMENT",
-      "value": undefined,
-    },
-    {
-      "id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
-      "name": "p",
-      "type": "ELEMENT",
-      "value": undefined,
-    },
-    {
-      "id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
-      "name": undefined,
-      "type": "TEXT",
-      "value": "test",
-    },
-  ],
+  },
+  "type": "root",
 }
 `;
 
-exports[`Convert DB rows to AST 1`] = `
+exports[`Convert AST to DB rows 2`] = `
 {
   "attachments": [
     {
@@ -132,6 +198,11 @@ exports[`Convert DB rows to AST 1`] = `
       "position": 0,
     },
     {
+      "child_id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+      "parent_id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
+      "position": 1,
+    },
+    {
       "child_id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
       "parent_id": "0d8afb3f-416a-48bc-8631-61872af9e880",
       "position": 0,
@@ -152,7 +223,7 @@ exports[`Convert DB rows to AST 1`] = `
       "id": "79455613-836f-44cb-9036-de551c6c0d23",
       "name": "/",
       "type": "DOCUMENT",
-      "value": undefined,
+      "value": null,
     },
     {
       "id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
@@ -164,23 +235,23 @@ exports[`Convert DB rows to AST 1`] = `
       "id": "06e18375-1962-47be-b8d1-b272b0013bea",
       "name": "html",
       "type": "ELEMENT",
-      "value": undefined,
+      "value": null,
     },
     {
       "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
       "name": "head",
       "type": "ELEMENT",
-      "value": undefined,
+      "value": null,
     },
     {
       "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
       "name": "title",
       "type": "ELEMENT",
-      "value": undefined,
+      "value": null,
     },
     {
       "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
-      "name": undefined,
+      "name": null,
       "type": "TEXT",
       "value": "text",
     },
@@ -188,35 +259,495 @@ exports[`Convert DB rows to AST 1`] = `
       "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
       "name": "body",
       "type": "ELEMENT",
-      "value": undefined,
+      "value": null,
     },
     {
       "id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
       "name": "p",
       "type": "ELEMENT",
-      "value": undefined,
+      "value": null,
     },
     {
       "id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
-      "name": undefined,
+      "name": null,
       "type": "TEXT",
       "value": "test",
+    },
+    {
+      "id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+      "name": "className",
+      "type": "ATTRIBUTE",
+      "value": [
+        "cancel-culture",
+      ],
     },
   ],
 }
 `;
 
+exports[`Convert HTML to AST and back 1`] = `
+{
+  "children": [
+    {
+      "position": {
+        "end": {
+          "column": 16,
+          "line": 1,
+          "offset": 15,
+        },
+        "start": {
+          "column": 1,
+          "line": 1,
+          "offset": 0,
+        },
+      },
+      "type": "doctype",
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "position": {
+                    "end": {
+                      "column": 16,
+                      "line": 4,
+                      "offset": 47,
+                    },
+                    "start": {
+                      "column": 12,
+                      "line": 4,
+                      "offset": 43,
+                    },
+                  },
+                  "type": "text",
+                  "value": "text",
+                },
+              ],
+              "position": {
+                "end": {
+                  "column": 24,
+                  "line": 4,
+                  "offset": 55,
+                },
+                "start": {
+                  "column": 5,
+                  "line": 4,
+                  "offset": 36,
+                },
+              },
+              "properties": {},
+              "tagName": "title",
+              "type": "element",
+            },
+          ],
+          "position": {
+            "end": {
+              "column": 10,
+              "line": 5,
+              "offset": 65,
+            },
+            "start": {
+              "column": 3,
+              "line": 3,
+              "offset": 25,
+            },
+          },
+          "properties": {},
+          "tagName": "head",
+          "type": "element",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "position": {
+                    "end": {
+                      "column": 35,
+                      "line": 7,
+                      "offset": 109,
+                    },
+                    "start": {
+                      "column": 31,
+                      "line": 7,
+                      "offset": 105,
+                    },
+                  },
+                  "type": "text",
+                  "value": "test",
+                },
+              ],
+              "position": {
+                "end": {
+                  "column": 39,
+                  "line": 7,
+                  "offset": 113,
+                },
+                "start": {
+                  "column": 5,
+                  "line": 7,
+                  "offset": 79,
+                },
+              },
+              "properties": {
+                "className": [
+                  "cancel-culture",
+                ],
+              },
+              "tagName": "p",
+              "type": "element",
+            },
+          ],
+          "position": {
+            "end": {
+              "column": 10,
+              "line": 8,
+              "offset": 123,
+            },
+            "start": {
+              "column": 3,
+              "line": 6,
+              "offset": 68,
+            },
+          },
+          "properties": {},
+          "tagName": "body",
+          "type": "element",
+        },
+      ],
+      "position": {
+        "end": {
+          "column": 8,
+          "line": 9,
+          "offset": 131,
+        },
+        "start": {
+          "column": 1,
+          "line": 2,
+          "offset": 16,
+        },
+      },
+      "properties": {},
+      "tagName": "html",
+      "type": "element",
+    },
+  ],
+  "data": {
+    "quirksMode": false,
+  },
+  "position": {
+    "end": {
+      "column": 8,
+      "line": 9,
+      "offset": 131,
+    },
+    "start": {
+      "column": 1,
+      "line": 1,
+      "offset": 0,
+    },
+  },
+  "type": "root",
+}
+`;
+
+exports[`Convert HTML to AST and back 2`] = `"<!doctype html><html><head><title>text</title></head><body><p class="cancel-culture">test</p></body></html>"`;
+
+exports[`Convert DB rows to AST 1`] = `
+{
+  "children": [
+    {
+      "position": {
+        "end": {
+          "column": 16,
+          "line": 1,
+          "offset": 15,
+        },
+        "start": {
+          "column": 1,
+          "line": 1,
+          "offset": 0,
+        },
+      },
+      "type": "doctype",
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "position": {
+                    "end": {
+                      "column": 16,
+                      "line": 4,
+                      "offset": 47,
+                    },
+                    "start": {
+                      "column": 12,
+                      "line": 4,
+                      "offset": 43,
+                    },
+                  },
+                  "type": "text",
+                  "value": "text",
+                },
+              ],
+              "position": {
+                "end": {
+                  "column": 24,
+                  "line": 4,
+                  "offset": 55,
+                },
+                "start": {
+                  "column": 5,
+                  "line": 4,
+                  "offset": 36,
+                },
+              },
+              "properties": {},
+              "tagName": "title",
+              "type": "element",
+            },
+          ],
+          "position": {
+            "end": {
+              "column": 10,
+              "line": 5,
+              "offset": 65,
+            },
+            "start": {
+              "column": 3,
+              "line": 3,
+              "offset": 25,
+            },
+          },
+          "properties": {},
+          "tagName": "head",
+          "type": "element",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "position": {
+                    "end": {
+                      "column": 35,
+                      "line": 7,
+                      "offset": 109,
+                    },
+                    "start": {
+                      "column": 31,
+                      "line": 7,
+                      "offset": 105,
+                    },
+                  },
+                  "type": "text",
+                  "value": "test",
+                },
+              ],
+              "position": {
+                "end": {
+                  "column": 39,
+                  "line": 7,
+                  "offset": 113,
+                },
+                "start": {
+                  "column": 5,
+                  "line": 7,
+                  "offset": 79,
+                },
+              },
+              "properties": {
+                "className": [
+                  "cancel-culture",
+                ],
+              },
+              "tagName": "p",
+              "type": "element",
+            },
+          ],
+          "position": {
+            "end": {
+              "column": 10,
+              "line": 8,
+              "offset": 123,
+            },
+            "start": {
+              "column": 3,
+              "line": 6,
+              "offset": 68,
+            },
+          },
+          "properties": {},
+          "tagName": "body",
+          "type": "element",
+        },
+      ],
+      "position": {
+        "end": {
+          "column": 8,
+          "line": 9,
+          "offset": 131,
+        },
+        "start": {
+          "column": 1,
+          "line": 2,
+          "offset": 16,
+        },
+      },
+      "properties": {},
+      "tagName": "html",
+      "type": "element",
+    },
+  ],
+  "data": {
+    "quirksMode": false,
+  },
+  "position": {
+    "end": {
+      "column": 8,
+      "line": 9,
+      "offset": 131,
+    },
+    "start": {
+      "column": 1,
+      "line": 1,
+      "offset": 0,
+    },
+  },
+  "type": "root",
+}
+`;
+
 exports[`Convert DB rows to AST 2`] = `
+{
+  "attachments": [
+    {
+      "child_id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
+      "parent_id": "79455613-836f-44cb-9036-de551c6c0d23",
+      "position": 0,
+    },
+    {
+      "child_id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+      "parent_id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+      "position": 0,
+    },
+    {
+      "child_id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+      "parent_id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+      "position": 0,
+    },
+    {
+      "child_id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+      "parent_id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "position": 0,
+    },
+    {
+      "child_id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
+      "parent_id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
+      "position": 0,
+    },
+    {
+      "child_id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+      "parent_id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
+      "position": 1,
+    },
+    {
+      "child_id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
+      "parent_id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+      "position": 0,
+    },
+    {
+      "child_id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+      "parent_id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "position": 1,
+    },
+    {
+      "child_id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "parent_id": "79455613-836f-44cb-9036-de551c6c0d23",
+      "position": 1,
+    },
+  ],
+  "rows": [
+    {
+      "id": "79455613-836f-44cb-9036-de551c6c0d23",
+      "name": "/",
+      "type": "DOCUMENT",
+      "value": null,
+    },
+    {
+      "id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
+      "name": "!doctype",
+      "type": "DOCUMENT_TYPE",
+      "value": "!DOCTYPE html",
+    },
+    {
+      "id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "name": "html",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+      "name": "head",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+      "name": "title",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+      "name": null,
+      "type": "TEXT",
+      "value": "text",
+    },
+    {
+      "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+      "name": "body",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
+      "name": "p",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
+      "name": null,
+      "type": "TEXT",
+      "value": "test",
+    },
+    {
+      "id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+      "name": "className",
+      "type": "ATTRIBUTE",
+      "value": [
+        "cancel-culture",
+      ],
+    },
+  ],
+}
+`;
+
+exports[`Convert DB rows to AST 3`] = `
 [
   {
     "children": [
       {
-        "children": [],
         "id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
-        "properties": {},
-        "tagName": "!doctype",
         "type": "doctype",
-        "value": "!DOCTYPE html",
       },
       {
         "children": [
@@ -225,10 +756,7 @@ exports[`Convert DB rows to AST 2`] = `
               {
                 "children": [
                   {
-                    "children": [],
                     "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
-                    "properties": {},
-                    "tagName": null,
                     "type": "text",
                     "value": "text",
                   },
@@ -237,62 +765,51 @@ exports[`Convert DB rows to AST 2`] = `
                 "properties": {},
                 "tagName": "title",
                 "type": "element",
-                "value": null,
               },
             ],
             "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
             "properties": {},
             "tagName": "head",
             "type": "element",
-            "value": null,
           },
           {
             "children": [
               {
                 "children": [
                   {
-                    "children": [],
                     "id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
-                    "properties": {},
-                    "tagName": null,
                     "type": "text",
                     "value": "test",
                   },
                 ],
                 "id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
-                "properties": {},
+                "properties": {
+                  "className": [
+                    "cancel-culture",
+                  ],
+                },
                 "tagName": "p",
                 "type": "element",
-                "value": null,
               },
             ],
             "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
             "properties": {},
             "tagName": "body",
             "type": "element",
-            "value": null,
           },
         ],
         "id": "06e18375-1962-47be-b8d1-b272b0013bea",
         "properties": {},
         "tagName": "html",
         "type": "element",
-        "value": null,
       },
     ],
     "id": "79455613-836f-44cb-9036-de551c6c0d23",
-    "properties": {},
-    "tagName": "/",
     "type": "root",
-    "value": null,
   },
   {
-    "children": [],
     "id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
-    "properties": {},
-    "tagName": "!doctype",
     "type": "doctype",
-    "value": "!DOCTYPE html",
   },
   {
     "children": [
@@ -301,10 +818,7 @@ exports[`Convert DB rows to AST 2`] = `
           {
             "children": [
               {
-                "children": [],
                 "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
-                "properties": {},
-                "tagName": null,
                 "type": "text",
                 "value": "text",
               },
@@ -313,57 +827,50 @@ exports[`Convert DB rows to AST 2`] = `
             "properties": {},
             "tagName": "title",
             "type": "element",
-            "value": null,
           },
         ],
         "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
         "properties": {},
         "tagName": "head",
         "type": "element",
-        "value": null,
       },
       {
         "children": [
           {
             "children": [
               {
-                "children": [],
                 "id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
-                "properties": {},
-                "tagName": null,
                 "type": "text",
                 "value": "test",
               },
             ],
             "id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
-            "properties": {},
+            "properties": {
+              "className": [
+                "cancel-culture",
+              ],
+            },
             "tagName": "p",
             "type": "element",
-            "value": null,
           },
         ],
         "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
         "properties": {},
         "tagName": "body",
         "type": "element",
-        "value": null,
       },
     ],
     "id": "06e18375-1962-47be-b8d1-b272b0013bea",
     "properties": {},
     "tagName": "html",
     "type": "element",
-    "value": null,
   },
   {
     "children": [
       {
         "children": [
           {
-            "children": [],
             "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
-            "properties": {},
-            "tagName": null,
             "type": "text",
             "value": "text",
           },
@@ -372,22 +879,17 @@ exports[`Convert DB rows to AST 2`] = `
         "properties": {},
         "tagName": "title",
         "type": "element",
-        "value": null,
       },
     ],
     "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
     "properties": {},
     "tagName": "head",
     "type": "element",
-    "value": null,
   },
   {
     "children": [
       {
-        "children": [],
         "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
-        "properties": {},
-        "tagName": null,
         "type": "text",
         "value": "text",
       },
@@ -396,13 +898,9 @@ exports[`Convert DB rows to AST 2`] = `
     "properties": {},
     "tagName": "title",
     "type": "element",
-    "value": null,
   },
   {
-    "children": [],
     "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
-    "properties": {},
-    "tagName": null,
     "type": "text",
     "value": "text",
   },
@@ -411,53 +909,57 @@ exports[`Convert DB rows to AST 2`] = `
       {
         "children": [
           {
-            "children": [],
             "id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
-            "properties": {},
-            "tagName": null,
             "type": "text",
             "value": "test",
           },
         ],
         "id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
-        "properties": {},
+        "properties": {
+          "className": [
+            "cancel-culture",
+          ],
+        },
         "tagName": "p",
         "type": "element",
-        "value": null,
       },
     ],
     "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
     "properties": {},
     "tagName": "body",
     "type": "element",
-    "value": null,
   },
   {
     "children": [
       {
-        "children": [],
         "id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
-        "properties": {},
-        "tagName": null,
         "type": "text",
         "value": "test",
       },
     ],
     "id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
-    "properties": {},
+    "properties": {
+      "className": [
+        "cancel-culture",
+      ],
+    },
     "tagName": "p",
     "type": "element",
-    "value": null,
   },
   {
-    "children": [],
     "id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
-    "properties": {},
-    "tagName": null,
     "type": "text",
     "value": "test",
+  },
+  {
+    "id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+    "tagName": "className",
+    "type": "attribute",
+    "value": [
+      "cancel-culture",
+    ],
   },
 ]
 `;
 
-exports[`Convert DB rows to AST 3`] = `"<!doctypehtml><title>text</title><p>test"`;
+exports[`Convert DB rows to AST 4`] = `"<!doctype html><html><head><title>text</title></head><body><p class="cancel-culture">test</p></body></html>"`;

@@ -98,13 +98,14 @@ export const astPrepareForRehype = (ast: any) => {
 }
 
 const processor = (fragment?: boolean) => rehype()
+  .use(rehypePresetMinify)
   .data('settings', {
     fragment: fragment,
     verbose: false,
-    emitParseErrors: true,
-    abruptDoctypePublicIdentifier: false,
+    // emitParseErrors: true,
+    // tightDoctype: false,
+    // abruptDoctypePublicIdentifier: false,
   })
-  .use(rehypePresetMinify)
   ;
 
 export const cleanAST = (ast: any, fragment?: boolean) => {

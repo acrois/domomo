@@ -9,7 +9,7 @@ import codecPlugin from "./encoder";
 import authPlugin, { AuthError } from "./auth";
 import { watch } from "fs";
 import { readdir } from "node:fs/promises";
-import { rowsToTree } from "./dbeautiful";
+import { rowsToTrees } from "./dbeautiful";
 import type { BunFile } from "bun";
 
 // client-side script to connect websocket for bidirectional async updates
@@ -120,7 +120,7 @@ const fetchTree = async (client: ClientBase, domainId: string, documentPath: str
       AND dd.document_name = ${documentPath}
   `);
   // console.log(tree);
-  const organized = rowsToTree(tree.rows);
+  const organized = rowsToTrees(tree.rows);
 
   if (organized === null || organized === undefined || organized.length === 0) {
     throw new NotFoundError();
@@ -550,7 +550,7 @@ const app = (env: any) => {
             WHERE root = ${document.document_id}
           `);
           // console.log(tree);
-          const parents = rowsToTree(tree.rows);
+          const parents = rowsToTrees(tree.rows);
           // console.log(parents);
 
           for (const parent of parents) {
