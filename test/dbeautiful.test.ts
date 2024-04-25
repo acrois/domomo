@@ -1,6 +1,6 @@
 import { expect, test, mock } from "bun:test";
-import { treeToRows } from "../src/dbeautiful";
-import { htmlToAST } from "../src/util";
+import { treeToRows, rowsToTree } from "../src/dbeautiful";
+import { astToHTML, htmlToAST } from "../src/util";
 
 const uuidMock = function* () {
   yield '79455613-836f-44cb-9036-de551c6c0d23';
@@ -122,6 +122,15 @@ test('Convert AST to DB rows', async () => {
   expect(rows).toMatchSnapshot();
 });
 
-test('Convert DB rows to AST', () => {
-
+test('Convert DB rows to AST', async () => {
+  const test = '<!doctypehtml><html><head><title>text</title></head><body><p>test</p></body></html>';
+  const ast = await htmlToAST(test);
+  // console.log(JSON.stringify(ast));
+  const rows = treeToRows(ast, '/', uuidNext());
+  // console.log(JSON.stringify(rows));
+  expect(rows).toMatchSnapshot();
+  const tree = rowsToTree(rows);
+  expect(tree).toMatchSnapshot();
+  const html = astToHTML(tree[0]);
+  expect(html).toMatchSnapshot();
 });

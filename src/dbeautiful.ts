@@ -1,46 +1,92 @@
 import type { Root, Doctype, Element, Literals, Text, Comment, Parent, Node } from 'hast'
 
-export const rowsToTree = (treeRows: any[]) => {
-  const parents = [
-    {
-      id: null,
-      type_id: 0, // TODO type_id -> type
-      children: [],
-      name: null,
-      value: null,
-      position: 0,
-      parent: null,
-    },
-  ];
+export const rowsToTree = ({
+  rows,
+  attachments
+}) => {
+  const nodes: Node[] = [];
 
-  for (let i = 0; i < treeRows.length; i++) {
-    console.log(i, treeRows[i])
-    const parentNode = {
-      ...treeRows[i],
-      children: [],
-    };
+  for (const r of rows) {
+    let type = r.type;
 
-    parentNode.type = parentNode.node_type.toLowerCase();
-    parentNode.type = (
-      parentNode.type === 'document'
-        ? 'root'
-        : parentNode.type === 'document_type'
-          ? 'doctype'
-          : parentNode.type
-    )
-    parents.push(parentNode);
-
-    for (const parent of parents) {
-      if (parent.id === treeRows[i].parent) {
-        parent.children.push(parentNode);
-        // TODO determine attribute
-        // parent.children.splice(treeRows[i].position, 0);
-      }
+    if (type === 'DOCUMENT_TYPE') {
+      type = 'doctype';
     }
+    else if (type === 'DOCUMENT') {
+      type = 'root';
+    }
+    else {
+      type = type.toLowerCase();
+    }
+
+    const rowNode = {
+      id: r.id,
+      type: type,
+      tagName: r.name ?? null,
+      value: r.value ?? null,
+      children: [],
+      properties: {},
+    }
+
+    nodes.push(rowNode);
   }
 
-  return parents;
+  for (const a of attachments) {
+    nodes
+      .filter(n => n.id === a.parent_id)
+      .map(n =>
+        n?.children?.splice(
+          a.position || 0,
+          0,
+          ...nodes.filter(n2 => n2?.id === a.child_id)
+        )
+      );
+  }
+
+  return nodes;
 }
+
+// export const rowsToTree = (treeRows: any[]) => {
+//   const parents = [
+//     {
+//       id: null,
+//       type_id: 0, // TODO type_id -> type
+//       children: [],
+//       name: null,
+//       value: null,
+//       position: 0,
+//       parent: null,
+//     },
+//   ];
+
+//   for (let i = 0; i < treeRows.length; i++) {
+//     console.log(i, treeRows[i])
+//     const parentNode = {
+//       ...treeRows[i],
+//       children: [],
+//     };
+
+//     parentNode.type = parentNode.node_type.toLowerCase();
+//     parentNode.type = (
+//       parentNode.type === 'document'
+//         ? 'root'
+//         : parentNode.type === 'document_type'
+//           ? 'doctype'
+//           : parentNode.type
+//     )
+//     parents.push(parentNode);
+
+//     for (const parent of parents) {
+//       if (parent.id === treeRows[i].parent) {
+//         parent.children.push(parentNode);
+//         // TODO determine attribute
+//         // parent.children.splice(treeRows[i].position, 0);
+//       }
+//     }
+//   }
+
+//   return parents;
+// }
 
 export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Function) => {
   // console.log(idGenerator);
@@ -72,6 +118,7 @@ export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Func
     case 'comment':
     case 'text':
       const l = (node as Literals);
+      type = node.type.toUpperCase();
       value = l.value;
       break;
     default:
@@ -120,7 +167,7 @@ export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Func
     const props = (node as Element).properties;
     for (const k in props) {
       const t = props[k];
-      console.log(t);
+      // console.log(t);
     }
     // (node as Parent).properties
     //   .flatMap(c => treeToRows(c, documentPath))
