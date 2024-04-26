@@ -12,6 +12,7 @@ export const rowsToTrees = ({
       id: r.id,
     }
 
+    // console.log(rowNode, r);
     if (type === 'DOCUMENT') {
       type = 'root';
     }
@@ -61,7 +62,14 @@ export const rowsToTrees = ({
 
         // map attributes to properties instead of children
         if (n.type === 'element' && srcAttr.type === 'attribute') {
-          n.properties[srcAttr.tagName] = srcAttr.value;
+          let k = srcAttr.tagName;
+          let v = JSON.parse(srcAttr.value);
+
+          if (k === 'className') {
+            k = 'class';
+          }
+
+          n.properties[k] = v;
         }
         else {
           n?.children?.splice(
@@ -121,10 +129,10 @@ export const rowsToTrees = ({
 
 export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Function) => {
   // console.log(idGenerator);
-  const idg = idGenerator !== undefined
-    ? idGenerator
-    : crypto.randomUUID;
-  const id = node?.id
+  const idg = () => idGenerator !== undefined && idGenerator !== null
+    ? idGenerator()
+    : crypto.randomUUID();
+  const id: string = node?.id
     || idg()
   let type: string | undefined
   let name: string | undefined
@@ -165,6 +173,11 @@ export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Func
   WHERE tag = ${type}
   */
 
+  // if (type === 'ELEMENT' && name === null) {
+  //   console.error(node);
+  //   throw 'what';
+  // }
+
   const rows: any[] = [
     {
       id,
@@ -203,7 +216,7 @@ export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Func
         id: idg(),
         type: 'ATTRIBUTE',
         name: k,
-        value: props[k],
+        value: JSON.stringify(props[k]),
       };
       rows.push(attr);
       attachments.push({

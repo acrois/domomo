@@ -1,7 +1,7 @@
 import { Elysia, NotFoundError, ParseError } from "elysia";
 import { ClientBase, Pool } from "pg";
 import { cron, Patterns } from '@elysiajs/cron'
-import { astPrepareForRehype } from "./util";
+// import { astPrepareForRehype } from "./util";
 import { SQL } from "sql-template-strings";
 import Stream from "@elysiajs/stream";
 import diff from "microdiff";
@@ -9,7 +9,7 @@ import codecPlugin from "./encoder";
 import authPlugin, { AuthError } from "./auth";
 import { watch } from "fs";
 import { readdir } from "node:fs/promises";
-import { rowsToTrees } from "./dbeautiful";
+import { rowsToTrees, treeToRows } from "./dbeautiful";
 import type { BunFile } from "bun";
 
 // client-side script to connect websocket for bidirectional async updates
@@ -107,69 +107,70 @@ const loadFileByRelativePath = async (handle: any, event: any, filename: string)
 const fetchTree = async (client: ClientBase, domainId: string, documentPath: string) => {
   const tree = await client.query(SQL`
     SELECT
-      dt.id,
-      dt.node_type,
-      dt.name,
-      dt.value,
-      dt.position,
-      dt.parent
-    FROM document_tree dt
-    JOIN domain_documents dd
-      ON dd.document_id = dt.root
+      get_document_tree(dd.document_id) AS tree
+    FROM domain_documents dd
     WHERE dd.id = ${domainId}
       AND dd.document_name = ${documentPath}
   `);
+
+  if (tree === null || tree === undefined || tree.rows.length === 0) {
+    throw new NotFoundError();
+  }
+
+
+  const t = tree.rows[0].tree
+  // console.log(t);
   // console.log(tree);
-  const organized = rowsToTrees(tree.rows);
+  const organized = rowsToTrees(t);
 
   if (organized === null || organized === undefined || organized.length === 0) {
     throw new NotFoundError();
   }
 
-  return organized[0]!.children[0];
+  return organized[0];
 }
 
-const fetcher = (fetch: () => Promise<any>) => {
-  return new Stream(async (stream) => {
-    let initial = await fetch();
+// const fetcher = (fetch: () => Promise<any>) => {
+//   return new Stream(async (stream) => {
+//     let initial = await fetch();
 
-    if (!initial) {
-      throw 'Invalid document.';
-    }
+//     if (!initial) {
+//       throw 'Invalid document.';
+//     }
 
-    let initialPrep = astPrepareForRehype(initial);
-    stream.event = 'init';
-    stream.send(initialPrep);
+//     let initialPrep = astPrepareForRehype(initial);
+//     stream.event = 'init';
+//     stream.send(initialPrep);
 
-    let connected = true;
-    while (connected) {
-      await stream.wait(1500)
-      // TODO LISTEN postgres pubsub this stuff only when it is actually edited.
-      const renewed = await fetch();
+//     let connected = true;
+//     while (connected) {
+//       await stream.wait(1500)
+//       // TODO LISTEN postgres pubsub this stuff only when it is actually edited.
+//       const renewed = await fetch();
 
-      if (!renewed) {
-        throw 'Invalid document';
-      }
+//       if (!renewed) {
+//         throw 'Invalid document';
+//       }
 
-      const prep = astPrepareForRehype(renewed);
-      const d = diff(initialPrep, prep);
+//       const prep = astPrepareForRehype(renewed);
+//       const d = diff(initialPrep, prep);
 
-      // console.log(d);
-      // stream.send(d.length > 0 ? renewed : []);
+//       // console.log(d);
+//       // stream.send(d.length > 0 ? renewed : []);
 
-      if (d && d.length > 0) {
-        // console.log(JSON.stringify(d), JSON.stringify(prep), JSON.stringify(diff(astPrepareForRehype(initial), prep)));
-        stream.event = 'step';
-        // console.log(d);
-        stream.send(d);
-        initial = renewed;
-        initialPrep = prep;
-      }
-    }
+//       if (d && d.length > 0) {
+//         // console.log(JSON.stringify(d), JSON.stringify(prep), JSON.stringify(diff(astPrepareForRehype(initial), prep)));
+//         stream.event = 'step';
+//         // console.log(d);
+//         stream.send(d);
+//         initial = renewed;
+//         initialPrep = prep;
+//       }
+//     }
 
-    stream.close()
-  })
-}
+//     stream.close()
+//   })
+// }
 
 const app = (env: any) => {
   const pgUri: string = env.PG_URI || env.POSTGRES_URI || env.POSTGRES_URL
@@ -261,9 +262,9 @@ const app = (env: any) => {
       const accept = headers['accept'];
       const boundFetcher = () => fetchTree(pool, domain.id, path);
 
-      if (accept === 'text/event-stream') {
-        return fetcher(boundFetcher);
-      }
+      // if (accept === 'text/event-stream') {
+      //   return fetcher(boundFetcher);
+      // }
 
       return boundFetcher();
     })
@@ -314,85 +315,41 @@ const app = (env: any) => {
             `);
           }
 
-          const insertNode = async (node: any, parentId: string, next_position: number = 0) => {
-            const type = (
-              node.type === 'root'
-                ? 'document'
-                : node.type === 'doctype'
-                  ? 'document_type'
-                  : node.type
-            ).toUpperCase()
-            const name = node.name ?? type === 'DOCUMENT_TYPE'
-              ? '!doctype'
-              : type === 'DOCUMENT'
-                ? path
-                : null
-            const value = node.value ?? type === 'DOCUMENT_TYPE'
-              ? '!DOCTYPE html'
-              : null
-            // console.log(type, name, value, node);
-            const id = node?.id || crypto.randomUUID()
-            // TODO: prepare
-            const inserted = await db.query(SQL`
-              INSERT INTO node (
-                id,
-                type_id,
-                name,
-                value
-              ) VALUES (
-                ${id},
-                (
-                  SELECT id
-                  FROM node_type
-                  WHERE tag = ${type}
-                ),
-                ${name},
-                ${value}
-              ) ON CONFLICT (id) DO UPDATE SET
-                name = EXCLUDED.name,
-                type_id = EXCLUDED.type_id,
-                value = EXCLUDED.value
-              returning id
-            `);
+          const t = treeToRows(body, path);
+          // console.log(JSON.stringify(t));
 
-            // console.log(inserted);
-            const nodeId = inserted.rows[0]!.id;
-            // console.log(nodeId, parentId, next_position);
-            // throw ';';
-            // const nextAttachment = await sql`
-            //   SELECT next_position
-            //   FROM node_attachment_next
-            //   WHERE parent_id = ${parentId}
-            // `;
-
-            // if (nextAttachment.length === 0) {
-            //   throw 'Uh oh...';
-            // }
-
-            // console.log(node.name, node.value, node.node_type, parentId, nodeId, next_position);
-
-            await db.query(SQL`
-              INSERT INTO node_attachment
-                (parent_id, child_id, position)
-              VALUES
-                (${parentId}, ${nodeId}, ${next_position})
-              ON CONFLICT (id) DO UPDATE
-              SET
-                parent_id = EXCLUDED.parent_id,
-                child_id = EXCLUDED.child_id,
-                position = EXCLUDED.position
-            `)
-
-            // console.log();
-            const children: any[] = node?.children || [];
-
-            for (let i = 0; i < children.length; i++) {
-              // console.log(nodeId, i);
-              await insertNode(children[i], nodeId, i);
-            }
-
-            // children.map(v => await insertNode(v, nodeId));
-          }
+          t.rows.map(r => db.query(SQL`
+            INSERT INTO node (
+              id,
+              type_id,
+              name,
+              value
+            ) VALUES (
+              ${r.id},
+              (
+                SELECT id
+                FROM node_type
+                WHERE tag = ${r.type}
+              ),
+              ${r.name},
+              ${r.value}
+            ) ON CONFLICT (id) DO UPDATE SET
+              name = EXCLUDED.name,
+              type_id = EXCLUDED.type_id,
+              value = EXCLUDED.value
+            returning id
+          `))
+          t.attachments.map(a => db.query(SQL`
+            INSERT INTO node_attachment
+              (parent_id, child_id, position)
+            VALUES
+              (${a.parent_id}, ${a.child_id}, ${a.position})
+            ON CONFLICT (id) DO UPDATE
+            SET
+              parent_id = EXCLUDED.parent_id,
+              child_id = EXCLUDED.child_id,
+              position = EXCLUDED.position
+          `))
 
           const nextAttachment = await db.query(SQL`
             SELECT next_position
@@ -404,43 +361,12 @@ const app = (env: any) => {
             throw 'Uh oh...';
           }
 
-          await insertNode(body, domain.id, nextAttachment.rows[0]!.next_position);
-          // });
-
-
-          // let organized = null;
-          // let organizedClean = null;
-
-          // if (document.length > 0) {
-          //   const doc = document[0];
-          //   // console.log(doc);
-          //   const tree = await sql`
-          //     SELECT
-          //       id,
-          //       node_type,
-          //       name,
-          //       value,
-          //       position,
-          //       parent
-          //     FROM document_tree
-          //     WHERE root = ${doc.id}
-          //   `;
-          //   // console.log(tree);
-          //   organized = rowsToTree(tree);
-
-          //   if (organized) {
-          //     organized = organized;
-          //     organizedClean = cleanTree(organized);
-          //   }
-          //   // console.log(JSON.stringify(organized));
-          // }
-
-          // console.log(organized, organizedClean);
-          // const d = diff(organizedClean ?? {}, body ?? {});
-          // console.log(JSON.stringify(d));
-          // const c = sql``
-
-          // return organized;
+          db.query(SQL`
+            INSERT INTO node_attachment
+              (parent_id, child_id, position)
+            VALUES
+              (${domain.id}, ${t.rows[0].id}, ${nextAttachment.rows[0].next_position})
+          `)
           await db.query('COMMIT');
         }
         catch (e) {

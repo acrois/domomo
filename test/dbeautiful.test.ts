@@ -117,6 +117,7 @@ const testy = `<!doctype html>
 <html>
   <head>
     <title>text</title>
+    <link rel="stylesheet" src="test.css" />
   </head>
   <body>
     <p class="cancel-culture">test</p>

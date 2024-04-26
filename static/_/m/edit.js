@@ -134,9 +134,9 @@ document.addEventListener('keydown', e => {
     }
     // different behavior for designMode than with contentEditable
     else if (document.designMode == 'on') {
-      if (tgt.tagName != 'P') {
+      // if (tgt.tagName != 'P') {
         e.preventDefault();
-      }
+      // }
 
       let t = null;
 
