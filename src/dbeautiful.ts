@@ -20,17 +20,30 @@ const hasUpdate = (name: string, a: any, b: any, stringify: boolean = false) => 
 const findNodeById = (children: Node[], id: string) =>
   children.find(child => getNodeId(child) === id);
 
+interface Operation {
+  type: 'insert' | 'delete' | 'update'
+  id: string
+  parentId?: string
+  node?: Node
+  value?: string
+  properties?: Record<string, any>
+  name?: string
+}
+
+// movements can be thought of as two operations: remove + insert
 export const diffTrees = (oldNode: Node, newNode: Node, parentId?: string) => {
-  let operations: any = [];
+  let operations: Operation[] = [];
 
   if ('children' in oldNode && 'children' in newNode) {
     const oldParent = (oldNode as Parent);
     const newParent = (newNode as Parent);
+
     // Check for deletions or updates
-    oldParent.children.forEach(child => {
+    oldParent.children.forEach((child, idx) => {
       const cId = getNodeId(child);
 
       if (!cId) {
+        console.error(child);
         // oops?
         return;
       }
@@ -45,23 +58,30 @@ export const diffTrees = (oldNode: Node, newNode: Node, parentId?: string) => {
 
         // Check for updates
         if (hasValueUpdate || hasPropertyUpdate || hasNameUpdate || hasTypeUpdate) {
-          const update = { type: 'update', id: cId };
+          const update: Operation = {
+            type: 'update',
+            id: cId,
+            node: {
+              type: correspondingNode.type,
+            }
+          };
 
           if (hasValueUpdate) {
-            update.value = correspondingNode.value;
+            update.node.value = correspondingNode.value;
           }
 
           if (hasPropertyUpdate) {
-            update.properties = correspondingNode.properties;
+            // TODO attribute-level updates?
+            update.node.properties = correspondingNode.properties;
           }
 
           if (hasNameUpdate) {
-            update.name = correspondingNode.name;
+            update.node.name = correspondingNode.name;
           }
 
-          if (hasTypeUpdate) {
-            update.type = correspondingNode.type;
-          }
+          // if (hasTypeUpdate) {
+          //   update.node.type = correspondingNode.type;
+          // }
 
           operations.push(update);
         }
@@ -69,7 +89,11 @@ export const diffTrees = (oldNode: Node, newNode: Node, parentId?: string) => {
         operations = operations.concat(diffTrees(child, correspondingNode, cId));
       }
       else {
-        operations.push({ type: 'delete', id: cId });
+        operations.push({
+          type: 'delete',
+          id: cId,
+          parentId,
+        });
       }
     });
 
@@ -78,17 +102,68 @@ export const diffTrees = (oldNode: Node, newNode: Node, parentId?: string) => {
       const cId = getNodeId(child);
 
       if (!cId) {
+        console.error(child);
         // oops?
         return;
       }
 
       if (!findNodeById(oldParent.children, cId)) {
-        operations.push({ type: 'insert', id: cId, parentId: parentId, node: child });
+        // TODO optimize node (child) remove children?
+        operations.push({
+          type: 'insert',
+          id: cId,
+          parentId,
+          node: child,
+        });
       }
     });
   }
 
   return operations;
+}
+
+export const applyTreeDiff = (tree: Root, operations: any[]) => {
+  for (const op of operations) {
+    console.log(op.type, op.id);
+    switch (op.type) {
+      case 'insert':
+        let parent = findNodeById(tree.children, op.parentId);
+
+        if (parent === undefined) {
+          parent = tree;
+          // return;
+        }
+
+        console.log(parent);
+
+        if ('children' in parent) {
+          const parentElement = (parent as Element);
+          parentElement.children.push(op.node);
+        }
+        break;
+      case 'update':
+        if ('type' in op) {
+
+        }
+
+        if ('properties' in op) {
+
+        }
+
+        if ('name' in op) {
+
+        }
+
+        if ('value' in op) {
+
+        }
+        break;
+      case 'delete':
+
+        break;
+    }
+  }
+  // return tree;
 }
 
 export const rowsToTrees = ({
@@ -100,7 +175,9 @@ export const rowsToTrees = ({
     let type = r.type;
 
     const rowNode = {
-      id: r.id,
+      data: {
+        id: r.id,
+      },
     }
 
     // console.log(rowNode, r);
@@ -146,9 +223,9 @@ export const rowsToTrees = ({
 
   attachments?.map(a => {
     nodes
-      .filter(n => n.id === a.parent_id)
+      .filter(n => getNodeId(n) === a.parent_id)
       .map(n => {
-        const filt = nodes.filter(n2 => n2?.id === a.child_id);
+        const filt = nodes.filter(n2 => getNodeId(n2) === a.child_id);
         const srcAttr = filt.at(0)!; // we expect to find 1 result
 
         // map attributes to properties instead of children

@@ -877,7 +877,9 @@ exports[`Convert DB rows to AST 3`] = `
   {
     "children": [
       {
-        "id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
+        "data": {
+          "id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
+        },
         "type": "doctype",
       },
       {
@@ -887,19 +889,25 @@ exports[`Convert DB rows to AST 3`] = `
               {
                 "children": [
                   {
-                    "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+                    "data": {
+                      "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+                    },
                     "type": "text",
                     "value": "text",
                   },
                 ],
-                "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+                "data": {
+                  "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+                },
                 "properties": {},
                 "tagName": "title",
                 "type": "element",
               },
               {
                 "children": [],
-                "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+                "data": {
+                  "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+                },
                 "properties": {
                   "rel": [
                     "stylesheet",
@@ -910,7 +918,9 @@ exports[`Convert DB rows to AST 3`] = `
                 "type": "element",
               },
             ],
-            "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+            "data": {
+              "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+            },
             "properties": {},
             "tagName": "head",
             "type": "element",
@@ -920,12 +930,16 @@ exports[`Convert DB rows to AST 3`] = `
               {
                 "children": [
                   {
-                    "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+                    "data": {
+                      "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+                    },
                     "type": "text",
                     "value": "test",
                   },
                 ],
-                "id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+                "data": {
+                  "id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+                },
                 "properties": {
                   "class": [
                     "cancel-culture",
@@ -935,23 +949,31 @@ exports[`Convert DB rows to AST 3`] = `
                 "type": "element",
               },
             ],
-            "id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+            "data": {
+              "id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+            },
             "properties": {},
             "tagName": "body",
             "type": "element",
           },
         ],
-        "id": "06e18375-1962-47be-b8d1-b272b0013bea",
+        "data": {
+          "id": "06e18375-1962-47be-b8d1-b272b0013bea",
+        },
         "properties": {},
         "tagName": "html",
         "type": "element",
       },
     ],
-    "id": "79455613-836f-44cb-9036-de551c6c0d23",
+    "data": {
+      "id": "79455613-836f-44cb-9036-de551c6c0d23",
+    },
     "type": "root",
   },
   {
-    "id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
+    "data": {
+      "id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
+    },
     "type": "doctype",
   },
   {
@@ -961,19 +983,25 @@ exports[`Convert DB rows to AST 3`] = `
           {
             "children": [
               {
-                "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+                "data": {
+                  "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+                },
                 "type": "text",
                 "value": "text",
               },
             ],
-            "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+            "data": {
+              "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+            },
             "properties": {},
             "tagName": "title",
             "type": "element",
           },
           {
             "children": [],
-            "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+            "data": {
+              "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+            },
             "properties": {
               "rel": [
                 "stylesheet",
@@ -984,7 +1012,9 @@ exports[`Convert DB rows to AST 3`] = `
             "type": "element",
           },
         ],
-        "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+        "data": {
+          "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+        },
         "properties": {},
         "tagName": "head",
         "type": "element",
@@ -994,12 +1024,16 @@ exports[`Convert DB rows to AST 3`] = `
           {
             "children": [
               {
-                "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+                "data": {
+                  "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+                },
                 "type": "text",
                 "value": "test",
               },
             ],
-            "id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+            "data": {
+              "id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+            },
             "properties": {
               "class": [
                 "cancel-culture",
@@ -1009,13 +1043,17 @@ exports[`Convert DB rows to AST 3`] = `
             "type": "element",
           },
         ],
-        "id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+        "data": {
+          "id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+        },
         "properties": {},
         "tagName": "body",
         "type": "element",
       },
     ],
-    "id": "06e18375-1962-47be-b8d1-b272b0013bea",
+    "data": {
+      "id": "06e18375-1962-47be-b8d1-b272b0013bea",
+    },
     "properties": {},
     "tagName": "html",
     "type": "element",
@@ -1025,19 +1063,25 @@ exports[`Convert DB rows to AST 3`] = `
       {
         "children": [
           {
-            "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+            "data": {
+              "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+            },
             "type": "text",
             "value": "text",
           },
         ],
-        "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+        "data": {
+          "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+        },
         "properties": {},
         "tagName": "title",
         "type": "element",
       },
       {
         "children": [],
-        "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+        "data": {
+          "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+        },
         "properties": {
           "rel": [
             "stylesheet",
@@ -1048,7 +1092,9 @@ exports[`Convert DB rows to AST 3`] = `
         "type": "element",
       },
     ],
-    "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+    "data": {
+      "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+    },
     "properties": {},
     "tagName": "head",
     "type": "element",
@@ -1056,24 +1102,32 @@ exports[`Convert DB rows to AST 3`] = `
   {
     "children": [
       {
-        "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+        "data": {
+          "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+        },
         "type": "text",
         "value": "text",
       },
     ],
-    "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+    "data": {
+      "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+    },
     "properties": {},
     "tagName": "title",
     "type": "element",
   },
   {
-    "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+    "data": {
+      "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+    },
     "type": "text",
     "value": "text",
   },
   {
     "children": [],
-    "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+    "data": {
+      "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+    },
     "properties": {
       "rel": [
         "stylesheet",
@@ -1084,13 +1138,17 @@ exports[`Convert DB rows to AST 3`] = `
     "type": "element",
   },
   {
-    "id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
+    "data": {
+      "id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
+    },
     "tagName": "rel",
     "type": "attribute",
     "value": "["stylesheet"]",
   },
   {
-    "id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
+    "data": {
+      "id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
+    },
     "tagName": "src",
     "type": "attribute",
     "value": ""test.css"",
@@ -1100,12 +1158,16 @@ exports[`Convert DB rows to AST 3`] = `
       {
         "children": [
           {
-            "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+            "data": {
+              "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+            },
             "type": "text",
             "value": "test",
           },
         ],
-        "id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+        "data": {
+          "id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+        },
         "properties": {
           "class": [
             "cancel-culture",
@@ -1115,7 +1177,9 @@ exports[`Convert DB rows to AST 3`] = `
         "type": "element",
       },
     ],
-    "id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+    "data": {
+      "id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+    },
     "properties": {},
     "tagName": "body",
     "type": "element",
@@ -1123,12 +1187,16 @@ exports[`Convert DB rows to AST 3`] = `
   {
     "children": [
       {
-        "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+        "data": {
+          "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+        },
         "type": "text",
         "value": "test",
       },
     ],
-    "id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+    "data": {
+      "id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+    },
     "properties": {
       "class": [
         "cancel-culture",
@@ -1138,12 +1206,16 @@ exports[`Convert DB rows to AST 3`] = `
     "type": "element",
   },
   {
-    "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+    "data": {
+      "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+    },
     "type": "text",
     "value": "test",
   },
   {
-    "id": "2953960c-9aa5-4c5a-b47d-42b20bdae370",
+    "data": {
+      "id": "2953960c-9aa5-4c5a-b47d-42b20bdae370",
+    },
     "tagName": "className",
     "type": "attribute",
     "value": "["cancel-culture"]",
@@ -1152,3 +1224,29 @@ exports[`Convert DB rows to AST 3`] = `
 `;
 
 exports[`Convert DB rows to AST 4`] = `"<!doctype html><html><head><title>text</title><link rel="stylesheet" src="test.css"></head><body><p class="cancel-culture">test</p></body></html>"`;
+
+exports[`Tree Difference and Apply 1`] = `
+[
+  {
+    "id": "guid2",
+    "node": {
+      "type": "text",
+      "value": "changed",
+    },
+    "type": "update",
+  },
+  {
+    "id": "guid3",
+    "node": {
+      "children": [],
+      "id": "guid3",
+      "name": "p",
+      "properties": {},
+      "type": "element",
+      "value": null,
+    },
+    "parentId": "root",
+    "type": "insert",
+  },
+]
+`;

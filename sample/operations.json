@@ -1,0 +1,19 @@
+[
+    {
+        "type": "update",
+        "id": "guid2",
+        "value": "changed"
+    },
+    {
+        "type": "insert",
+        "id": "guid3",
+        "node": {
+            "id": "guid3",
+            "type": "element",
+            "name": "p",
+            "value": null,
+            "properties": {},
+            "children": []
+        }
+    }
+]

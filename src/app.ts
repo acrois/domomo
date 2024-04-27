@@ -9,7 +9,7 @@ import codecPlugin from "./encoder";
 import authPlugin, { AuthError } from "./auth";
 import { watch } from "fs";
 import { readdir } from "node:fs/promises";
-import { rowsToTrees, treeToRows } from "./dbeautiful";
+import { diffTrees, rowsToTrees, treeToRows } from "./dbeautiful";
 import type { BunFile } from "bun";
 // import diff from 'unist-diff';
 
@@ -51,7 +51,6 @@ const serveStaticFile = (f: BunFile) => {
     return f.arrayBuffer();
   }
 }
-
 
 function convertFileUrlToHttp(url: URL): string {
   // Extract the pathname and split into segments
@@ -119,7 +118,6 @@ const fetchTree = async (client: ClientBase, domainId: string, documentPath: str
     throw new NotFoundError();
   }
 
-
   const t = tree.rows[0].tree
   // console.log(t);
   // console.log(tree);
@@ -155,14 +153,14 @@ const fetcher = (fetch: () => Promise<any>) => {
       }
 
       // const prep = astPrepareForRehype(renewed);
-      const d = diff(initial, renewed);
+      const d = diffTrees(initial, renewed);
 
-      // console.log(d);
+      console.log(d);
       // stream.send(d.length > 0 ? renewed : []);
 
       if (d && Object.keys(d).length > 0) {
         // console.log(JSON.stringify(d), JSON.stringify(prep), JSON.stringify(diff(astPrepareForRehype(initial), prep)));
-        stream.event = 'step';
+        stream.event = 'diff';
         // console.log(d);
         stream.send(d);
         initial = renewed;
