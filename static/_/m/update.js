@@ -1,5 +1,8 @@
 import { toDom } from 'https://esm.sh/hast-util-to-dom@4?bundle';
 import { toHtml } from "https://esm.sh/hast-util-to-html@9?bundle";
+import { diff } from "https://esm.sh/unist-diff@2?bundle";
+
+console.log(diff);
 
 // TODO build module
 function patch(obj, diffs) {
@@ -53,7 +56,8 @@ if (!window.es) {
     if (decoded) {
       window.esd = decoded;
       const tree = toDom(decoded, {});
-      document.body = tree.body;
+      console.log(tree);
+      // document.body = tree.body;
     }
   });
   es.addEventListener("step", ev => {
@@ -63,7 +67,8 @@ if (!window.es) {
       if (attempt) {
         window.esd = attempt;
         const tree = toDom(window.esd, {});
-        document.body = tree.body;
+        console.log(tree);
+        // document.body = tree.body;
       }
     }
   });

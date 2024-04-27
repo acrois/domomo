@@ -4,13 +4,14 @@ import { cron, Patterns } from '@elysiajs/cron'
 // import { astPrepareForRehype } from "./util";
 import { SQL } from "sql-template-strings";
 import Stream from "@elysiajs/stream";
-import diff from "microdiff";
+// import diff from "microdiff";
 import codecPlugin from "./encoder";
 import authPlugin, { AuthError } from "./auth";
 import { watch } from "fs";
 import { readdir } from "node:fs/promises";
 import { rowsToTrees, treeToRows } from "./dbeautiful";
 import type { BunFile } from "bun";
+import diff from 'unist-diff';
 
 // client-side script to connect websocket for bidirectional async updates
 // update nodes
@@ -130,47 +131,46 @@ const fetchTree = async (client: ClientBase, domainId: string, documentPath: str
   return organized[0];
 }
 
-// const fetcher = (fetch: () => Promise<any>) => {
-//   return new Stream(async (stream) => {
-//     let initial = await fetch();
+const fetcher = (fetch: () => Promise<any>) => {
+  return new Stream(async (stream) => {
+    let initial = await fetch();
 
-//     if (!initial) {
-//       throw 'Invalid document.';
-//     }
+    if (!initial) {
+      throw 'Invalid document.';
+    }
 
-//     let initialPrep = astPrepareForRehype(initial);
-//     stream.event = 'init';
-//     stream.send(initialPrep);
+    // let initialPrep = astPrepareForRehype(initial);
+    stream.event = 'init';
+    stream.send(initial);
 
-//     let connected = true;
-//     while (connected) {
-//       await stream.wait(1500)
-//       // TODO LISTEN postgres pubsub this stuff only when it is actually edited.
-//       const renewed = await fetch();
+    let connected = true;
+    while (connected) {
+      await stream.wait(1500)
+      // TODO LISTEN postgres pubsub this stuff only when it is actually edited.
+      const renewed = await fetch();
 
-//       if (!renewed) {
-//         throw 'Invalid document';
-//       }
+      if (!renewed) {
+        throw 'Invalid document';
+      }
 
-//       const prep = astPrepareForRehype(renewed);
-//       const d = diff(initialPrep, prep);
+      // const prep = astPrepareForRehype(renewed);
+      const d = diff(initial, renewed);
 
-//       // console.log(d);
-//       // stream.send(d.length > 0 ? renewed : []);
+      // console.log(d);
+      // stream.send(d.length > 0 ? renewed : []);
 
-//       if (d && d.length > 0) {
-//         // console.log(JSON.stringify(d), JSON.stringify(prep), JSON.stringify(diff(astPrepareForRehype(initial), prep)));
-//         stream.event = 'step';
-//         // console.log(d);
-//         stream.send(d);
-//         initial = renewed;
-//         initialPrep = prep;
-//       }
-//     }
+      if (d && Object.keys(d).length > 0) {
+        // console.log(JSON.stringify(d), JSON.stringify(prep), JSON.stringify(diff(astPrepareForRehype(initial), prep)));
+        stream.event = 'step';
+        // console.log(d);
+        stream.send(d);
+        initial = renewed;
+      }
+    }
 
-//     stream.close()
-//   })
-// }
+    stream.close()
+  })
+}
 
 const app = (env: any) => {
   const pgUri: string = env.PG_URI || env.POSTGRES_URI || env.POSTGRES_URL
@@ -262,9 +262,9 @@ const app = (env: any) => {
       const accept = headers['accept'];
       const boundFetcher = () => fetchTree(pool, domain.id, path);
 
-      // if (accept === 'text/event-stream') {
-      //   return fetcher(boundFetcher);
-      // }
+      if (accept === 'text/event-stream') {
+        return fetcher(boundFetcher);
+      }
 
       return boundFetcher();
     })

@@ -904,7 +904,7 @@ exports[`Convert DB rows to AST 3`] = `
                   "rel": [
                     "stylesheet",
                   ],
-                  "src": ""test.css"",
+                  "src": "test.css",
                 },
                 "tagName": "link",
                 "type": "element",
@@ -978,7 +978,7 @@ exports[`Convert DB rows to AST 3`] = `
               "rel": [
                 "stylesheet",
               ],
-              "src": ""test.css"",
+              "src": "test.css",
             },
             "tagName": "link",
             "type": "element",
@@ -1042,7 +1042,7 @@ exports[`Convert DB rows to AST 3`] = `
           "rel": [
             "stylesheet",
           ],
-          "src": ""test.css"",
+          "src": "test.css",
         },
         "tagName": "link",
         "type": "element",
@@ -1078,7 +1078,7 @@ exports[`Convert DB rows to AST 3`] = `
       "rel": [
         "stylesheet",
       ],
-      "src": ""test.css"",
+      "src": "test.css",
     },
     "tagName": "link",
     "type": "element",
@@ -1151,4 +1151,4 @@ exports[`Convert DB rows to AST 3`] = `
 ]
 `;
 
-exports[`Convert DB rows to AST 4`] = `"<!doctype html><html><head><title>text</title><link rel="stylesheet" src="&#x22;test.css&#x22;"></head><body><p class="cancel-culture">test</p></body></html>"`;
+exports[`Convert DB rows to AST 4`] = `"<!doctype html><html><head><title>text</title><link rel="stylesheet" src="test.css"></head><body><p class="cancel-culture">test</p></body></html>"`;
