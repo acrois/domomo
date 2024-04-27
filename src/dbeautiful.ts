@@ -1,5 +1,96 @@
 import type { Root, Doctype, Element, Literals, Text, Comment, Parent, Node } from 'hast'
 
+const getNodeId = (node: Node): string | undefined => {
+  return 'id' in node && node.id
+    ? node.id
+    : node.data && 'id' in node.data && node.data.id
+      ? node.data.id : undefined
+}
+
+const hasUpdate = (name: string, a: any, b: any, stringify: boolean = false) => {
+  return name in a
+    && name in b
+    && (stringify
+      ? JSON.stringify(a[name]) !== JSON.stringify(b[name])
+      : a[name] !== b[name])
+    ;
+}
+
+// Helper function to find a node by ID within children
+const findNodeById = (children: Node[], id: string) =>
+  children.find(child => getNodeId(child) === id);
+
+export const diffTrees = (oldNode: Node, newNode: Node, parentId?: string) => {
+  let operations: any = [];
+
+  if ('children' in oldNode && 'children' in newNode) {
+    const oldParent = (oldNode as Parent);
+    const newParent = (newNode as Parent);
+    // Check for deletions or updates
+    oldParent.children.forEach(child => {
+      const cId = getNodeId(child);
+
+      if (!cId) {
+        // oops?
+        return;
+      }
+
+      const correspondingNode = findNodeById(newParent.children, cId);
+
+      if (correspondingNode) {
+        const hasValueUpdate = hasUpdate('value', child, correspondingNode);
+        const hasPropertyUpdate = hasUpdate('properties', child, correspondingNode, true);
+        const hasNameUpdate = hasUpdate('name', child, correspondingNode);
+        const hasTypeUpdate = hasUpdate('type', child, correspondingNode);
+
+        // Check for updates
+        if (hasValueUpdate || hasPropertyUpdate || hasNameUpdate || hasTypeUpdate) {
+          const update = { type: 'update', id: cId };
+
+          if (hasValueUpdate) {
+            update.value = correspondingNode.value;
+          }
+
+          if (hasPropertyUpdate) {
+            update.properties = correspondingNode.properties;
+          }
+
+          if (hasNameUpdate) {
+            update.name = correspondingNode.name;
+          }
+
+          if (hasTypeUpdate) {
+            update.type = correspondingNode.type;
+          }
+
+          operations.push(update);
+        }
+        // Recurse on children
+        operations = operations.concat(diffTrees(child, correspondingNode, cId));
+      }
+      else {
+        operations.push({ type: 'delete', id: cId });
+      }
+    });
+
+    // Check for insertions
+    newParent.children.forEach(child => {
+      const cId = getNodeId(child);
+
+      if (!cId) {
+        // oops?
+        return;
+      }
+
+      if (!findNodeById(oldParent.children, cId)) {
+        operations.push({ type: 'insert', id: cId, parentId: parentId, node: child });
+      }
+    });
+  }
+
+  return operations;
+}
+
 export const rowsToTrees = ({
   rows,
   attachments

@@ -11,7 +11,7 @@ import { watch } from "fs";
 import { readdir } from "node:fs/promises";
 import { rowsToTrees, treeToRows } from "./dbeautiful";
 import type { BunFile } from "bun";
-import diff from 'unist-diff';
+// import diff from 'unist-diff';
 
 // client-side script to connect websocket for bidirectional async updates
 // update nodes
@@ -51,6 +51,7 @@ const serveStaticFile = (f: BunFile) => {
     return f.arrayBuffer();
   }
 }
+
 
 function convertFileUrlToHttp(url: URL): string {
   // Extract the pathname and split into segments

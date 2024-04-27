@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { treeToRows, rowsToTrees } from "../src/dbeautiful";
+import { treeToRows, rowsToTrees, diffTrees } from "../src/dbeautiful";
 import { astToHTML, htmlToAST } from "../src/util";
 
 const uuidMock = function* () {
@@ -156,3 +156,12 @@ test('Convert DB rows to AST', async () => {
   // console.log(JSON.stringify(tree[0]));
   expect(html).toMatchSnapshot();
 });
+
+test('Tree Difference and Apply', async () => {
+  // Example usage:
+  const oldTree = { id: "guid1", type: "element", name: "p", children: [ { id: "guid2", type: "text", name: null, value: "test", properties: {} } ] };
+  const newTree = { id: "guid1", type: "element", name: "div", children: [ { id: "guid2", type: "text", name: null, value: "changed", properties: {} }, { id: "guid3", type: "element", name: "p", value: null, properties: {}, children: [] } ] };
+
+  const operations = diffTrees(oldTree, newTree);
+  console.log(operations);
+})
