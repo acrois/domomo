@@ -8,7 +8,7 @@ var hasUpdate = (name, a, b, stringify = false) => {
 var findNodeById = (children, id) => children.find((child) => getNodeId(child) === id);
 var findNodeByIdRecursive = (children, id) => findNodeById(children.flatMap(flattenTree), id);
 var flattenTree = (node) => [node, ...node?.children?.flatMap(flattenTree) ?? []];
-var diffTrees = (oldNode, newNode, parentId) => {
+var diffTrees = (oldNode, newNode) => {
   let operations = [];
   if ("children" in oldNode && "children" in newNode) {
     const oldParent = oldNode;
@@ -44,12 +44,12 @@ var diffTrees = (oldNode, newNode, parentId) => {
           }
           operations.push(update);
         }
-        operations = operations.concat(diffTrees(child, correspondingNode, cId));
+        operations = operations.concat(diffTrees(child, correspondingNode));
       } else {
         operations.push({
           type: "delete",
           id: cId,
-          parentId
+          parentId: getNodeId(newParent)
         });
       }
     });
@@ -112,6 +112,20 @@ var applyTreeDiff = (tree, operations) => {
         }
         break;
       case "delete":
+        let parentD = undefined;
+        if (op.parentId) {
+          parentD = findNodeByIdRecursive(tree.children, op.parentId);
+        }
+        if (parentD === undefined) {
+          parentD = tree;
+        }
+        if ("children" in parentD) {
+          const parentElement = parentD;
+          const index = parentElement.children.findIndex((child) => getNodeId(child) === op.id);
+          if (index !== -1) {
+            parentElement.children.splice(index, 1);
+          }
+        }
         break;
     }
   }

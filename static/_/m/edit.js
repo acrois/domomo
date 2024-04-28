@@ -1,3 +1,5 @@
+import { diffTrees } from '../w/web.js';
+
 const goodTags = ['SPAN', 'A', 'PRE', 'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
 const incrTags = ['P', 'H6', 'H5', 'H4', 'H3', 'H2', 'H1'];
 function getCurrentEditingElement() {
@@ -386,7 +388,7 @@ const mutation = (mutationList, observer) => {
     //   console.log(`The ${mutation.attributeName} attribute was modified.`);
     // }
 
-    // console.log(mutation);
+    console.log(mutation);
   }
 };
 

@@ -1,6 +1,6 @@
 import { toDom } from 'https://esm.sh/hast-util-to-dom@4?bundle';
 // import { toHtml } from "https://esm.sh/hast-util-to-html@9?bundle";
-import { applyTreeDiff } from '../w/web.js';
+import { applyTreeDiff, diffTrees } from '../w/web.js';
 
 if (!window.es) {
   window.es = new EventSource(window.location.href, {
@@ -16,6 +16,7 @@ if (!window.es) {
       const tree = toDom(decoded, {});
       console.log(tree);
       document.body = tree.body;
+      document.designMode = 'off';
     }
   });
   es.addEventListener('diff', ev => {
@@ -26,6 +27,7 @@ if (!window.es) {
       const tree = toDom(window.esd, {});
       console.log(tree);
       document.body = tree.body;
+      document.designMode = 'off';
     }
   });
   // es.addEventListener("step", ev => {

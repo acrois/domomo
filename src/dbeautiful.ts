@@ -35,7 +35,7 @@ interface Operation {
 }
 
 // movements can be thought of as two operations: remove + insert
-export const diffTrees = (oldNode: Node, newNode: Node, parentId?: string) => {
+export const diffTrees = (oldNode: Node, newNode: Node) => {
   let operations: Operation[] = [];
 
   if ('children' in oldNode && 'children' in newNode) {
@@ -91,13 +91,14 @@ export const diffTrees = (oldNode: Node, newNode: Node, parentId?: string) => {
         }
 
         // Recurse on children
-        operations = operations.concat(diffTrees(child, correspondingNode, cId));
+        operations = operations.concat(diffTrees(child, correspondingNode));
       }
       else {
         operations.push({
           type: 'delete',
           id: cId,
-          parentId, // getNodeId(newParent)
+          // parentId,
+          parentId: getNodeId(newParent),
         });
       }
     });
@@ -132,7 +133,6 @@ export const applyTreeDiff = (tree: Root, operations: Operation[]) => {
     console.log(op.type, op.id);
     switch (op.type) {
       case 'insert':
-
         let parent = undefined;
 
         if (op.parentId) {
@@ -181,7 +181,29 @@ export const applyTreeDiff = (tree: Root, operations: Operation[]) => {
         }
         break;
       case 'delete':
+        let parentD = undefined;
 
+        if (op.parentId) {
+          // attempt to resolve by parent ID
+          parentD = findNodeByIdRecursive(tree.children, op.parentId);
+        }
+
+        if (parentD === undefined) {
+          // if is still unresolved, choose the tree as the root.
+          parentD = tree;
+          // return;
+        }
+
+        if ('children' in parentD) {
+          const parentElement = (parentD as Element);
+          // Find the index of the child with the specified ID
+          const index = parentElement.children.findIndex(child => getNodeId(child) === op.id);
+
+          // If the child is found, remove it using splice
+          if (index !== -1) {
+            parentElement.children.splice(index, 1);
+          }
+        }
         break;
     }
   }
