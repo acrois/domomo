@@ -181,8 +181,9 @@ test('Tree Difference and Apply', async () => {
   expect(operations).toMatchSnapshot();
 
   const transferTree = JSON.parse(JSON.stringify(oldTree)); // simulate what the network will do
-  // applyTreeDiff(transferTree, operations);
-  console.log(transferTree, newTree, operations);
+  applyTreeDiff(transferTree, operations);
+  expect(transferTree).toMatchSnapshot();
+  // console.log(transferTree, operations);
   // console.log(JSON.stringify(operations));
 
 })

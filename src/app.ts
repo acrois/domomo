@@ -155,10 +155,10 @@ const fetcher = (fetch: () => Promise<any>) => {
       // const prep = astPrepareForRehype(renewed);
       const d = diffTrees(initial, renewed);
 
-      console.log(d);
+      // console.log(d);
       // stream.send(d.length > 0 ? renewed : []);
 
-      if (d && Object.keys(d).length > 0) {
+      if (d && d.length > 0) {
         // console.log(JSON.stringify(d), JSON.stringify(prep), JSON.stringify(diff(astPrepareForRehype(initial), prep)));
         stream.event = 'diff';
         // console.log(d);
@@ -249,6 +249,7 @@ const app = (env: any) => {
       }
     })
     .get('/m/*', serveStaticDirectory('m'))
+    .get('/w/*', serveStaticDirectory('w'))
     .get('/s/*', serveStaticDirectory('s'))
     .get('favicon.ico', serveStaticFile(Bun.file('./static/_/favicon.ico')))
     .get("*", async ({ params, domain, pool, headers }) => {

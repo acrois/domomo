@@ -33,6 +33,7 @@ const codecPlugin = new Elysia({
       : '';
 
     // console.log(type);
+
     if (response !== null
       && typeof response === 'object'
       && !(response instanceof Response)
@@ -42,7 +43,7 @@ const codecPlugin = new Elysia({
       //   TODO find a better one
       // also, we did not request the raw (server default) response
       //   raw is useful for debugging and as an escape hatch
-      if ('id' in response && 'children' in response && !('raw' in query)) {
+      if ('data' in response && 'children' in response && !('raw' in query)) {
         type = 'text/html; charset=utf-8'
         dat = astToHTML(response);
       }
@@ -58,7 +59,7 @@ const codecPlugin = new Elysia({
       }
     }
 
-    // console.log(response);
+    // console.log(type, dat);
     // const isTextContent = type.startsWith('text/') || type.includes('charset=');
 
     if (dat !== null

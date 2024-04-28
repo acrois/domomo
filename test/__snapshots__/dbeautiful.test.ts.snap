@@ -1245,8 +1245,33 @@ exports[`Tree Difference and Apply 1`] = `
       "type": "element",
       "value": null,
     },
-    "parentId": "root",
+    "parentId": "guid1",
     "type": "insert",
   },
 ]
+`;
+
+exports[`Tree Difference and Apply 2`] = `
+{
+  "children": [
+    {
+      "id": "guid2",
+      "name": null,
+      "properties": {},
+      "type": "text",
+      "value": "changed",
+    },
+    {
+      "children": [],
+      "id": "guid3",
+      "name": "p",
+      "properties": {},
+      "type": "element",
+      "value": null,
+    },
+  ],
+  "id": "guid1",
+  "name": "p",
+  "type": "element",
+}
 `;

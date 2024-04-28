@@ -1,9 +1,9 @@
-import type { Root, Doctype, Element, Literals, Text, Comment, Parent, Node } from 'hast'
+import type { Root, Doctype, Element, Literals, Text, Comment, Parent, Node, ElementContent } from 'hast'
 
 const getNodeId = (node: Node): string | undefined => {
-  return 'id' in node && node.id
+  return ('id' in node && node.id && typeof node.id === 'string')
     ? node.id
-    : node.data && 'id' in node.data && node.data.id
+    : (node.data && 'id' in node.data && node.data.id && typeof node.data.id === 'string')
       ? node.data.id : undefined
 }
 
@@ -19,6 +19,10 @@ const hasUpdate = (name: string, a: any, b: any, stringify: boolean = false) => 
 // Helper function to find a node by ID within children
 const findNodeById = (children: Node[], id: string) =>
   children.find(child => getNodeId(child) === id);
+const findNodeByIdRecursive = (children: Node[], id: string) =>
+  findNodeById(children.flatMap(flattenTree), id)
+const flattenTree = (node: any) =>
+  [node, ...node?.children?.flatMap(flattenTree) ?? []]
 
 interface Operation {
   type: 'insert' | 'delete' | 'update'
@@ -39,7 +43,7 @@ export const diffTrees = (oldNode: Node, newNode: Node, parentId?: string) => {
     const newParent = (newNode as Parent);
 
     // Check for deletions or updates
-    oldParent.children.forEach((child, idx) => {
+    oldParent.children.forEach(child => {
       const cId = getNodeId(child);
 
       if (!cId) {
@@ -85,6 +89,7 @@ export const diffTrees = (oldNode: Node, newNode: Node, parentId?: string) => {
 
           operations.push(update);
         }
+
         // Recurse on children
         operations = operations.concat(diffTrees(child, correspondingNode, cId));
       }
@@ -92,7 +97,7 @@ export const diffTrees = (oldNode: Node, newNode: Node, parentId?: string) => {
         operations.push({
           type: 'delete',
           id: cId,
-          parentId,
+          parentId, // getNodeId(newParent)
         });
       }
     });
@@ -112,7 +117,7 @@ export const diffTrees = (oldNode: Node, newNode: Node, parentId?: string) => {
         operations.push({
           type: 'insert',
           id: cId,
-          parentId,
+          parentId: getNodeId(newParent),
           node: child,
         });
       }
@@ -122,40 +127,57 @@ export const diffTrees = (oldNode: Node, newNode: Node, parentId?: string) => {
   return operations;
 }
 
-export const applyTreeDiff = (tree: Root, operations: any[]) => {
+export const applyTreeDiff = (tree: Root, operations: Operation[]) => {
   for (const op of operations) {
     console.log(op.type, op.id);
     switch (op.type) {
       case 'insert':
-        let parent = findNodeById(tree.children, op.parentId);
+
+        let parent = undefined;
+
+        if (op.parentId) {
+          // attempt to resolve by parent ID
+          parent = findNodeByIdRecursive(tree.children, op.parentId);
+        }
 
         if (parent === undefined) {
+          // if is still unresolved, choose the tree as the root.
           parent = tree;
           // return;
         }
 
-        console.log(parent);
+        if (!op.node) {
+          throw 'Invalid node';
+        }
 
         if ('children' in parent) {
           const parentElement = (parent as Element);
-          parentElement.children.push(op.node);
+          parentElement.children.push(op.node as ElementContent);
         }
         break;
       case 'update':
-        if ('type' in op) {
+        const content = op.node;
+        const existing = findNodeByIdRecursive(tree.children, op.id);
 
+        if (!content || !existing) {
+          console.error(content, existing);
+          throw 'Invalid empty content.';
         }
 
-        if ('properties' in op) {
-
+        if ('type' in content) {
+          existing.type = content.type;
         }
 
-        if ('name' in op) {
-
+        if ('properties' in content) {
+          existing.properties = content.properties;
         }
 
-        if ('value' in op) {
+        if ('name' in content) {
+          existing.name = content.name
+        }
 
+        if ('value' in content) {
+          existing.value = content.value;
         }
         break;
       case 'delete':
