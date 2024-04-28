@@ -388,6 +388,14 @@ const mutation = (mutationList, observer) => {
     //   console.log(`The ${mutation.attributeName} attribute was modified.`);
     // }
 
+    if (mutation.type === 'attributes') {
+      if (mutation.attributeName === 'data-cmd') {
+        continue;
+      }
+
+      // if (mutation.attributeName === 'class' && mutation.)
+    }
+
     console.log(mutation);
   }
 };
@@ -398,7 +406,7 @@ observer.observe(document, {
   childList: true,
   subtree: true,
   characterData: true,
-  // attributeOldValue: true,
-  // characterDataOldValue: true,
+  attributeOldValue: true,
+  characterDataOldValue: true,
 });
 //observer.disconnect();

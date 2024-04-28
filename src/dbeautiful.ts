@@ -1,6 +1,6 @@
 import type { Root, Doctype, Element, Literals, Text, Comment, Parent, Node, ElementContent } from 'hast'
 
-const getNodeId = (node: Node): string | undefined => {
+export const getNodeId = (node: Node): string | undefined => {
   return ('id' in node && node.id && typeof node.id === 'string')
     ? node.id
     : (node.data && 'id' in node.data && node.data.id && typeof node.data.id === 'string')

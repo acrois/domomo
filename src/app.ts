@@ -9,7 +9,7 @@ import codecPlugin from "./encoder";
 import authPlugin, { AuthError } from "./auth";
 import { watch } from "fs";
 import { readdir } from "node:fs/promises";
-import { diffTrees, rowsToTrees, treeToRows } from "./dbeautiful";
+import { diffTrees, getNodeId, rowsToTrees, treeToRows } from "./dbeautiful";
 import type { BunFile } from "bun";
 // import diff from 'unist-diff';
 
@@ -105,7 +105,7 @@ const loadFileByRelativePath = async (handle: any, event: any, filename: string)
   }
 }
 
-const fetchTree = async (client: ClientBase, domainId: string, documentPath: string) => {
+const fetchTrees = async (client: ClientBase, domainId: string, documentPath: string) => {
   const tree = await client.query(SQL`
     SELECT
       get_document_tree(dd.document_id) AS tree
@@ -127,8 +127,11 @@ const fetchTree = async (client: ClientBase, domainId: string, documentPath: str
     throw new NotFoundError();
   }
 
-  return organized[0];
+  return organized;
 }
+
+const fetchTree = async (client: ClientBase, domainId: string, documentPath: string) =>
+  (await fetchTrees(client, domainId, documentPath))[0]
 
 const fetcher = (fetch: () => Promise<any>) => {
   return new Stream(async (stream) => {
@@ -464,23 +467,11 @@ const app = (env: any) => {
 
         try {
           // console.log(document, fragment);
-          const tree = await db.query(SQL`
-            SELECT
-              id,
-              node_type,
-              name,
-              value,
-              position,
-              parent
-            FROM document_tree
-            WHERE root = ${document.document_id}
-          `);
-          // console.log(tree);
-          const parents = rowsToTrees(tree.rows);
+          const parents = await fetchTrees(db, document.id, document.document_name)
           // console.log(parents);
 
           for (const parent of parents) {
-            if (parent.id === fragment.id) {
+            if (getNodeId(parent) === fragment.id) {
               return parent;
             }
           }
