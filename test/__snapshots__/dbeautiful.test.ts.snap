@@ -1,0 +1,1277 @@
+// Bun Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Convert AST to DB rows 1`] = `
+{
+  "children": [
+    {
+      "position": {
+        "end": {
+          "column": 16,
+          "line": 1,
+          "offset": 15,
+        },
+        "start": {
+          "column": 1,
+          "line": 1,
+          "offset": 0,
+        },
+      },
+      "type": "doctype",
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "position": {
+                    "end": {
+                      "column": 16,
+                      "line": 4,
+                      "offset": 47,
+                    },
+                    "start": {
+                      "column": 12,
+                      "line": 4,
+                      "offset": 43,
+                    },
+                  },
+                  "type": "text",
+                  "value": "text",
+                },
+              ],
+              "position": {
+                "end": {
+                  "column": 24,
+                  "line": 4,
+                  "offset": 55,
+                },
+                "start": {
+                  "column": 5,
+                  "line": 4,
+                  "offset": 36,
+                },
+              },
+              "properties": {},
+              "tagName": "title",
+              "type": "element",
+            },
+            {
+              "children": [],
+              "position": {
+                "end": {
+                  "column": 45,
+                  "line": 5,
+                  "offset": 100,
+                },
+                "start": {
+                  "column": 5,
+                  "line": 5,
+                  "offset": 60,
+                },
+              },
+              "properties": {
+                "rel": [
+                  "stylesheet",
+                ],
+                "src": "test.css",
+              },
+              "tagName": "link",
+              "type": "element",
+            },
+          ],
+          "position": {
+            "end": {
+              "column": 10,
+              "line": 6,
+              "offset": 110,
+            },
+            "start": {
+              "column": 3,
+              "line": 3,
+              "offset": 25,
+            },
+          },
+          "properties": {},
+          "tagName": "head",
+          "type": "element",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "position": {
+                    "end": {
+                      "column": 35,
+                      "line": 8,
+                      "offset": 154,
+                    },
+                    "start": {
+                      "column": 31,
+                      "line": 8,
+                      "offset": 150,
+                    },
+                  },
+                  "type": "text",
+                  "value": "test",
+                },
+              ],
+              "position": {
+                "end": {
+                  "column": 39,
+                  "line": 8,
+                  "offset": 158,
+                },
+                "start": {
+                  "column": 5,
+                  "line": 8,
+                  "offset": 124,
+                },
+              },
+              "properties": {
+                "className": [
+                  "cancel-culture",
+                ],
+              },
+              "tagName": "p",
+              "type": "element",
+            },
+          ],
+          "position": {
+            "end": {
+              "column": 10,
+              "line": 9,
+              "offset": 168,
+            },
+            "start": {
+              "column": 3,
+              "line": 7,
+              "offset": 113,
+            },
+          },
+          "properties": {},
+          "tagName": "body",
+          "type": "element",
+        },
+      ],
+      "position": {
+        "end": {
+          "column": 8,
+          "line": 10,
+          "offset": 176,
+        },
+        "start": {
+          "column": 1,
+          "line": 2,
+          "offset": 16,
+        },
+      },
+      "properties": {},
+      "tagName": "html",
+      "type": "element",
+    },
+  ],
+  "data": {
+    "quirksMode": false,
+  },
+  "position": {
+    "end": {
+      "column": 8,
+      "line": 10,
+      "offset": 176,
+    },
+    "start": {
+      "column": 1,
+      "line": 1,
+      "offset": 0,
+    },
+  },
+  "type": "root",
+}
+`;
+
+exports[`Convert AST to DB rows 2`] = `
+{
+  "attachments": [
+    {
+      "child_id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
+      "parent_id": "79455613-836f-44cb-9036-de551c6c0d23",
+      "position": 0,
+    },
+    {
+      "child_id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+      "parent_id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+      "position": 0,
+    },
+    {
+      "child_id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+      "parent_id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+      "position": 0,
+    },
+    {
+      "child_id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
+      "parent_id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+      "position": 0,
+    },
+    {
+      "child_id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
+      "parent_id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+      "position": 1,
+    },
+    {
+      "child_id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+      "parent_id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+      "position": 1,
+    },
+    {
+      "child_id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+      "parent_id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "position": 0,
+    },
+    {
+      "child_id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+      "parent_id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+      "position": 0,
+    },
+    {
+      "child_id": "2953960c-9aa5-4c5a-b47d-42b20bdae370",
+      "parent_id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+      "position": 1,
+    },
+    {
+      "child_id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+      "parent_id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+      "position": 0,
+    },
+    {
+      "child_id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+      "parent_id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "position": 1,
+    },
+    {
+      "child_id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "parent_id": "79455613-836f-44cb-9036-de551c6c0d23",
+      "position": 1,
+    },
+  ],
+  "rows": [
+    {
+      "id": "79455613-836f-44cb-9036-de551c6c0d23",
+      "name": "/",
+      "type": "DOCUMENT",
+      "value": null,
+    },
+    {
+      "id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
+      "name": "!doctype",
+      "type": "DOCUMENT_TYPE",
+      "value": "!DOCTYPE html",
+    },
+    {
+      "id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "name": "html",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+      "name": "head",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+      "name": "title",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+      "name": null,
+      "type": "TEXT",
+      "value": "text",
+    },
+    {
+      "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+      "name": "link",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
+      "name": "rel",
+      "type": "ATTRIBUTE",
+      "value": "["stylesheet"]",
+    },
+    {
+      "id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
+      "name": "src",
+      "type": "ATTRIBUTE",
+      "value": ""test.css"",
+    },
+    {
+      "id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+      "name": "body",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+      "name": "p",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+      "name": null,
+      "type": "TEXT",
+      "value": "test",
+    },
+    {
+      "id": "2953960c-9aa5-4c5a-b47d-42b20bdae370",
+      "name": "className",
+      "type": "ATTRIBUTE",
+      "value": "["cancel-culture"]",
+    },
+  ],
+}
+`;
+
+exports[`Convert HTML to AST and back 1`] = `
+{
+  "children": [
+    {
+      "position": {
+        "end": {
+          "column": 16,
+          "line": 1,
+          "offset": 15,
+        },
+        "start": {
+          "column": 1,
+          "line": 1,
+          "offset": 0,
+        },
+      },
+      "type": "doctype",
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "position": {
+                    "end": {
+                      "column": 16,
+                      "line": 4,
+                      "offset": 47,
+                    },
+                    "start": {
+                      "column": 12,
+                      "line": 4,
+                      "offset": 43,
+                    },
+                  },
+                  "type": "text",
+                  "value": "text",
+                },
+              ],
+              "position": {
+                "end": {
+                  "column": 24,
+                  "line": 4,
+                  "offset": 55,
+                },
+                "start": {
+                  "column": 5,
+                  "line": 4,
+                  "offset": 36,
+                },
+              },
+              "properties": {},
+              "tagName": "title",
+              "type": "element",
+            },
+            {
+              "children": [],
+              "position": {
+                "end": {
+                  "column": 45,
+                  "line": 5,
+                  "offset": 100,
+                },
+                "start": {
+                  "column": 5,
+                  "line": 5,
+                  "offset": 60,
+                },
+              },
+              "properties": {
+                "rel": [
+                  "stylesheet",
+                ],
+                "src": "test.css",
+              },
+              "tagName": "link",
+              "type": "element",
+            },
+          ],
+          "position": {
+            "end": {
+              "column": 10,
+              "line": 6,
+              "offset": 110,
+            },
+            "start": {
+              "column": 3,
+              "line": 3,
+              "offset": 25,
+            },
+          },
+          "properties": {},
+          "tagName": "head",
+          "type": "element",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "position": {
+                    "end": {
+                      "column": 35,
+                      "line": 8,
+                      "offset": 154,
+                    },
+                    "start": {
+                      "column": 31,
+                      "line": 8,
+                      "offset": 150,
+                    },
+                  },
+                  "type": "text",
+                  "value": "test",
+                },
+              ],
+              "position": {
+                "end": {
+                  "column": 39,
+                  "line": 8,
+                  "offset": 158,
+                },
+                "start": {
+                  "column": 5,
+                  "line": 8,
+                  "offset": 124,
+                },
+              },
+              "properties": {
+                "className": [
+                  "cancel-culture",
+                ],
+              },
+              "tagName": "p",
+              "type": "element",
+            },
+          ],
+          "position": {
+            "end": {
+              "column": 10,
+              "line": 9,
+              "offset": 168,
+            },
+            "start": {
+              "column": 3,
+              "line": 7,
+              "offset": 113,
+            },
+          },
+          "properties": {},
+          "tagName": "body",
+          "type": "element",
+        },
+      ],
+      "position": {
+        "end": {
+          "column": 8,
+          "line": 10,
+          "offset": 176,
+        },
+        "start": {
+          "column": 1,
+          "line": 2,
+          "offset": 16,
+        },
+      },
+      "properties": {},
+      "tagName": "html",
+      "type": "element",
+    },
+  ],
+  "data": {
+    "quirksMode": false,
+  },
+  "position": {
+    "end": {
+      "column": 8,
+      "line": 10,
+      "offset": 176,
+    },
+    "start": {
+      "column": 1,
+      "line": 1,
+      "offset": 0,
+    },
+  },
+  "type": "root",
+}
+`;
+
+exports[`Convert HTML to AST and back 2`] = `"<!doctype html><html><head><title>text</title><link rel="stylesheet" src="test.css"></head><body><p class="cancel-culture">test</p></body></html>"`;
+
+exports[`Convert DB rows to AST 1`] = `
+{
+  "children": [
+    {
+      "position": {
+        "end": {
+          "column": 16,
+          "line": 1,
+          "offset": 15,
+        },
+        "start": {
+          "column": 1,
+          "line": 1,
+          "offset": 0,
+        },
+      },
+      "type": "doctype",
+    },
+    {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "position": {
+                    "end": {
+                      "column": 16,
+                      "line": 4,
+                      "offset": 47,
+                    },
+                    "start": {
+                      "column": 12,
+                      "line": 4,
+                      "offset": 43,
+                    },
+                  },
+                  "type": "text",
+                  "value": "text",
+                },
+              ],
+              "position": {
+                "end": {
+                  "column": 24,
+                  "line": 4,
+                  "offset": 55,
+                },
+                "start": {
+                  "column": 5,
+                  "line": 4,
+                  "offset": 36,
+                },
+              },
+              "properties": {},
+              "tagName": "title",
+              "type": "element",
+            },
+            {
+              "children": [],
+              "position": {
+                "end": {
+                  "column": 45,
+                  "line": 5,
+                  "offset": 100,
+                },
+                "start": {
+                  "column": 5,
+                  "line": 5,
+                  "offset": 60,
+                },
+              },
+              "properties": {
+                "rel": [
+                  "stylesheet",
+                ],
+                "src": "test.css",
+              },
+              "tagName": "link",
+              "type": "element",
+            },
+          ],
+          "position": {
+            "end": {
+              "column": 10,
+              "line": 6,
+              "offset": 110,
+            },
+            "start": {
+              "column": 3,
+              "line": 3,
+              "offset": 25,
+            },
+          },
+          "properties": {},
+          "tagName": "head",
+          "type": "element",
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "position": {
+                    "end": {
+                      "column": 35,
+                      "line": 8,
+                      "offset": 154,
+                    },
+                    "start": {
+                      "column": 31,
+                      "line": 8,
+                      "offset": 150,
+                    },
+                  },
+                  "type": "text",
+                  "value": "test",
+                },
+              ],
+              "position": {
+                "end": {
+                  "column": 39,
+                  "line": 8,
+                  "offset": 158,
+                },
+                "start": {
+                  "column": 5,
+                  "line": 8,
+                  "offset": 124,
+                },
+              },
+              "properties": {
+                "className": [
+                  "cancel-culture",
+                ],
+              },
+              "tagName": "p",
+              "type": "element",
+            },
+          ],
+          "position": {
+            "end": {
+              "column": 10,
+              "line": 9,
+              "offset": 168,
+            },
+            "start": {
+              "column": 3,
+              "line": 7,
+              "offset": 113,
+            },
+          },
+          "properties": {},
+          "tagName": "body",
+          "type": "element",
+        },
+      ],
+      "position": {
+        "end": {
+          "column": 8,
+          "line": 10,
+          "offset": 176,
+        },
+        "start": {
+          "column": 1,
+          "line": 2,
+          "offset": 16,
+        },
+      },
+      "properties": {},
+      "tagName": "html",
+      "type": "element",
+    },
+  ],
+  "data": {
+    "quirksMode": false,
+  },
+  "position": {
+    "end": {
+      "column": 8,
+      "line": 10,
+      "offset": 176,
+    },
+    "start": {
+      "column": 1,
+      "line": 1,
+      "offset": 0,
+    },
+  },
+  "type": "root",
+}
+`;
+
+exports[`Convert DB rows to AST 2`] = `
+{
+  "attachments": [
+    {
+      "child_id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
+      "parent_id": "79455613-836f-44cb-9036-de551c6c0d23",
+      "position": 0,
+    },
+    {
+      "child_id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+      "parent_id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+      "position": 0,
+    },
+    {
+      "child_id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+      "parent_id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+      "position": 0,
+    },
+    {
+      "child_id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
+      "parent_id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+      "position": 0,
+    },
+    {
+      "child_id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
+      "parent_id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+      "position": 1,
+    },
+    {
+      "child_id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+      "parent_id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+      "position": 1,
+    },
+    {
+      "child_id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+      "parent_id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "position": 0,
+    },
+    {
+      "child_id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+      "parent_id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+      "position": 0,
+    },
+    {
+      "child_id": "2953960c-9aa5-4c5a-b47d-42b20bdae370",
+      "parent_id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+      "position": 1,
+    },
+    {
+      "child_id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+      "parent_id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+      "position": 0,
+    },
+    {
+      "child_id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+      "parent_id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "position": 1,
+    },
+    {
+      "child_id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "parent_id": "79455613-836f-44cb-9036-de551c6c0d23",
+      "position": 1,
+    },
+  ],
+  "rows": [
+    {
+      "id": "79455613-836f-44cb-9036-de551c6c0d23",
+      "name": "/",
+      "type": "DOCUMENT",
+      "value": null,
+    },
+    {
+      "id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
+      "name": "!doctype",
+      "type": "DOCUMENT_TYPE",
+      "value": "!DOCTYPE html",
+    },
+    {
+      "id": "06e18375-1962-47be-b8d1-b272b0013bea",
+      "name": "html",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+      "name": "head",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+      "name": "title",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+      "name": null,
+      "type": "TEXT",
+      "value": "text",
+    },
+    {
+      "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+      "name": "link",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
+      "name": "rel",
+      "type": "ATTRIBUTE",
+      "value": "["stylesheet"]",
+    },
+    {
+      "id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
+      "name": "src",
+      "type": "ATTRIBUTE",
+      "value": ""test.css"",
+    },
+    {
+      "id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+      "name": "body",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+      "name": "p",
+      "type": "ELEMENT",
+      "value": null,
+    },
+    {
+      "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+      "name": null,
+      "type": "TEXT",
+      "value": "test",
+    },
+    {
+      "id": "2953960c-9aa5-4c5a-b47d-42b20bdae370",
+      "name": "className",
+      "type": "ATTRIBUTE",
+      "value": "["cancel-culture"]",
+    },
+  ],
+}
+`;
+
+exports[`Convert DB rows to AST 3`] = `
+[
+  {
+    "children": [
+      {
+        "data": {
+          "id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
+        },
+        "type": "doctype",
+      },
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "data": {
+                      "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+                    },
+                    "type": "text",
+                    "value": "text",
+                  },
+                ],
+                "data": {
+                  "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+                },
+                "properties": {},
+                "tagName": "title",
+                "type": "element",
+              },
+              {
+                "children": [],
+                "data": {
+                  "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+                },
+                "properties": {
+                  "rel": [
+                    "stylesheet",
+                  ],
+                  "src": "test.css",
+                },
+                "tagName": "link",
+                "type": "element",
+              },
+            ],
+            "data": {
+              "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+            },
+            "properties": {},
+            "tagName": "head",
+            "type": "element",
+          },
+          {
+            "children": [
+              {
+                "children": [
+                  {
+                    "data": {
+                      "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+                    },
+                    "type": "text",
+                    "value": "test",
+                  },
+                ],
+                "data": {
+                  "id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+                },
+                "properties": {
+                  "class": [
+                    "cancel-culture",
+                  ],
+                },
+                "tagName": "p",
+                "type": "element",
+              },
+            ],
+            "data": {
+              "id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+            },
+            "properties": {},
+            "tagName": "body",
+            "type": "element",
+          },
+        ],
+        "data": {
+          "id": "06e18375-1962-47be-b8d1-b272b0013bea",
+        },
+        "properties": {},
+        "tagName": "html",
+        "type": "element",
+      },
+    ],
+    "data": {
+      "id": "79455613-836f-44cb-9036-de551c6c0d23",
+    },
+    "type": "root",
+  },
+  {
+    "data": {
+      "id": "04e1b12b-c42d-4c67-916c-8acf9dec75f6",
+    },
+    "type": "doctype",
+  },
+  {
+    "children": [
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "data": {
+                  "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+                },
+                "type": "text",
+                "value": "text",
+              },
+            ],
+            "data": {
+              "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+            },
+            "properties": {},
+            "tagName": "title",
+            "type": "element",
+          },
+          {
+            "children": [],
+            "data": {
+              "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+            },
+            "properties": {
+              "rel": [
+                "stylesheet",
+              ],
+              "src": "test.css",
+            },
+            "tagName": "link",
+            "type": "element",
+          },
+        ],
+        "data": {
+          "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+        },
+        "properties": {},
+        "tagName": "head",
+        "type": "element",
+      },
+      {
+        "children": [
+          {
+            "children": [
+              {
+                "data": {
+                  "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+                },
+                "type": "text",
+                "value": "test",
+              },
+            ],
+            "data": {
+              "id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+            },
+            "properties": {
+              "class": [
+                "cancel-culture",
+              ],
+            },
+            "tagName": "p",
+            "type": "element",
+          },
+        ],
+        "data": {
+          "id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+        },
+        "properties": {},
+        "tagName": "body",
+        "type": "element",
+      },
+    ],
+    "data": {
+      "id": "06e18375-1962-47be-b8d1-b272b0013bea",
+    },
+    "properties": {},
+    "tagName": "html",
+    "type": "element",
+  },
+  {
+    "children": [
+      {
+        "children": [
+          {
+            "data": {
+              "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+            },
+            "type": "text",
+            "value": "text",
+          },
+        ],
+        "data": {
+          "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+        },
+        "properties": {},
+        "tagName": "title",
+        "type": "element",
+      },
+      {
+        "children": [],
+        "data": {
+          "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+        },
+        "properties": {
+          "rel": [
+            "stylesheet",
+          ],
+          "src": "test.css",
+        },
+        "tagName": "link",
+        "type": "element",
+      },
+    ],
+    "data": {
+      "id": "896c8aa4-c868-4c9c-af0b-c2969dd12c18",
+    },
+    "properties": {},
+    "tagName": "head",
+    "type": "element",
+  },
+  {
+    "children": [
+      {
+        "data": {
+          "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+        },
+        "type": "text",
+        "value": "text",
+      },
+    ],
+    "data": {
+      "id": "882bbc2b-2c53-46f0-8e9e-d1bd3e5d0e5f",
+    },
+    "properties": {},
+    "tagName": "title",
+    "type": "element",
+  },
+  {
+    "data": {
+      "id": "2115feec-c2a2-410a-b3a7-9e2593d592a3",
+    },
+    "type": "text",
+    "value": "text",
+  },
+  {
+    "children": [],
+    "data": {
+      "id": "0d8afb3f-416a-48bc-8631-61872af9e880",
+    },
+    "properties": {
+      "rel": [
+        "stylesheet",
+      ],
+      "src": "test.css",
+    },
+    "tagName": "link",
+    "type": "element",
+  },
+  {
+    "data": {
+      "id": "4f81f0fe-ada5-4a0a-91d4-cdb40e492271",
+    },
+    "tagName": "rel",
+    "type": "attribute",
+    "value": "["stylesheet"]",
+  },
+  {
+    "data": {
+      "id": "de02bea8-04cd-4f5d-807f-2bcd3daf6ceb",
+    },
+    "tagName": "src",
+    "type": "attribute",
+    "value": ""test.css"",
+  },
+  {
+    "children": [
+      {
+        "children": [
+          {
+            "data": {
+              "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+            },
+            "type": "text",
+            "value": "test",
+          },
+        ],
+        "data": {
+          "id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+        },
+        "properties": {
+          "class": [
+            "cancel-culture",
+          ],
+        },
+        "tagName": "p",
+        "type": "element",
+      },
+    ],
+    "data": {
+      "id": "8cadab15-b7bd-4303-8ba3-4b4044b577e0",
+    },
+    "properties": {},
+    "tagName": "body",
+    "type": "element",
+  },
+  {
+    "children": [
+      {
+        "data": {
+          "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+        },
+        "type": "text",
+        "value": "test",
+      },
+    ],
+    "data": {
+      "id": "e57657c7-d63c-44a2-a307-b2521513f1dc",
+    },
+    "properties": {
+      "class": [
+        "cancel-culture",
+      ],
+    },
+    "tagName": "p",
+    "type": "element",
+  },
+  {
+    "data": {
+      "id": "a7f94b39-a72f-4452-8ffc-f4aa652f43ed",
+    },
+    "type": "text",
+    "value": "test",
+  },
+  {
+    "data": {
+      "id": "2953960c-9aa5-4c5a-b47d-42b20bdae370",
+    },
+    "tagName": "className",
+    "type": "attribute",
+    "value": "["cancel-culture"]",
+  },
+]
+`;
+
+exports[`Convert DB rows to AST 4`] = `"<!doctype html><html><head><title>text</title><link rel="stylesheet" src="test.css"></head><body><p class="cancel-culture">test</p></body></html>"`;
+
+exports[`Tree Difference and Apply 1`] = `
+[
+  {
+    "id": "guid2",
+    "node": {
+      "type": "text",
+      "value": "changed",
+    },
+    "type": "update",
+  },
+  {
+    "id": "guid3",
+    "node": {
+      "children": [],
+      "id": "guid3",
+      "name": "p",
+      "properties": {},
+      "type": "element",
+      "value": null,
+    },
+    "parentId": "guid1",
+    "type": "insert",
+  },
+]
+`;
+
+exports[`Tree Difference and Apply 2`] = `
+{
+  "children": [
+    {
+      "id": "guid2",
+      "name": null,
+      "properties": {},
+      "type": "text",
+      "value": "changed",
+    },
+    {
+      "children": [],
+      "id": "guid3",
+      "name": "p",
+      "properties": {},
+      "type": "element",
+      "value": null,
+    },
+  ],
+  "id": "guid1",
+  "name": "p",
+  "type": "element",
+}
+`;

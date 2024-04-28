@@ -1,0 +1,12 @@
+:root {
+  --system-ui: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+body {
+  /* background-color: Canvas;
+  color: CanvasText; */
+  background-color: color-mix(in srgb, Canvas, CanvasText 2.5%);
+  color: color-mix(in srgb, CanvasText, Canvas 15%);
+  color-scheme: light dark;
+  font-family: var(--system-ui);
+}

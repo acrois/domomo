@@ -1,11 +1,9 @@
-import { DomHandler, Parser } from "htmlparser2";
-import { unified } from 'unified';
-import rehypeParse from 'rehype-parse';
-import rehypeStringify from 'rehype-stringify';
 import rehypePresetMinify from 'rehype-preset-minify';
+import diff from "unist-diff";
+import { rehype } from 'rehype';
 
 export enum NodeType {
-  WINDOW,
+  ROOT,
   DOMAIN,
   DOCUMENT,
   DOCUMENT_TYPE,
@@ -30,29 +28,10 @@ export type DatabaseNode = BasicNode & {
   children: DatabaseNode[];
 }
 
-export const nodeToHTML = (node: DatabaseNode): string => {
-  const children: string = node.children ? node.children.map(nodeToHTML).join("") : "";
-
-  switch (node.node_type) {
-    case "DOCUMENT_TYPE":
-      return `<${node.value}>`;
-    case "ELEMENT":
-      return `<${node.name} data-guid="${node.id}">${children}</${node.name}>`;
-    case "TEXT":
-      return node.value ?? '';
-    case "COMMENT":
-      return `<!--#${node.id} ${children}-->`;
-    default:
-    case "WINDOW":
-    case "DOCUMENT":
-      return children;
-  }
-}
-
 export const rowsToParents = (treeRows: any[]) => {
   const parents: DatabaseNode[] = [{
     id: null,
-    node_type: 'WINDOW',
+    type_id: 0,
     children: [],
     name: null,
     value: null,
@@ -85,41 +64,19 @@ export const nodesToProperties = (node: any) => {
   // console.log(node);
   return {
     ...node,
-    children: node?.children?.filter(v => v.type.toUpperCase() !== 'ATTRIBUTE')?.map(nodesToProperties),
+    children: node?.children?.filter(v => v.type.toUpperCase() !== 'ATTRIBUTE')?.map(nodesToProperties) ?? [],
     properties: Object.fromEntries(
-      node?.children
+      (node?.children ?? [])
         ?.filter(v => v.type.toUpperCase() === 'ATTRIBUTE')
         ?.map(v => [
           v.tagName,
           v.tagName == 'className'
-            ? JSON.parse("[" + v.value.slice(1, v.value.length-1) + "]")
+            ? JSON.parse("[" + v.value.slice(1, v.value.length - 1) + "]")
             : v.value,
         ])
       ?? {}
     ),
   }
-}
-
-export const propertiesToNodes = (node: any) => {
-  if (node.properties) {
-    for (const key in node.properties) {
-      if (!node.children) { node.children = [] }
-      node.children.push({
-        node_type: 'ATTRIBUTE',
-        name: key,
-        value: node.properties[key],
-      });
-      delete node.properties[key];
-    }
-  }
-
-  if (node.children) {
-    for (const child of node.children) {
-      propertiesToNodes(child);
-    }
-  }
-
-  return node;
 }
 
 export const astPrepareForRehype = (ast: any) => {
@@ -140,12 +97,14 @@ export const astPrepareForRehype = (ast: any) => {
   );
 }
 
-const processor = (fragment?: boolean) => unified()
+const processor = (fragment?: boolean) => rehype()
   .use(rehypePresetMinify)
-  .use(rehypeStringify)
-  .use(rehypeParse, {
-    fragment,
+  .data('settings', {
+    fragment: fragment,
     verbose: false,
+    // emitParseErrors: true,
+    // tightDoctype: false,
+    // abruptDoctypePublicIdentifier: false,
   })
   ;
 
@@ -158,11 +117,22 @@ export const cleanHTML = (html: string, fragment?: boolean) => {
 }
 
 export const htmlToAST = (html: string, fragment?: boolean) => {
-  return cleanAST(processor().parse(html), fragment);
+  const proc = processor(fragment)
+  const parsed = proc.parse(html)
+  return proc.run(parsed);
 }
 
 export const astToHTML = (ast: any, fragment?: boolean) => {
-  return processor(fragment).stringify(astPrepareForRehype(ast));
+  // const t = astPrepareForRehype(ast);
+  // console.log(JSON.stringify(t));
+  return processor(fragment).stringify(ast);
+}
+
+export const diffTreeWithHTML = async (oldTree: any, newTree: string) => {
+  const oldTreePrep = astPrepareForRehype(oldTree);
+  const newTreePrep = htmlToAST(newTree);
+  const d = diff(oldTreePrep, newTreePrep, {});
+  return d;
 }
 
 export const parseToAST = async (html: string, fragment?: boolean) => {
@@ -192,49 +162,9 @@ export const parseToAST = async (html: string, fragment?: boolean) => {
   const fin =
     // root
     propertiesToNodes(root)
-  ;
+    ;
   // console.log(JSON.stringify(fin));
   return fin;
-}
-
-export const htmlToDocument = (path: string, html: string): BasicNode[] => {
-  const handler = new DomHandler();
-  const parser = new Parser(handler);
-  parser.write(html);
-  parser.end();
-
-  const simplifyDom = (node: any): BasicNode => {
-    const node_type = node.type
-      .replace('directive', 'document_type')
-      .replace('tag', 'element')
-      .toUpperCase()
-      ;
-
-    const attribs = node.attribs;
-
-    // console.log(attribs);
-
-    return {
-      node_type,
-      name: node.name,
-      value: node.value || node.data,
-      children: node.children ? node.children.map(simplifyDom) : undefined,
-    }
-  };
-
-  return {
-    node_type: 'WINDOW',
-    name: null,
-    value: null,
-    children: [
-      {
-        node_type: 'DOCUMENT',
-        name: path,
-        value: null,
-        children: handler.dom.map(simplifyDom),
-      },
-    ],
-  };
 }
 
 export const cleanTree = ({ name, node_type, value, children }: BasicNode): BasicNode => {
@@ -307,4 +237,26 @@ export const transformPropertyValue = (
   }
   // Return the value if it's neither an array nor an object
   return obj;
+}
+
+export const propertiesToNodes = (node: any) => {
+  if (node.properties) {
+    for (const key in node.properties) {
+      if (!node.children) { node.children = [] }
+      node.children.push({
+        node_type: 'ATTRIBUTE',
+        name: key,
+        value: node.properties[key],
+      });
+      delete node.properties[key];
+    }
+  }
+
+  if (node.children) {
+    for (const child of node.children) {
+      propertiesToNodes(child);
+    }
+  }
+
+  return node;
 }

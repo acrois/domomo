@@ -15,7 +15,7 @@ exports[`html to node 1`] = `
           "children": undefined,
           "name": undefined,
           "node_type": "TEXT",
-          "value": 
+          "value":
 "
   "
 ,
@@ -26,7 +26,7 @@ exports[`html to node 1`] = `
               "children": undefined,
               "name": undefined,
               "node_type": "TEXT",
-              "value": 
+              "value":
 "
 
   "
@@ -38,7 +38,7 @@ exports[`html to node 1`] = `
                   "children": undefined,
                   "name": undefined,
                   "node_type": "TEXT",
-                  "value": 
+                  "value":
 "
     "
 ,
@@ -60,7 +60,7 @@ exports[`html to node 1`] = `
                   "children": undefined,
                   "name": undefined,
                   "node_type": "TEXT",
-                  "value": 
+                  "value":
 "
   "
 ,
@@ -74,7 +74,7 @@ exports[`html to node 1`] = `
               "children": undefined,
               "name": undefined,
               "node_type": "TEXT",
-              "value": 
+              "value":
 "
 
   "
@@ -86,7 +86,7 @@ exports[`html to node 1`] = `
                   "children": undefined,
                   "name": undefined,
                   "node_type": "TEXT",
-                  "value": 
+                  "value":
 "
     "
 ,
@@ -97,7 +97,7 @@ exports[`html to node 1`] = `
                       "children": undefined,
                       "name": undefined,
                       "node_type": "TEXT",
-                      "value": 
+                      "value":
 "
       "
 ,
@@ -119,7 +119,7 @@ exports[`html to node 1`] = `
                       "children": undefined,
                       "name": undefined,
                       "node_type": "TEXT",
-                      "value": 
+                      "value":
 "
       "
 ,
@@ -141,7 +141,7 @@ exports[`html to node 1`] = `
                       "children": undefined,
                       "name": undefined,
                       "node_type": "TEXT",
-                      "value": 
+                      "value":
 "
     "
 ,
@@ -155,7 +155,7 @@ exports[`html to node 1`] = `
                   "children": undefined,
                   "name": undefined,
                   "node_type": "TEXT",
-                  "value": 
+                  "value":
 "
   "
 ,
@@ -169,7 +169,7 @@ exports[`html to node 1`] = `
               "children": undefined,
               "name": undefined,
               "node_type": "TEXT",
-              "value": 
+              "value":
 "
 
   "

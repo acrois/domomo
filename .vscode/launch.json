@@ -2,15 +2,15 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "bun",
+      "type": "node",
       "request": "attach",
-      "name": "Attach to Bun",
+      "name": "Attach to Node",
       // "address": "localhost",
       // "port": 80,
-      // "websocketAddress": "ws://127.0.0.1:9229/",
-      "url": "ws://127.0.0.1:9229/",
-      // "remoteRoot": "/app/",
-      // "localRoot": "${workspaceFolder}",
+      "websocketAddress": "ws://127.0.0.1:9229/",
+      // "url": "ws://127.0.0.1:9229/",
+      "remoteRoot": "/app",
+      "localRoot": "${workspaceFolder}",
       // "protocol": "inspector"
     }
   ]
