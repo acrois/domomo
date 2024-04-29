@@ -2,6 +2,7 @@ import { diffTrees } from '../w/web.js';
 
 const goodTags = ['SPAN', 'A', 'PRE', 'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
 const incrTags = ['P', 'H6', 'H5', 'H4', 'H3', 'H2', 'H1'];
+
 function getCurrentEditingElement() {
   const selection = window.getSelection();
   // Check if there is a selection or if the cursor is placed within some content
@@ -26,7 +27,7 @@ function selectElementContents(el) {
   sel.addRange(range);
 }
 
-const toggleDesignMode  = () => {
+const toggleDesignMode = () => {
   document.designMode = document.designMode == 'on' ? 'off' : 'on';
   document.body.removeAttribute('data-cmd');
   document.querySelectorAll('[contenteditable]').forEach(c => c.removeAttribute('contentEditable'));
@@ -137,7 +138,7 @@ document.addEventListener('keydown', e => {
     // different behavior for designMode than with contentEditable
     else if (document.designMode == 'on') {
       // if (tgt.tagName != 'P') {
-        e.preventDefault();
+      e.preventDefault();
       // }
 
       let t = null;
@@ -303,11 +304,11 @@ document.addEventListener('dragstart', e => {
   )) {
     event.dataTransfer.effectAllowed = "copyMove";
 
-    if (!e.target.id) {
-      e.target.id = crypto.randomUUID();
+    if (!e.target.dataset.id) {
+      e.target.dataset.id = crypto.randomUUID();
     }
 
-    e.dataTransfer.setData('text/plain', e.target.id);
+    e.dataTransfer.setData('text/plain', e.target.dataset.id);
     e.dataTransfer.setDragImage(e.target, 10, 10);
   }
 }, true);
@@ -343,7 +344,7 @@ document.addEventListener('drop', e => {
   if (e.target
     && !['BODY', 'HTML'].includes(e.target.tagName)
   ) {
-    const dragElement = document.getElementById(d);
+    const dragElement = document.querySelector(`[data-id="${d}"]`);
 
     if (dragElement != e.target) {
       const targetDirection = dragDropTarget(e);
@@ -380,23 +381,71 @@ document.addEventListener('drop', e => {
   document.querySelectorAll('.dropper').forEach(c => c.classList.remove('dropper'))
 }, true);
 
-const mutation = (mutationList, observer) => {
-  for (const mutation of mutationList) {
-    // if (mutation.type === "childList") {
-    //   console.log("A child node has been added or removed.");
-    // } else if (mutation.type === "attributes") {
-    //   console.log(`The ${mutation.attributeName} attribute was modified.`);
-    // }
+const editableClassNames = ['design-mode', 'selected', 'above', 'dropper', 'right', 'left', 'below'];
 
+const mutation = (mutationList, observer) => {
+  const changeset = crypto.randomUUID();
+
+  for (const mutation of mutationList) {
     if (mutation.type === 'attributes') {
-      if (mutation.attributeName === 'data-cmd') {
+      if (mutation.attributeName === 'data-cmd' || mutation.attributeName === 'data-id') {
+        // ignore body super design trigger and guid encoding
         continue;
       }
 
-      // if (mutation.attributeName === 'class' && mutation.)
+      if (mutation.attributeName === 'class') {
+        if (
+          editableClassNames.includes(mutation.oldValue)
+        ) {
+          // ignore JS-styling / editing
+          continue;
+        }
+
+        const classListWithoutEditables = mutation.target.classList.values().filter(v => !editableClassNames.includes(v)).toArray();
+
+        if (
+          // (mutation.oldValue === null || mutation.oldValue === undefined || mutation.oldValue === '') &&
+          classListWithoutEditables.length == 0
+        ) {
+          // console.log(mutation.target.classList);
+          // ignore selected class style
+          continue;
+        }
+
+        console.log(classListWithoutEditables);
+      }
+
+      if (mutation.attributeName === 'draggable' || mutation.attributeName === 'contenteditable') {
+        // ignore editing attributes
+        continue;
+      }
+    }
+    else if (mutation.type === 'childList') {
+      // console.log(mutation?.target?.tagName, mutation.addedNodes.length, mutation.removedNodes.length);
+
+      if (
+        mutation?.target?.tagName === 'HTML'
+        && mutation.addedNodes.length === 1
+        && mutation.removedNodes.length === 1
+      ) {
+        // ignore complete replacements of the document
+        continue;
+      }
+    }
+    else if (mutation.type === 'characterData') {
+
     }
 
-    console.log(mutation);
+    console.log(changeset, mutation);
+
+    // TODO resolve node -> GUID?
+    // const mutty = {
+    //   attributeName: mutation.attributeName,
+    //   type: mutation.type,
+    //   oldValue: mutation.oldValue,
+    //   // target:
+    // }
+    // console.log(JSON.stringify(mutty));
   }
 };
 

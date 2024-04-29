@@ -6,6 +6,13 @@ if (!window.es) {
   window.es = new EventSource(window.location.href, {
     withCredentials: true,
   });
+  const callback = (hastNode, domNode) => {
+    if (hastNode.type === 'element') {
+      domNode.dataset.id = hastNode.data.id;
+    }
+
+    // console.log(hastNode, domNode);
+  };
   es.addEventListener("open", ev => {
     console.log(ev);
   });
@@ -13,7 +20,9 @@ if (!window.es) {
     const decoded = JSON.parse(ev.data);
     if (decoded) {
       window.esd = decoded;
-      const tree = toDom(decoded, {});
+      const tree = toDom(decoded, {
+        afterTransform: callback,
+      });
       console.log(tree);
       document.body = tree.body;
       document.designMode = 'off';
@@ -24,7 +33,10 @@ if (!window.es) {
     if (decoded) {
       console.log(window.esd, decoded);
       applyTreeDiff(window.esd, decoded);
-      const tree = toDom(window.esd, {});
+      const tree = toDom(window.esd, {
+        afterTransform: callback,
+      });
+      // TODO target specific nodes
       console.log(tree);
       document.body = tree.body;
       document.designMode = 'off';
