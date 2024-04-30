@@ -7,7 +7,7 @@ export const getNodeId = (node: Node): string | undefined => {
       ? node.data.id : undefined
 }
 
-const hasUpdate = (name: string, a: any, b: any, stringify: boolean = false) => {
+export const hasUpdate = (name: string, a: any, b: any, stringify: boolean = false) => {
   return name in a
     && name in b
     && (stringify
@@ -17,18 +17,19 @@ const hasUpdate = (name: string, a: any, b: any, stringify: boolean = false) => 
 }
 
 // Helper function to find a node by ID within children
-const findNodeById = (children: Node[], id: string) =>
+export const findNodeById = (children: Node[], id: string) =>
   children.find(child => getNodeId(child) === id);
-const findNodeByIdRecursive = (children: Node[], id: string) =>
+export const findNodeByIdRecursive = (children: Node[], id: string) =>
   findNodeById(children.flatMap(flattenTree), id)
-const flattenTree = (node: any) =>
+export const flattenTree = (node: any) =>
   [node, ...node?.children?.flatMap(flattenTree) ?? []]
 
-interface Operation {
+export interface Operation {
   type: 'insert' | 'delete' | 'update'
   id: string
   parentId?: string
   node?: Node
+  position?: number
   value?: string
   properties?: Record<string, any>
   name?: string
@@ -104,7 +105,7 @@ export const diffTrees = (oldNode: Node, newNode: Node) => {
     });
 
     // Check for insertions
-    newParent.children.forEach(child => {
+    newParent.children.forEach((child, index) => {
       const cId = getNodeId(child);
 
       if (!cId) {
@@ -119,6 +120,7 @@ export const diffTrees = (oldNode: Node, newNode: Node) => {
           type: 'insert',
           id: cId,
           parentId: getNodeId(newParent),
+          position: index,
           node: child,
         });
       }
@@ -152,7 +154,13 @@ export const applyTreeDiff = (tree: Root, operations: Operation[]) => {
 
         if ('children' in parent) {
           const parentElement = (parent as Element);
-          parentElement.children.push(op.node as ElementContent);
+          const childElement = op.node as ElementContent
+          if ('index' in op) {
+            parentElement.children.splice(op.index, 0, childElement);
+          }
+          else {
+            parentElement.children.push(childElement);
+          }
         }
         break;
       case 'update':
@@ -344,7 +352,7 @@ export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Func
   const idg = () => idGenerator !== undefined && idGenerator !== null
     ? idGenerator()
     : crypto.randomUUID();
-  const id: string = node?.id
+  const id: string = getNodeId(node)
     || idg()
   let type: string | undefined
   let name: string | undefined
@@ -378,22 +386,10 @@ export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Func
       break;
   }
 
-  // TODO resolve type -> id
-  /*
-  SELECT id
-  FROM node_type
-  WHERE tag = ${type}
-  */
-
-  // if (type === 'ELEMENT' && name === null) {
-  //   console.error(node);
-  //   throw 'what';
-  // }
-
   const rows: any[] = [
     {
       id,
-      type: type, // TODO resolve type -> id
+      type,
       name: name || null,
       value: value || null,
     },
@@ -406,17 +402,13 @@ export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Func
       .flatMap(c => treeToRows(c, documentPath, idGenerator))
       .map(ttr => {
         rows.push(...ttr.rows);
-        attachments.push(
-          ...ttr.attachments,
-        );
-
-        attachments.push(
-          {
-            parent_id: id,
-            child_id: ttr.rows[0].id,
-            position: attachments.filter(pv => pv.parent_id == id).length,
-          },
-        );
+        attachments.push(...ttr.attachments);
+        attachments.push({
+          parent_id: id,
+          child_id: ttr.rows[0].id,
+          // TODO fix ordering:
+          position: attachments.filter(pv => pv.parent_id == id).length,
+        });
       });
   }
 
@@ -434,17 +426,12 @@ export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Func
       attachments.push({
         parent_id: id,
         child_id: attr.id,
+        // TODO fix ordering:
         position: attachments.filter(pv => pv.parent_id == id).length,
       });
 
       // console.log(t);
     }
-    // (node as Parent).properties
-    //   .flatMap(c => treeToRows(c, documentPath))
-    //   .map(tree => {
-    //     rows.push(tree.rows);
-    //     attachments.push(tree.attachments);
-    //   });
   }
 
   return {

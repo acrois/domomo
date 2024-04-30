@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scared Page</title>
+  <style>
+    #container {
+      transition: transform 0.5s ease;
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container">
+    <h1>I'm scared of your cursor!</h1>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const container = document.getElementById('container');
+
+      function moveAway(event) {
+        const rect = container.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const distanceX = centerX - event.clientX;
+        const distanceY = centerY - event.clientY;
+
+        const strength = 150;
+        const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+        if (distance < 50) { // Distance threshold: 150 pixels
+          const moveX = strength * distanceX / distance;
+          const moveY = strength * distanceY / distance;
+
+          container.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        } else {
+          container.style.transform = 'translate(0, 0)';
+        }
+      }
+
+      document.addEventListener('mousemove', moveAway);
+    });
+  </script>
+</body>
+
+</html>

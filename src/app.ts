@@ -1,5 +1,5 @@
 import { Elysia, NotFoundError, ParseError } from "elysia";
-import { ClientBase, Pool } from "pg";
+import { ClientBase, Pool, Query } from "pg";
 import { cron, Patterns } from '@elysiajs/cron'
 // import { astPrepareForRehype } from "./util";
 import { SQL } from "sql-template-strings";
@@ -12,6 +12,19 @@ import { readdir } from "node:fs/promises";
 import { diffTrees, getNodeId, rowsToTrees, treeToRows } from "./dbeautiful";
 import type { BunFile } from "bun";
 // import diff from 'unist-diff';
+
+const DEBUG_QUERIES = false;
+
+if (DEBUG_QUERIES) {
+  const submit = Query.prototype.submit;
+  Query.prototype.submit = function () {
+    const text = this.text;
+    const values = this.values || [];
+    const query = text.replace(/\$([0-9]+)/g, (m, v) => JSON.stringify(values[parseInt(v) - 1]))
+    console.log(query);
+    submit.apply(this, arguments);
+  };
+}
 
 // client-side script to connect websocket for bidirectional async updates
 // update nodes
@@ -188,7 +201,7 @@ const app = (env: any) => {
       // console.error(error, code);
       const estr = typeof error === 'string' ? error : 'toString' in error ? error?.toString() : '';
 
-      if (code === 'NOT_FOUND' || estr === 'NOT_FOUND' || estr.includes('ENOENT')) {
+      if (code === 'NOT_FOUND' || estr === 'NOT_FOUND' || estr.includes('ENOENT') || error instanceof NotFoundError) {
         set.status = 404;
         return '';
       }
@@ -351,7 +364,7 @@ const app = (env: any) => {
             SET
               parent_id = EXCLUDED.parent_id,
               child_id = EXCLUDED.child_id,
-              position = EXCLUDED.position
+              position = EXCLUDED.position + 1
           `))
 
           const nextAttachment = await db.query(SQL`

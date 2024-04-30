@@ -1,4 +1,5 @@
-import { diffTrees } from '../w/web.js';
+import { diffTrees, findNodeByIdRecursive, getNodeId } from '../w/web.js';
+import { fromDom } from 'https://esm.sh/hast-util-from-dom@5?bundle'
 
 const goodTags = ['SPAN', 'A', 'PRE', 'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
 const incrTags = ['P', 'H6', 'H5', 'H4', 'H3', 'H2', 'H1'];
@@ -17,6 +18,19 @@ function getCurrentEditingElement() {
   }
 
   return element;
+}
+
+const assignIds = (n) => {
+  if (!('data' in n)) {
+    n.data = {};
+  }
+
+  if (!n?.data?.id) {
+    n.data.id = crypto.randomUUID();
+  }
+
+  n?.children?.map(assignIds);
+  return n;
 }
 
 function selectElementContents(el) {
@@ -273,6 +287,7 @@ document.addEventListener('pointerout', e => {
   e.target.removeAttribute('draggable');
 }, true);
 
+const directions = ['left', 'right', 'above', 'below'];
 const dragDropTarget = (e) => {
   const rect = e.target.getBoundingClientRect();
   const x = e.clientX - rect.left;
@@ -317,7 +332,6 @@ document.addEventListener('dragover', e => {
   e.preventDefault();
   const targetDirection = dragDropTarget(e);
   const canMoveTo = !['BODY', 'HTML'].includes(e.target.tagName);
-  const directions = ['left', 'right', 'above', 'below'];
   let removeDirections = directions;
   e.dataTransfer.dropEffect = canMoveTo ? 'move' : 'none';
 
@@ -378,13 +392,14 @@ document.addEventListener('drop', e => {
     }
   }
 
-  document.querySelectorAll('.dropper').forEach(c => c.classList.remove('dropper'))
+  document.querySelectorAll('.dropper').forEach(c => c.classList.remove('dropper', ...directions))
 }, true);
 
 const editableClassNames = ['design-mode', 'selected', 'above', 'dropper', 'right', 'left', 'below'];
 
 const mutation = (mutationList, observer) => {
   const changeset = crypto.randomUUID();
+  let original = null;
 
   for (const mutation of mutationList) {
     if (mutation.type === 'attributes') {
@@ -431,12 +446,86 @@ const mutation = (mutationList, observer) => {
         // ignore complete replacements of the document
         continue;
       }
+
+      if (mutation.removedNodes) {
+        original = original ?? structuredClone(window.esd);
+        const mrv = mutation.removedNodes.values();
+
+        for (const value of mrv) {
+          const parentId = mutation.target.dataset.id;
+          console.log('remove', parentId, value);
+
+          // look up target (parent) uuid in tree
+          const parent = findNodeByIdRecursive(window.esd.children, parentId);
+          const child = findNodeByIdRecursive(parent.children, value.dataset.id);
+
+          // remove node from parent's children, adjusting the other's positions.
+          parent.children = parent.children.filter(i => getNodeId(i) !== child.data.id)
+        }
+      }
+
+      if (mutation.addedNodes) {
+        original = original ?? structuredClone(window.esd);
+        const mav = mutation.addedNodes.values();
+
+        for (const value of mav) {
+          const parentId = mutation.target.dataset.id;
+          console.log('create', parentId, value);
+          // look up target (parent) uuid in tree
+          const parent = findNodeByIdRecursive(window.esd.children, parentId);
+
+          // check if a child exists
+          let child = null;
+
+          if (value?.dataset?.id) {
+            child = findNodeByIdRecursive(parent.children, value.dataset.id);
+          }
+
+          // nextSibling != null && previousSibling != null
+          const siblingId = mutation.previousSibling.dataset.id;
+          const nsIdx = parent.children.findIndex(e => getNodeId(e) === siblingId);
+
+          // nextSibling == null when at the end
+          const position = mutation.nextSibling === null
+            ? parent.children.length
+            // previousSibling == null when at the start
+            : mutation.previousSibling === null
+              ? 0
+              // when in between two elements
+              : nsIdx + 1
+
+          const callback = (domNode, hastNode) => {
+            if (!('data' in hastNode)) {
+              hastNode.data = {};
+            }
+
+            if (!hastNode?.data?.id) {
+              hastNode.data.id = crypto.randomUUID();
+            }
+
+            if (hastNode.type === 'element') {
+              domNode.dataset.id = hastNode.data.id;
+            }
+
+            // console.log(hastNode, domNode);
+          };
+          const v = assignIds(fromDom(value, {
+            afterTransform: callback,
+          }));
+          console.debug(parent, child, position, v);
+
+          // add node to parent's children, adjusting the other's positions.
+          parent.children.splice(position, 0, v)
+        }
+      }
+
     }
     else if (mutation.type === 'characterData') {
+      original = original ?? structuredClone(window.esd);
 
     }
 
-    console.log(changeset, mutation);
+    console.log('change', changeset, mutation.type, mutation.target, mutation);
 
     // TODO resolve node -> GUID?
     // const mutty = {
@@ -446,6 +535,11 @@ const mutation = (mutationList, observer) => {
     //   // target:
     // }
     // console.log(JSON.stringify(mutty));
+  }
+
+  if (original) {
+    const d = diffTrees(original, window.esd);
+    console.log('diff', changeset, d, original, window.esd);
   }
 };
 
