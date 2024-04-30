@@ -10,7 +10,8 @@ import authPlugin, { AuthError } from "./auth";
 import { watch } from "fs";
 import { readdir } from "node:fs/promises";
 import { diffTrees, getNodeId, rowsToTrees, treeToRows } from "./dbeautiful";
-import type { BunFile } from "bun";
+import { loadFileByRelativePath, serveStaticDirectory, serveStaticFile } from "./util";
+import { fetchTree, fetchTrees } from "./database";
 // import diff from 'unist-diff';
 
 const DEBUG_QUERIES = false;
@@ -44,107 +45,6 @@ if (DEBUG_QUERIES) {
 //   console.log(e);
 // }
 
-const serveStaticDirectory = (directory: string) => {
-  return async ({ params, set }) => {
-    const path = `/${directory}/${params['*']}`
-    const f = Bun.file(`./static/_${path}`);
-    return await serveStaticFile(f)({ params, set });
-  }
-}
-
-const serveStaticFile = (f: BunFile) => {
-  return async ({ params, set }) => {
-    const exists = await f.exists();
-
-    if (!exists) {
-      throw new NotFoundError();
-    }
-
-    set.headers['Content-Type'] = f.type;
-    return f.arrayBuffer();
-  }
-}
-
-function convertFileUrlToHttp(url: URL): string {
-  // Extract the pathname and split into segments
-  const pathSegments = url.pathname.split('/');
-
-  // Find the index of 'static' and determine the host, which is the segment right after 'static'
-  const staticIndex = pathSegments.indexOf('static');
-
-  if (staticIndex === -1 || staticIndex + 1 >= pathSegments.length) {
-    throw new Error('Invalid URL format: "static" directory not found');
-  }
-
-  const host = pathSegments[staticIndex + 1];
-
-  // Construct the path by joining segments after the host, remove '.html' from the last segment
-  const newPath = pathSegments
-    .slice(staticIndex + 2)
-    .filter(v => v === 'index.html' ? undefined : v)
-    .join('/')
-    .replace('.html', '')
-    .replace('//', '/')
-    ;
-
-  // Construct and return the new HTTP URL
-  return `http://${host}/${newPath}`;
-}
-
-const loadFileByRelativePath = async (handle: any, event: any, filename: string) => {
-  const location = Bun.pathToFileURL('./static/' + filename);
-  const z = Bun.file(location);
-
-  if (!z.exists()) {
-    console.error('bad', filename, location);
-    return;
-  }
-
-  if (z.type.startsWith('text/html')) {
-    const newUrl = convertFileUrlToHttp(location);
-
-    const request = new Request(newUrl, {
-      method: 'PUT',
-      body: await z.arrayBuffer(),
-      headers: {
-        'Content-Type': z.type,
-      }
-    });
-    handle(request)
-    console.log('Handled', event, newUrl);
-  }
-  else {
-    console.log(`Detected ${event} in ${filename}`);
-  }
-}
-
-const fetchTrees = async (client: ClientBase, domainId: string, documentPath: string) => {
-  const tree = await client.query(SQL`
-    SELECT
-      get_document_tree(dd.document_id) AS tree
-    FROM domain_documents dd
-    WHERE dd.id = ${domainId}
-      AND dd.document_name = ${documentPath}
-  `);
-
-  if (tree === null || tree === undefined || tree.rows.length === 0) {
-    throw new NotFoundError();
-  }
-
-  const t = tree.rows[0].tree
-  // console.log(t);
-  // console.log(tree);
-  const organized = rowsToTrees(t);
-
-  if (organized === null || organized === undefined || organized.length === 0) {
-    throw new NotFoundError();
-  }
-
-  return organized;
-}
-
-const fetchTree = async (client: ClientBase, domainId: string, documentPath: string) =>
-  (await fetchTrees(client, domainId, documentPath))[0]
 
 const fetcher = (fetch: () => Promise<any>) => {
   return new Stream(async (stream) => {

@@ -540,6 +540,7 @@ const mutation = (mutationList, observer) => {
   if (original) {
     const d = diffTrees(original, window.esd);
     console.log('diff', changeset, d, original, window.esd);
+
   }
 };
 

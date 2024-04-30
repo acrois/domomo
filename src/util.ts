@@ -1,101 +1,8 @@
 import rehypePresetMinify from 'rehype-preset-minify';
-import diff from "unist-diff";
+// import diff from "unist-diff";
 import { rehype } from 'rehype';
-
-export enum NodeType {
-  ROOT,
-  DOMAIN,
-  DOCUMENT,
-  DOCUMENT_TYPE,
-  ELEMENT,
-  TEXT,
-  COMMENT,
-}
-
-export type NodeTypeName = keyof typeof NodeType;
-
-export type BasicNode = {
-  node_type: NodeTypeName;
-  name: string | null;
-  value: string | null;
-  children: BasicNode[];
-}
-
-export type DatabaseNode = BasicNode & {
-  id: string | null;
-  position: number;
-  parent: string | null;
-  children: DatabaseNode[];
-}
-
-export const rowsToParents = (treeRows: any[]) => {
-  const parents: DatabaseNode[] = [{
-    id: null,
-    type_id: 0,
-    children: [],
-    name: null,
-    value: null,
-    position: 0,
-    parent: null,
-  }];
-
-  for (let i = 0; i < treeRows.length; i++) {
-    const p = {
-      ...treeRows[i],
-      children: [],
-    };
-    parents.push(p);
-    for (const parent of parents) {
-      if (parent.id === treeRows[i].parent) {
-        parent.children.splice(treeRows[i].position, 0, p);
-      }
-    }
-  }
-
-  return parents;
-}
-
-export const rowsToTree = (treeRows: any[]): DatabaseNode => {
-  const parents = rowsToParents(treeRows);
-  return parents[0]!;
-}
-
-export const nodesToProperties = (node: any) => {
-  // console.log(node);
-  return {
-    ...node,
-    children: node?.children?.filter(v => v.type.toUpperCase() !== 'ATTRIBUTE')?.map(nodesToProperties) ?? [],
-    properties: Object.fromEntries(
-      (node?.children ?? [])
-        ?.filter(v => v.type.toUpperCase() === 'ATTRIBUTE')
-        ?.map(v => [
-          v.tagName,
-          v.tagName == 'className'
-            ? JSON.parse("[" + v.value.slice(1, v.value.length - 1) + "]")
-            : v.value,
-        ])
-      ?? {}
-    ),
-  }
-}
-
-export const astPrepareForRehype = (ast: any) => {
-  return nodesToProperties(
-    transformPropertyValue(
-      renameProperty(
-        renameProperty(
-          removeKeys(ast, ['position']),
-          'node_type', // from
-          'type' // to
-        ),
-        'name', // from
-        'tagName' // to
-      ),
-      'type',
-      v => v == 'DOCUMENT' ? 'root' : v == 'DOCUMENT_TYPE' ? 'doctype' : v.toLowerCase()
-    )
-  );
-}
+import { NotFoundError } from 'elysia';
+import type { BunFile } from "bun";
 
 const processor = (fragment?: boolean) => rehype()
   .use(rehypePresetMinify)
@@ -126,54 +33,6 @@ export const astToHTML = (ast: any, fragment?: boolean) => {
   // const t = astPrepareForRehype(ast);
   // console.log(JSON.stringify(t));
   return processor(fragment).stringify(ast);
-}
-
-export const diffTreeWithHTML = async (oldTree: any, newTree: string) => {
-  const oldTreePrep = astPrepareForRehype(oldTree);
-  const newTreePrep = htmlToAST(newTree);
-  const d = diff(oldTreePrep, newTreePrep, {});
-  return d;
-}
-
-export const parseToAST = async (html: string, fragment?: boolean) => {
-  const ast = await htmlToAST(html, fragment);
-  // console.log(ast);
-  const root = transformPropertyValue(
-    renameProperty(
-      renameProperty(
-        removeKeys(
-          ast,
-          ['position'] // remove
-        ),
-        'type', // from
-        'node_type' // to
-      ),
-      'tagName', // from
-      'name' // to
-    ),
-    'node_type',
-    v => v == 'doctype' ? 'DOCUMENT_TYPE' : v.toUpperCase()
-  );
-
-  if (!fragment) {
-    root.node_type = 'DOCUMENT';
-  }
-
-  const fin =
-    // root
-    propertiesToNodes(root)
-    ;
-  // console.log(JSON.stringify(fin));
-  return fin;
-}
-
-export const cleanTree = ({ name, node_type, value, children }: BasicNode): BasicNode => {
-  return {
-    node_type,
-    name,
-    value,
-    children: children.map(cleanTree),
-  };
 }
 
 export const removeKeys = (obj: object, keys: string[]) => obj !== Object(obj)
@@ -239,24 +98,76 @@ export const transformPropertyValue = (
   return obj;
 }
 
-export const propertiesToNodes = (node: any) => {
-  if (node.properties) {
-    for (const key in node.properties) {
-      if (!node.children) { node.children = [] }
-      node.children.push({
-        node_type: 'ATTRIBUTE',
-        name: key,
-        value: node.properties[key],
-      });
-      delete node.properties[key];
+export const serveStaticDirectory = (directory: string) => {
+  return async ({ params, set }) => {
+    const path = `/${directory}/${params['*']}`
+    const f = Bun.file(`./static/_${path}`);
+    return await serveStaticFile(f)({ params, set });
+  }
+}
+
+export const serveStaticFile = (f: BunFile) => {
+  return async ({ params, set }) => {
+    const exists = await f.exists();
+
+    if (!exists) {
+      throw new NotFoundError();
     }
+
+    set.headers['Content-Type'] = f.type;
+    return f.arrayBuffer();
+  }
+}
+
+export const convertFileUrlToHttp = (url: URL): string => {
+  // Extract the pathname and split into segments
+  const pathSegments = url.pathname.split('/');
+
+  // Find the index of 'static' and determine the host, which is the segment right after 'static'
+  const staticIndex = pathSegments.indexOf('static');
+
+  if (staticIndex === -1 || staticIndex + 1 >= pathSegments.length) {
+    throw new Error('Invalid URL format: "static" directory not found');
   }
 
-  if (node.children) {
-    for (const child of node.children) {
-      propertiesToNodes(child);
-    }
+  const host = pathSegments[staticIndex + 1];
+
+  // Construct the path by joining segments after the host, remove '.html' from the last segment
+  const newPath = pathSegments
+    .slice(staticIndex + 2)
+    .filter(v => v === 'index.html' ? undefined : v)
+    .join('/')
+    .replace('.html', '')
+    .replace('//', '/')
+    ;
+
+  // Construct and return the new HTTP URL
+  return `http://${host}/${newPath}`;
+}
+
+export const loadFileByRelativePath = async (handle: any, event: any, filename: string) => {
+  const location = Bun.pathToFileURL('./static/' + filename);
+  const z = Bun.file(location);
+
+  if (!z.exists()) {
+    console.error('bad', filename, location);
+    return;
   }
 
-  return node;
+  if (z.type.startsWith('text/html')) {
+    const newUrl = convertFileUrlToHttp(location);
+
+    const request = new Request(newUrl, {
+      method: 'PUT',
+      body: await z.arrayBuffer(),
+      headers: {
+        'Content-Type': z.type,
+      }
+    });
+    handle(request)
+    console.log('Handled', event, newUrl);
+  }
+  else {
+    console.log(`Detected ${event} in ${filename}`);
+  }
 }
