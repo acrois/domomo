@@ -1,5 +1,5 @@
 import { SQL } from "sql-template-strings";
-import { ClientBase, } from "pg";
+import { ClientBase, Query, } from "pg";
 import { rowsToTrees } from "./dbeautiful";
 import { NotFoundError } from "elysia";
 
@@ -30,3 +30,20 @@ export const fetchTrees = async (client: ClientBase, domainId: string, documentP
 
 export const fetchTree = async (client: ClientBase, domainId: string, documentPath: string) =>
   (await fetchTrees(client, domainId, documentPath))[0]
+
+const DEBUG_QUERIES = false;
+
+if (DEBUG_QUERIES) {
+  const submit = Query.prototype.submit;
+  Query.prototype.submit = function () {
+    // @ts-ignore
+    const text = this.text;
+    // @ts-ignore
+    const values = this.values || [];
+    // @ts-ignore
+    const query = text.replace(/\$([0-9]+)/g, (m, v) => JSON.stringify(values[parseInt(v) - 1]))
+    console.debug('QUERY', query);
+    // @ts-ignore
+    submit.apply(this, arguments);
+  };
+}

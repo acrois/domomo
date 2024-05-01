@@ -35,14 +35,14 @@ export const astToHTML = (ast: any, fragment?: boolean) => {
   return processor(fragment).stringify(ast);
 }
 
-export const removeKeys = (obj: object, keys: string[]) => obj !== Object(obj)
+export const removeKeys: any = (obj: object, keys: string[]) => obj !== Object(obj)
   ? obj
   : Array.isArray(obj)
     ? obj.map((item) => removeKeys(item, keys))
     : Object.keys(obj)
       .filter((k) => !keys.includes(k))
       .reduce(
-        (acc, x) => Object.assign(acc, { [x]: removeKeys(obj[x], keys) }),
+        (acc, x) => Object.assign(acc, { [x]: removeKeys((<any>obj)[x], keys) }),
         {}
       )
 
@@ -99,7 +99,7 @@ export const transformPropertyValue = (
 }
 
 export const serveStaticDirectory = (directory: string) => {
-  return async ({ params, set }) => {
+  return async ({ params, set }: any) => {
     const path = `/${directory}/${params['*']}`
     const f = Bun.file(`./static/_${path}`);
     return await serveStaticFile(f)({ params, set });
@@ -107,7 +107,7 @@ export const serveStaticDirectory = (directory: string) => {
 }
 
 export const serveStaticFile = (f: BunFile) => {
-  return async ({ params, set }) => {
+  return async ({ set }: any) => {
     const exists = await f.exists();
 
     if (!exists) {

@@ -1,31 +1,15 @@
 import { Elysia, NotFoundError, ParseError } from "elysia";
-import { ClientBase, Pool, Query } from "pg";
+import { Pool } from "pg";
 import { cron, Patterns } from '@elysiajs/cron'
-// import { astPrepareForRehype } from "./util";
 import { SQL } from "sql-template-strings";
 import Stream from "@elysiajs/stream";
-// import diff from "microdiff";
 import codecPlugin from "./encoder";
 import authPlugin, { AuthError } from "./auth";
 import { watch } from "fs";
 import { readdir } from "node:fs/promises";
-import { diffTrees, getNodeId, rowsToTrees, treeToRows } from "./dbeautiful";
+import { diffTrees, getNodeId, treeToRows } from "./dbeautiful";
 import { loadFileByRelativePath, serveStaticDirectory, serveStaticFile } from "./util";
 import { fetchTree, fetchTrees } from "./database";
-// import diff from 'unist-diff';
-
-const DEBUG_QUERIES = false;
-
-if (DEBUG_QUERIES) {
-  const submit = Query.prototype.submit;
-  Query.prototype.submit = function () {
-    const text = this.text;
-    const values = this.values || [];
-    const query = text.replace(/\$([0-9]+)/g, (m, v) => JSON.stringify(values[parseInt(v) - 1]))
-    console.log(query);
-    submit.apply(this, arguments);
-  };
-}
 
 // client-side script to connect websocket for bidirectional async updates
 // update nodes
@@ -54,7 +38,6 @@ const fetcher = (fetch: () => Promise<any>) => {
       throw 'Invalid document.';
     }
 
-    // let initialPrep = astPrepareForRehype(initial);
     stream.event = 'init';
     stream.send(initial);
 
@@ -68,14 +51,12 @@ const fetcher = (fetch: () => Promise<any>) => {
         throw 'Invalid document';
       }
 
-      // const prep = astPrepareForRehype(renewed);
       const d = diffTrees(initial, renewed);
 
       // console.log(d);
       // stream.send(d.length > 0 ? renewed : []);
 
       if (d && d.length > 0) {
-        // console.log(JSON.stringify(d), JSON.stringify(prep), JSON.stringify(diff(astPrepareForRehype(initial), prep)));
         stream.event = 'diff';
         // console.log(d);
         stream.send(d);
@@ -97,6 +78,7 @@ const app = (env: any) => {
   })
     .use(authPlugin(env))
     .use(codecPlugin)
+    // @ts-ignore
     .onError(({ code, error, set }) => {
       // console.error(error, code);
       const estr = typeof error === 'string' ? error : 'toString' in error ? error?.toString() : '';
@@ -121,7 +103,7 @@ const app = (env: any) => {
         }
       })
     )
-    .derive(async ({ headers, request, pool, }) => {
+    .derive(async ({ request, pool, }) => {
       const db = await pool.connect();
       const uri = new URL(request.url);
 
@@ -176,7 +158,7 @@ const app = (env: any) => {
       // console.log(params);
       const path = `/${params['*']}`
       const accept = headers['accept'];
-      const boundFetcher = () => fetchTree(pool, domain.id, path);
+      const boundFetcher = () => fetchTree(<any>pool, domain.id, path);
 
       if (accept === 'text/event-stream') {
         return fetcher(boundFetcher);
@@ -193,7 +175,7 @@ const app = (env: any) => {
 
         if (!auth
           || !auth.email
-          || !auth!.email!.endsWith('@kinetech.llc')
+          || !auth!.email!.toString().endsWith('@kinetech.llc')
         ) {
           throw new AuthError();
         }
@@ -231,7 +213,7 @@ const app = (env: any) => {
             `);
           }
 
-          const t = treeToRows(body, path);
+          const t = treeToRows(body as any, path);
           // console.log(JSON.stringify(t));
 
           t.rows.map(r => db.query(SQL`
@@ -314,7 +296,7 @@ const app = (env: any) => {
           try {
             initialTree = await fetchTree(db, domain.id, path);
           }
-          catch (ex) {
+          catch (ex: any) {
             if (ex instanceof NotFoundError || ex?.code === 'NOT_FOUND') {
               // allow it to be empty.
             }
