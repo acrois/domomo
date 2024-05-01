@@ -29,6 +29,7 @@ import { fetchTree, fetchTrees } from "./database";
 //   console.log(e);
 // }
 
+const INTERNAL_SECRET = crypto.randomUUID();
 
 const fetcher = (fetch: () => Promise<any>) => {
   return new Stream(async (stream) => {
@@ -69,6 +70,7 @@ const fetcher = (fetch: () => Promise<any>) => {
 }
 
 const app = (env: any) => {
+  env.INTERNAL_SECRET = INTERNAL_SECRET;
   const pgUri: string = env.PG_URI || env.POSTGRES_URI || env.POSTGRES_URL
     || env.DB_URI || env.DB_URL || env.PG_URL
     || `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@localhost:5432/${env.POSTGRES_DB}`;
@@ -167,7 +169,14 @@ const app = (env: any) => {
       return boundFetcher();
     })
     .guard({
-      beforeHandle({ auth, uri }) {
+      beforeHandle({ auth, uri, basicAuth }) {
+        // console.log(basicAuth);
+
+        // accept basic auth
+        if (basicAuth.isAuthed) {
+          return;
+        }
+
         // allow localhost changes :)
         if (uri.hostname.match(/.*\.?localhost/) !== null) {
           return;
@@ -382,14 +391,14 @@ const app = (env: any) => {
       const watcher = watch(
         './static',
         { recursive: true },
-        async (event, filename) => await loadFileByRelativePath(app.handle, event, filename!),
+        async (event, filename) => await loadFileByRelativePath(app.handle, event, filename!, INTERNAL_SECRET),
       );
 
       // read all the files in the current directory, recursively
       const rd = await readdir("./static", { recursive: true });
 
       for await (const filename of rd) {
-        await loadFileByRelativePath(app.handle, 'load', filename!)
+        await loadFileByRelativePath(app.handle, 'load', filename!, INTERNAL_SECRET);
       }
 
       process.on('exit', () => {

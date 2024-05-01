@@ -145,7 +145,7 @@ export const convertFileUrlToHttp = (url: URL): string => {
   return `http://${host}/${newPath}`;
 }
 
-export const loadFileByRelativePath = async (handle: any, event: any, filename: string) => {
+export const loadFileByRelativePath = async (handle: any, event: any, filename: string, secret: string) => {
   const location = Bun.pathToFileURL('./static/' + filename);
   const z = Bun.file(location);
 
@@ -162,6 +162,7 @@ export const loadFileByRelativePath = async (handle: any, event: any, filename: 
       body: await z.arrayBuffer(),
       headers: {
         'Content-Type': z.type,
+        'Authorization': `Basic ${btoa(`internal:${secret}`)}`,
       }
     });
     handle(request)
