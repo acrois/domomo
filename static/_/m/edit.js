@@ -526,21 +526,22 @@ const mutation = (mutationList, observer) => {
     }
 
     console.log('change', changeset, mutation.type, mutation.target, mutation);
-
-    // TODO resolve node -> GUID?
-    // const mutty = {
-    //   attributeName: mutation.attributeName,
-    //   type: mutation.type,
-    //   oldValue: mutation.oldValue,
-    //   // target:
-    // }
-    // console.log(JSON.stringify(mutty));
   }
 
   if (original) {
     const d = diffTrees(original, window.esd);
     console.log('diff', changeset, d, original, window.esd);
-
+    fetch('/!', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(d),
+    }).then(f => {
+      console.log(f)
+    }, r => {
+      console.error(r);
+    });
   }
 };
 

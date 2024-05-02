@@ -7,9 +7,9 @@ import codecPlugin from "./encoder";
 import authPlugin, { AuthError } from "./auth";
 import { watch } from "fs";
 import { readdir } from "node:fs/promises";
-import { diffTrees, getNodeId, treeToRows } from "./dbeautiful";
+import { diffTrees, getNodeId, treeToRows, type Operation } from "./dbeautiful";
 import { loadFileByRelativePath, serveStaticDirectory, serveStaticFile } from "./util";
-import { fetchTree, fetchTrees } from "./database";
+import { fetchTree, fetchTrees, insertNodesAttachments } from "./database";
 
 // client-side script to connect websocket for bidirectional async updates
 // update nodes
@@ -190,6 +190,73 @@ const app = (env: any) => {
         }
       },
     }, (app) => app
+      .post('!', async ({ body, pool }: { body: Operation[], pool: Pool }) => {
+        /*
+        [
+          {
+            type: "insert",
+            id: "b48b89f4-4723-48b6-8271-f721ec11c52f",
+            parentId: "aeac81bb-f3fd-4d4f-a5a4-b6a5bb105d54",
+            position: 4,
+            node: {
+              type: "element",
+              tagName: "p",
+              properties: [Object ...],
+              children: [
+                [Object ...]
+              ],
+              data: [Object ...],
+            },
+          }
+        ]
+        */
+        // console.log(body);
+        const db = await pool.connect();
+        try {
+          await db.query('BEGIN');
+
+          const rows = [];
+          const attachments = [];
+
+          for (const op of body) {
+
+            if (op.type === 'insert') {
+              if (op.node) {
+                const ttr = treeToRows(op.node);
+                ttr.attachments.push({
+                  parent_id: op.parentId,
+                  child_id: op.id,
+                  position: op.position,
+                })
+                db.query(SQL`UPDATE node_attachment
+                  SET position = position + 1
+                WHERE id IN (
+                  SELECT id FROM node_attachment
+                  WHERE parent_id = ${op.parentId}
+                    AND position >= ${op.position}
+                  ORDER BY position DESC
+                  FOR UPDATE
+                )`);
+                rows.push(...ttr.rows);
+                attachments.push(...ttr.attachments);
+              }
+            }
+          }
+
+          insertNodesAttachments(db, rows, attachments);
+
+          await db.query('COMMIT');
+        }
+        catch (e) {
+          console.error(e);
+          await db.query('ROLLBACK');
+          throw e;
+        }
+        finally {
+          db.release();
+        }
+        return 'meh'
+      })
       .put('*', async ({ params, domain, body, pool }) => {
         const db = await pool.connect();
         try {
@@ -224,39 +291,7 @@ const app = (env: any) => {
 
           const t = treeToRows(body as any, path);
           // console.log(JSON.stringify(t));
-
-          t.rows.map(r => db.query(SQL`
-            INSERT INTO node (
-              id,
-              type_id,
-              name,
-              value
-            ) VALUES (
-              ${r.id},
-              (
-                SELECT id
-                FROM node_type
-                WHERE tag = ${r.type}
-              ),
-              ${r.name},
-              ${r.value}
-            ) ON CONFLICT (id) DO UPDATE SET
-              name = EXCLUDED.name,
-              type_id = EXCLUDED.type_id,
-              value = EXCLUDED.value
-            returning id
-          `))
-          t.attachments.map(a => db.query(SQL`
-            INSERT INTO node_attachment
-              (parent_id, child_id, position)
-            VALUES
-              (${a.parent_id}, ${a.child_id}, ${a.position})
-            ON CONFLICT (id) DO UPDATE
-            SET
-              parent_id = EXCLUDED.parent_id,
-              child_id = EXCLUDED.child_id,
-              position = EXCLUDED.position + 1
-          `))
+          insertNodesAttachments(db, t.rows, t.attachments);
 
           const nextAttachment = await db.query(SQL`
             SELECT next_position

@@ -30,9 +30,6 @@ export interface Operation {
   parentId?: string
   node?: Node
   position?: number
-  value?: string
-  properties?: Record<string, any>
-  name?: string
 }
 
 // movements can be thought of as two operations: remove + insert

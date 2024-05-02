@@ -56,20 +56,41 @@ const authPlugin = (env: any) => {
         secret: jwkset,
       })
     )
+    .error({
+      AuthError,
+      BasicAuthError,
+    })
     .derive({
       as: 'global',
     }, ({ headers }) => {
       const authorization = headers?.authorization;
       // console.log(authorization);
-      if (!authorization)
+
+      if (!authorization) {
         return { basicAuth: { isAuthed: false, username: null } };
+      }
+
+      // @ts-ignore
       const [username, password] = atob(authorization.split(' ')[1]).split(':');
       // console.log(username, password, config.users);
       const user = config.users.find(
         (user) => user.username === username && user.password === password
       );
+
       if (!user) return { basicAuth: { isAuthed: false, username: null } };
+
       return { basicAuth: { isAuthed: true, username: user.username } };
+    })
+    .derive({
+      as: 'global',
+    }, async ({ headers, cookie, jwt }) => {
+      // check cookies, then check headers
+      const token = JWT_COOKIE in cookie
+        ? cookie[JWT_COOKIE]!.value
+        : headers[JWT_HEADER];
+      return {
+        auth: token ? await jwt.verify(token, options) : null,
+      };
     })
     .onTransform({
       as: 'global',
@@ -97,25 +118,10 @@ const authPlugin = (env: any) => {
     //     });
     //   }
     // })
-    .derive({
-      as: 'global',
-    }, async ({ headers, cookie, jwt }) => {
-      // check cookies, then check headers
-      const token = JWT_COOKIE in cookie
-        ? cookie[JWT_COOKIE]!.value
-        : headers[JWT_HEADER];
-      return {
-        auth: token ? await jwt.verify(token, options) : null,
-      };
-    })
     .get('-', async ({ auth }) => {
       return {
         auth,
       };
-    })
-    .error({
-      AuthError,
-      BasicAuthError,
     })
     .onError({
       as: 'global',
