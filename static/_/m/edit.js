@@ -3,6 +3,7 @@ import { fromDom } from 'https://esm.sh/hast-util-from-dom@5?bundle'
 
 const goodTags = ['SPAN', 'A', 'PRE', 'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
 const incrTags = ['P', 'H6', 'H5', 'H4', 'H3', 'H2', 'H1'];
+const editableClassNames = ['design-mode', 'selected', 'above', 'dropper', 'right', 'left', 'below'];
 
 function getCurrentEditingElement() {
   const selection = window.getSelection();
@@ -23,6 +24,28 @@ function getCurrentEditingElement() {
 const assignIds = (n) => {
   if (!('data' in n)) {
     n.data = {};
+  }
+
+  if ('properties' in n) {
+    if ('dataId' in n.properties) {
+      if (!n?.data?.id) {
+        n.data.id = n.properties.dataId;
+      }
+      delete n.properties.dataId;
+    }
+
+    if ('className' in n.properties) {
+      // strip editable classes
+      n.properties.className = n.properties.className.filter(n => !editableClassNames.includes(n));
+
+      if (!n.properties.className || n.properties.className.length === 0) {
+        delete n.properties.className;
+      }
+    }
+
+    if ('draggable' in n.properties) {
+      delete n.properties.draggable;
+    }
   }
 
   if (!n?.data?.id) {
@@ -395,7 +418,6 @@ document.addEventListener('drop', e => {
   document.querySelectorAll('.dropper').forEach(c => c.classList.remove('dropper', ...directions))
 }, true);
 
-const editableClassNames = ['design-mode', 'selected', 'above', 'dropper', 'right', 'left', 'below'];
 
 const mutation = (mutationList, observer) => {
   const changeset = crypto.randomUUID();
@@ -457,10 +479,27 @@ const mutation = (mutationList, observer) => {
 
           // look up target (parent) uuid in tree
           const parent = findNodeByIdRecursive(window.esd.children, parentId);
-          const child = findNodeByIdRecursive(parent.children, value.dataset.id);
 
-          // remove node from parent's children, adjusting the other's positions.
-          parent.children = parent.children.filter(i => getNodeId(i) !== child.data.id)
+          // #text node
+          if (value.nodeType === 3) {
+            let pos = 0;
+
+            if (mutation.nextSibling !== null) {
+              pos = parent.children.findIndex(e => getNodeId(e) === mutation.nextSibling?.dataset?.id) - 1
+            }
+            else if (mutation.previousSibling !== null) {
+              pos = parent.children.findIndex(e => getNodeId(e) === mutation.previousSibling?.dataset?.id) + 1
+            }
+
+            const del = parent.children.splice(pos, 1);
+            console.log(del);
+          }
+          else {
+            const child = findNodeByIdRecursive(parent.children, value.dataset.id);
+
+            // remove node from parent's children, adjusting the other's positions.
+            parent.children = parent.children.filter(i => getNodeId(i) !== child.data.id);
+          }
         }
       }
 
@@ -481,18 +520,24 @@ const mutation = (mutationList, observer) => {
             child = findNodeByIdRecursive(parent.children, value.dataset.id);
           }
 
-          // nextSibling != null && previousSibling != null
-          const siblingId = mutation.previousSibling.dataset.id;
-          const nsIdx = parent.children.findIndex(e => getNodeId(e) === siblingId);
+          // // nextSibling == null when at the end
+          // const position = mutation.nextSibling === null
+          //   ? parent.children.length
+          //   // previousSibling == null when at the start
+          //   : mutation.previousSibling === null
+          //     ? 0
+          //     // when in between two elements
+          //     // nextSibling != null && previousSibling != null
+          //     : parent.children.findIndex(e => getNodeId(e) === mutation.previousSibling?.dataset?.id) + 1
 
-          // nextSibling == null when at the end
-          const position = mutation.nextSibling === null
-            ? parent.children.length
-            // previousSibling == null when at the start
-            : mutation.previousSibling === null
-              ? 0
-              // when in between two elements
-              : nsIdx + 1
+          let pos = 0;
+
+          if (mutation.nextSibling !== null) {
+            pos = parent.children.findIndex(e => getNodeId(e) === mutation.nextSibling?.dataset?.id) - 1
+          }
+          else if (mutation.previousSibling !== null) {
+            pos = parent.children.findIndex(e => getNodeId(e) === mutation.previousSibling?.dataset?.id) + 1
+          }
 
           const callback = (domNode, hastNode) => {
             if (!('data' in hastNode)) {
@@ -512,10 +557,10 @@ const mutation = (mutationList, observer) => {
           const v = assignIds(fromDom(value, {
             afterTransform: callback,
           }));
-          console.debug(parent, child, position, v);
+          // console.debug(parent, child, position, v);
 
           // add node to parent's children, adjusting the other's positions.
-          parent.children.splice(position, 0, v)
+          parent.children.splice(pos, 0, v)
         }
       }
 

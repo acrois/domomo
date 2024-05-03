@@ -275,7 +275,12 @@ export const rowsToTrees = ({
       .filter(n => getNodeId(n) === a.parent_id)
       .map(n => {
         const filt = nodes.filter(n2 => getNodeId(n2) === a.child_id);
-        const srcAttr = filt.at(0)!; // we expect to find 1 result
+        const srcAttr = filt.at(0); // we expect to find 1 result
+
+        if (!srcAttr) {
+          console.error('not found', a, n);
+          throw 'Invalid.';
+        }
 
         // map attributes to properties instead of children
         if (n.type === 'element' && srcAttr.type === 'attribute') {

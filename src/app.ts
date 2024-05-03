@@ -261,20 +261,27 @@ const app = (env: any) => {
                   SET name = ${op.node.name}
                   WHERE id = ${op.id}`);
                 }
-                if ('type' in op.node && op.node.type) {
-                  db.query(SQL`UPDATE node
-                  SET value = (
-                    SELECT id
-                    FROM node_type
-                    WHERE tag = ${op.node.type}
-                  )
-                  WHERE id = ${op.id}`);
-                }
+                // if ('type' in op.node && op.node.type) {
+                //   db.query(SQL`UPDATE node
+                //   SET value = (
+                //     SELECT id
+                //     FROM node_type
+                //     WHERE tag = ${op.node.type}
+                //   )
+                //   WHERE id = ${op.id}`);
+                // }
               }
+            }
+            else if (op.type === 'delete') {
+              db.query(SQL`DELETE FROM node_attachment
+              WHERE parent_id = ${op.parentId}
+                AND child_id  = ${op.id}`);
             }
           }
 
-          insertNodesAttachments(db, rows, attachments);
+          if (rows.length > 0 || attachments.length > 0) {
+            insertNodesAttachments(db, rows, attachments);
+          }
 
           await db.query('COMMIT');
         }
