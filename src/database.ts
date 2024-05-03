@@ -3,7 +3,7 @@ import { ClientBase, Query, } from "pg";
 import { rowsToTrees } from "./dbeautiful";
 import { NotFoundError } from "elysia";
 
-const DEBUG_QUERIES = false;
+const DEBUG_QUERIES = true;
 
 if (DEBUG_QUERIES) {
   const submit = Query.prototype.submit;
@@ -74,10 +74,5 @@ export const insertNodesAttachments = (db: ClientBase, rows: any[], attachments:
       (parent_id, child_id, position)
     VALUES
       (${a.parent_id}, ${a.child_id}, ${a.position})
-    ON CONFLICT (id) DO UPDATE
-    SET
-      parent_id = EXCLUDED.parent_id,
-      child_id = EXCLUDED.child_id,
-      position = EXCLUDED.position + 1
   `));
 }

@@ -165,7 +165,7 @@ export const loadFileByRelativePath = async (handle: any, event: any, filename: 
         'Authorization': `Basic ${btoa(`internal:${secret}`)}`,
       }
     });
-    handle(request)
+    await handle(request)
     console.log('Handled', event, newUrl);
   }
   else {

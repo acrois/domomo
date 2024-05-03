@@ -235,15 +235,19 @@ const app = (env: any) => {
                   child_id: op.id,
                   position: op.position,
                 })
-                db.query(SQL`UPDATE node_attachment
-                  SET position = position + 1
-                WHERE id IN (
-                  SELECT id FROM node_attachment
-                  WHERE parent_id = ${op.parentId}
-                    AND position >= ${op.position}
-                  ORDER BY position DESC
-                  FOR UPDATE
-                )`);
+                // assume we are idx 1 atm
+                if (body.length > 1 && body[0]?.parentId !== op.parentId && body[0]?.type === 'delete') {
+
+                  db.query(SQL`UPDATE node_attachment
+                    SET position = position + 1
+                  WHERE id IN (
+                    SELECT id FROM node_attachment
+                    WHERE parent_id = ${op.parentId}
+                      AND position >= ${op.position}
+                    ORDER BY position DESC
+                    FOR UPDATE
+                  )`);
+                }
                 rows.push(...ttr.rows);
                 attachments.push(...ttr.attachments);
               }
@@ -331,21 +335,15 @@ const app = (env: any) => {
           // console.log(JSON.stringify(t));
           insertNodesAttachments(db, t.rows, t.attachments);
 
-          const nextAttachment = await db.query(SQL`
-            SELECT next_position
-            FROM node_attachment_next
-            WHERE parent_id = ${domain.id}
-          `);
-
-          if (!nextAttachment.rowCount || nextAttachment.rowCount === 0) {
-            throw 'Uh oh...';
-          }
-
           db.query(SQL`
             INSERT INTO node_attachment
               (parent_id, child_id, position)
             VALUES
-              (${domain.id}, ${t.rows[0].id}, ${nextAttachment.rows[0].next_position})
+              (${domain.id}, ${t.rows[0].id}, (
+                SELECT next_position
+                FROM node_attachment_next
+                WHERE parent_id = ${domain.id}
+              ))
           `)
           await db.query('COMMIT');
         }
@@ -461,18 +459,18 @@ const app = (env: any) => {
       })
     )
     .onStart(async app => {
+      // read all the files in the current directory, recursively
+      const rd = await readdir("./static", { recursive: true });
+
+      for (const filename of rd) {
+        await loadFileByRelativePath(app.handle, 'load', filename!, INTERNAL_SECRET);
+      }
+
       const watcher = watch(
         './static',
         { recursive: true },
         async (event, filename) => await loadFileByRelativePath(app.handle, event, filename!, INTERNAL_SECRET),
       );
-
-      // read all the files in the current directory, recursively
-      const rd = await readdir("./static", { recursive: true });
-
-      for await (const filename of rd) {
-        await loadFileByRelativePath(app.handle, 'load', filename!, INTERNAL_SECRET);
-      }
 
       process.on('exit', () => {
         // console.log('msg', message);

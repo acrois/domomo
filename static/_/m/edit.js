@@ -46,6 +46,10 @@ const assignIds = (n) => {
     if ('draggable' in n.properties) {
       delete n.properties.draggable;
     }
+
+    if ('contentEditable' in n.properties) {
+      delete n.properties.contentEditable;
+    }
   }
 
   if (!n?.data?.id) {
@@ -418,12 +422,55 @@ document.addEventListener('drop', e => {
   document.querySelectorAll('.dropper').forEach(c => c.classList.remove('dropper', ...directions))
 }, true);
 
+let original = null;
+
+const serverMutate = async () => {
+  if (original) {
+    const d = diffTrees(original, window.esd);
+    console.log('diff to server', d, original, window.esd);
+
+    if (d.length > 0) {
+      original = undefined;
+      await fetch('/!', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(d),
+      }).then(f => {
+        console.log(f)
+      }, r => {
+        console.error(r);
+      });
+    }
+  }
+}
+
+const debounce = (func, timeout = 300) => {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+  }
+}
+
+const debouncedServerMutate = debounce(serverMutate);
 
 const mutation = (mutationList, observer) => {
   const changeset = crypto.randomUUID();
-  let original = null;
+
+  console.group(changeset);
 
   for (const mutation of mutationList) {
+    const parentId = mutation?.target?.dataset?.id;
+    console.log('mutation', mutation.type, mutation.target, mutation);
+
+    // look up target (parent) uuid in tree
+    const parent = findNodeByIdRecursive(window.esd.children, parentId);
+    const nextSiblingTreePos = mutation.nextSibling !== null ? parent?.children?.findIndex(e => getNodeId(e) === mutation.nextSibling?.dataset?.id) : undefined;
+    const previousSiblingTreePos = mutation.previousSibling !== null ? parent?.children?.findIndex(e => getNodeId(e) === mutation.previousSibling?.dataset?.id) : undefined;
+    console.log('parent', parentId, parent, nextSiblingTreePos, previousSiblingTreePos);
+
     if (mutation.type === 'attributes') {
       if (mutation.attributeName === 'data-cmd' || mutation.attributeName === 'data-id') {
         // ignore body super design trigger and guid encoding
@@ -449,7 +496,7 @@ const mutation = (mutationList, observer) => {
           continue;
         }
 
-        console.log(classListWithoutEditables);
+        console.log('classList', classListWithoutEditables);
       }
 
       if (mutation.attributeName === 'draggable' || mutation.attributeName === 'contenteditable') {
@@ -474,31 +521,28 @@ const mutation = (mutationList, observer) => {
         const mrv = mutation.removedNodes.values();
 
         for (const value of mrv) {
-          const parentId = mutation.target.dataset.id;
-          console.log('remove', parentId, value);
-
-          // look up target (parent) uuid in tree
-          const parent = findNodeByIdRecursive(window.esd.children, parentId);
+          console.log('remove', value);
 
           // #text node
           if (value.nodeType === 3) {
-            let pos = 0;
+            // let pos = 0;
 
-            if (mutation.nextSibling !== null) {
-              pos = parent.children.findIndex(e => getNodeId(e) === mutation.nextSibling?.dataset?.id) - 1
-            }
-            else if (mutation.previousSibling !== null) {
-              pos = parent.children.findIndex(e => getNodeId(e) === mutation.previousSibling?.dataset?.id) + 1
-            }
-
+            // if (nextSiblingTreePos) {
+            //   pos = nextSiblingTreePos - 1
+            // }
+            // else if (previousSiblingTreePos) {
+            //   pos = previousSiblingTreePos + 1
+            // }
+            const pos = !nextSiblingTreePos && !previousSiblingTreePos ? 0 : nextSiblingTreePos ? nextSiblingTreePos - 1 : previousSiblingTreePos + 1;
             const del = parent.children.splice(pos, 1);
-            console.log(del);
+            console.log('text', pos, del, parent.children);
           }
           else {
             const child = findNodeByIdRecursive(parent.children, value.dataset.id);
 
             // remove node from parent's children, adjusting the other's positions.
             parent.children = parent.children.filter(i => getNodeId(i) !== child.data.id);
+            console.log('other', child, parent.children);
           }
         }
       }
@@ -508,11 +552,6 @@ const mutation = (mutationList, observer) => {
         const mav = mutation.addedNodes.values();
 
         for (const value of mav) {
-          const parentId = mutation.target.dataset.id;
-          console.log('create', parentId, value);
-          // look up target (parent) uuid in tree
-          const parent = findNodeByIdRecursive(window.esd.children, parentId);
-
           // check if a child exists
           let child = null;
 
@@ -529,15 +568,9 @@ const mutation = (mutationList, observer) => {
           //     // when in between two elements
           //     // nextSibling != null && previousSibling != null
           //     : parent.children.findIndex(e => getNodeId(e) === mutation.previousSibling?.dataset?.id) + 1
+          const pos = !nextSiblingTreePos && !previousSiblingTreePos ? 0 : nextSiblingTreePos ? nextSiblingTreePos - 1 : previousSiblingTreePos + 1;
 
-          let pos = 0;
-
-          if (mutation.nextSibling !== null) {
-            pos = parent.children.findIndex(e => getNodeId(e) === mutation.nextSibling?.dataset?.id) - 1
-          }
-          else if (mutation.previousSibling !== null) {
-            pos = parent.children.findIndex(e => getNodeId(e) === mutation.previousSibling?.dataset?.id) + 1
-          }
+          console.log('create', child, value, pos);
 
           const callback = (domNode, hastNode) => {
             if (!('data' in hastNode)) {
@@ -561,9 +594,9 @@ const mutation = (mutationList, observer) => {
 
           // add node to parent's children, adjusting the other's positions.
           parent.children.splice(pos, 0, v)
+          console.log('inserted', v, pos, parent.children);
         }
       }
-
     }
     else if (mutation.type === 'characterData') {
       original = original ?? structuredClone(window.esd);
@@ -579,29 +612,20 @@ const mutation = (mutationList, observer) => {
       child.value = value;
       // console.log(parent, child)
     }
-
-    // console.log('change', changeset, mutation.type, mutation.target, mutation);
   }
 
   if (original) {
     const d = diffTrees(original, window.esd);
-    console.log('diff', changeset, d, original, window.esd);
+    console.log('diff from client', changeset, d, original, window.esd);
 
     if (d.length > 0) {
-      fetch('/!', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(d),
-      }).then(f => {
-        console.log(f)
-      }, r => {
-        console.error(r);
-      });
+      debouncedServerMutate();
     }
   }
+
+  console.groupEnd();
 };
+
 
 const observer = new MutationObserver(mutation);
 observer.observe(document, {

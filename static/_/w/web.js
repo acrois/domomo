@@ -181,6 +181,10 @@ var rowsToTrees = ({
     nodes.filter((n) => getNodeId(n) === a.parent_id).map((n) => {
       const filt = nodes.filter((n2) => getNodeId(n2) === a.child_id);
       const srcAttr = filt.at(0);
+      if (!srcAttr) {
+        console.error("not found", a, n);
+        throw "Invalid.";
+      }
       if (n.type === "element" && srcAttr.type === "attribute") {
         let k = srcAttr.tagName;
         let v = JSON.parse(srcAttr.value);

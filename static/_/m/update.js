@@ -20,6 +20,7 @@ if (!window.es) {
     const decoded = JSON.parse(ev.data);
     if (decoded) {
       window.esd = decoded;
+      window.init = structuredClone(decoded);
       const tree = toDom(decoded, {
         afterTransform: callback,
       });
@@ -31,9 +32,10 @@ if (!window.es) {
   es.addEventListener('diff', ev => {
     const decoded = JSON.parse(ev.data);
     if (decoded) {
-      console.log(window.esd, decoded);
-      applyTreeDiff(window.esd, decoded);
-      const tree = toDom(window.esd, {
+      console.log(window.init, decoded);
+      applyTreeDiff(window.init, decoded);
+      window.esd = structuredClone(window.init);
+      const tree = toDom(window.init, {
         afterTransform: callback,
       });
       // TODO target specific nodes
