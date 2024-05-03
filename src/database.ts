@@ -3,7 +3,7 @@ import { ClientBase, Query, } from "pg";
 import { rowsToTrees } from "./dbeautiful";
 import { NotFoundError } from "elysia";
 
-const DEBUG_QUERIES = true;
+const DEBUG_QUERIES = false;
 
 if (DEBUG_QUERIES) {
   const submit = Query.prototype.submit;

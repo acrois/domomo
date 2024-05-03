@@ -207,6 +207,14 @@ const app = (env: any) => {
               ],
               data: [Object ...],
             },
+          },
+          {
+            "type": "update",
+            "id": "233135ce-4663-4c8f-a3ef-ea2d4635a283",
+            "node": {
+              "type": "text",
+              "value": "Hi there!"
+            }
           }
         ]
         */
@@ -219,7 +227,6 @@ const app = (env: any) => {
           const attachments = [];
 
           for (const op of body) {
-
             if (op.type === 'insert') {
               if (op.node) {
                 const ttr = treeToRows(op.node);
@@ -239,6 +246,30 @@ const app = (env: any) => {
                 )`);
                 rows.push(...ttr.rows);
                 attachments.push(...ttr.attachments);
+              }
+            }
+            else if (op.type === 'update') {
+              if (op.node) {
+                // TODO properties
+                if ('value' in op.node && op.node.value) {
+                  db.query(SQL`UPDATE node
+                  SET value = ${op.node.value}
+                  WHERE id = ${op.id}`);
+                }
+                if ('name' in op.node && op.node.name) {
+                  db.query(SQL`UPDATE node
+                  SET name = ${op.node.name}
+                  WHERE id = ${op.id}`);
+                }
+                if ('type' in op.node && op.node.type) {
+                  db.query(SQL`UPDATE node
+                  SET value = (
+                    SELECT id
+                    FROM node_type
+                    WHERE tag = ${op.node.type}
+                  )
+                  WHERE id = ${op.id}`);
+                }
               }
             }
           }

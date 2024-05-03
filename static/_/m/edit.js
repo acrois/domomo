@@ -523,25 +523,38 @@ const mutation = (mutationList, observer) => {
     else if (mutation.type === 'characterData') {
       original = original ?? structuredClone(window.esd);
 
+      const parentNode = mutation.target.parentNode;
+      const parentId = parentNode.dataset.id;
+      const value = mutation.target.nodeValue;
+      console.log('update', parentId, value, parentNode);
+      // look up target (parent) uuid in tree
+      const parent = findNodeByIdRecursive(window.esd.children, parentId);
+      const nsIdx = Array.prototype.indexOf.call(parentNode.childNodes, mutation.target);
+      const child = parent.children[nsIdx];
+      child.value = value;
+      // console.log(parent, child)
     }
 
-    console.log('change', changeset, mutation.type, mutation.target, mutation);
+    // console.log('change', changeset, mutation.type, mutation.target, mutation);
   }
 
   if (original) {
     const d = diffTrees(original, window.esd);
     console.log('diff', changeset, d, original, window.esd);
-    fetch('/!', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(d),
-    }).then(f => {
-      console.log(f)
-    }, r => {
-      console.error(r);
-    });
+
+    if (d.length > 0) {
+      fetch('/!', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(d),
+      }).then(f => {
+        console.log(f)
+      }, r => {
+        console.error(r);
+      });
+    }
   }
 };
 
