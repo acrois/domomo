@@ -307,48 +307,6 @@ export const rowsToTrees = ({
   return nodes;
 }
 
-// export const rowsToTree = (treeRows: any[]) => {
-//   const parents = [
-//     {
-//       id: null,
-//       type_id: 0, // TODO type_id -> type
-//       children: [],
-//       name: null,
-//       value: null,
-//       position: 0,
-//       parent: null,
-//     },
-//   ];
-
-//   for (let i = 0; i < treeRows.length; i++) {
-//     console.log(i, treeRows[i])
-//     const parentNode = {
-//       ...treeRows[i],
-//       children: [],
-//     };
-
-//     parentNode.type = parentNode.node_type.toLowerCase();
-//     parentNode.type = (
-//       parentNode.type === 'document'
-//         ? 'root'
-//         : parentNode.type === 'document_type'
-//           ? 'doctype'
-//           : parentNode.type
-//     )
-//     parents.push(parentNode);
-
-//     for (const parent of parents) {
-//       if (parent.id === treeRows[i].parent) {
-//         parent.children.push(parentNode);
-//         // TODO determine attribute
-//         // parent.children.splice(treeRows[i].position, 0);
-//       }
-//     }
-//   }
-
-//   return parents;
-// }
-
 export const treeToRows = (node: Node, documentPath?: string, idGenerator?: Function) => {
   // console.log(idGenerator);
   const idg = () => idGenerator !== undefined && idGenerator !== null
