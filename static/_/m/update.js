@@ -44,18 +44,6 @@ if (!window.es) {
       document.designMode = 'off';
     }
   });
-  // es.addEventListener("step", ev => {
-  //   const decoded = JSON.parse(ev.data);
-  //   if (decoded) {
-  //     const attempt = patch(window.esd, decoded);
-  //     if (attempt) {
-  //       window.esd = attempt;
-  //       const tree = toDom(window.esd, {});
-  //       console.log(tree);
-  //       // document.body = tree.body;
-  //     }
-  //   }
-  // });
   es.addEventListener("error", ev => {
     console.log(ev);
   });
