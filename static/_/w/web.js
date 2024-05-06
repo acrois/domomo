@@ -53,7 +53,7 @@ var diffTrees = (oldNode, newNode) => {
         });
       }
     });
-    newParent.children.forEach((child) => {
+    newParent.children.forEach((child, index) => {
       const cId = getNodeId(child);
       if (!cId) {
         console.error(child);
@@ -64,6 +64,7 @@ var diffTrees = (oldNode, newNode) => {
           type: "insert",
           id: cId,
           parentId: getNodeId(newParent),
+          position: index,
           node: child
         });
       }
@@ -88,7 +89,12 @@ var applyTreeDiff = (tree, operations) => {
         }
         if ("children" in parent) {
           const parentElement = parent;
-          parentElement.children.push(op.node);
+          const childElement = op.node;
+          if ("index" in op) {
+            parentElement.children.splice(op.index, 0, childElement);
+          } else {
+            parentElement.children.push(childElement);
+          }
         }
         break;
       case "update":
@@ -130,7 +136,150 @@ var applyTreeDiff = (tree, operations) => {
     }
   }
 };
+var rowsToTrees = ({
+  rows,
+  attachments
+}) => {
+  const nodes = rows.map((r) => {
+    let type = r.type;
+    const rowNode = {
+      data: {
+        id: r.id
+      }
+    };
+    if (type === "DOCUMENT") {
+      type = "root";
+    } else if (type === "DOCUMENT_TYPE") {
+      type = "doctype";
+    } else {
+      type = type.toLowerCase();
+    }
+    rowNode.type = type;
+    switch (rowNode.type) {
+      case "root":
+        rowNode.children = [];
+        break;
+      case "element":
+        rowNode.tagName = r.name;
+        rowNode.children = [];
+        rowNode.properties = {};
+        break;
+      case "attribute":
+        rowNode.tagName = r.name;
+        rowNode.value = r.value;
+        break;
+      case "comment":
+      case "text":
+        rowNode.value = r.value;
+        break;
+      default:
+        break;
+    }
+    return rowNode;
+  });
+  attachments?.map((a) => {
+    nodes.filter((n) => getNodeId(n) === a.parent_id).map((n) => {
+      const filt = nodes.filter((n2) => getNodeId(n2) === a.child_id);
+      const srcAttr = filt.at(0);
+      if (!srcAttr) {
+        console.error("not found", a, n);
+        throw "Invalid.";
+      }
+      if (n.type === "element" && srcAttr.type === "attribute") {
+        let k = srcAttr.tagName;
+        let v = JSON.parse(srcAttr.value);
+        if (k === "className") {
+          k = "class";
+        }
+        n.properties[k] = v;
+      } else {
+        n?.children?.splice(a.position || 0, 0, srcAttr);
+      }
+    });
+  });
+  return nodes;
+};
+var treeToRows = (node, documentPath, idGenerator) => {
+  const idg = () => idGenerator !== undefined && idGenerator !== null ? idGenerator() : crypto.randomUUID();
+  const id = getNodeId(node) || idg();
+  let type;
+  let name;
+  let value;
+  switch (node.type) {
+    case "root":
+      type = "DOCUMENT";
+      name = documentPath;
+      break;
+    case "doctype":
+      type = "DOCUMENT_TYPE";
+      name = "!doctype";
+      value = "!DOCTYPE html";
+      break;
+    case "element":
+      const e = node;
+      type = "ELEMENT";
+      name = e.tagName;
+      break;
+    case "comment":
+    case "text":
+      const l = node;
+      type = node.type.toUpperCase();
+      value = l.value;
+      break;
+    default:
+      type = node.type.toUpperCase();
+      break;
+  }
+  const rows = [
+    {
+      id,
+      type,
+      name: name || null,
+      value: value || null
+    }
+  ];
+  const attachments = [];
+  if ("children" in node && node.children) {
+    node.children.flatMap((c) => treeToRows(c, documentPath, idGenerator)).map((ttr) => {
+      rows.push(...ttr.rows);
+      attachments.push(...ttr.attachments);
+      attachments.push({
+        parent_id: id,
+        child_id: ttr.rows[0].id,
+        position: attachments.filter((pv) => pv.parent_id == id).length
+      });
+    });
+  }
+  if (node.type === "element") {
+    const props = node.properties;
+    for (const k in props) {
+      const attr = {
+        id: idg(),
+        type: "ATTRIBUTE",
+        name: k,
+        value: JSON.stringify(props[k])
+      };
+      rows.push(attr);
+      attachments.push({
+        parent_id: id,
+        child_id: attr.id,
+        position: attachments.filter((pv) => pv.parent_id == id).length
+      });
+    }
+  }
+  return {
+    rows,
+    attachments
+  };
+};
 export {
+  treeToRows,
+  rowsToTrees,
+  hasUpdate,
+  getNodeId,
+  flattenTree,
+  findNodeByIdRecursive,
+  findNodeById,
   diffTrees,
   applyTreeDiff
 };

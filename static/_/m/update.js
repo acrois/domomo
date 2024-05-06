@@ -6,6 +6,13 @@ if (!window.es) {
   window.es = new EventSource(window.location.href, {
     withCredentials: true,
   });
+  const callback = (hastNode, domNode) => {
+    if (hastNode.type === 'element') {
+      domNode.dataset.id = hastNode.data.id;
+    }
+
+    // console.log(hastNode, domNode);
+  };
   es.addEventListener("open", ev => {
     console.log(ev);
   });
@@ -13,7 +20,10 @@ if (!window.es) {
     const decoded = JSON.parse(ev.data);
     if (decoded) {
       window.esd = decoded;
-      const tree = toDom(decoded, {});
+      window.init = structuredClone(decoded);
+      const tree = toDom(decoded, {
+        afterTransform: callback,
+      });
       console.log(tree);
       document.body = tree.body;
       document.designMode = 'off';
@@ -22,26 +32,18 @@ if (!window.es) {
   es.addEventListener('diff', ev => {
     const decoded = JSON.parse(ev.data);
     if (decoded) {
-      console.log(window.esd, decoded);
-      applyTreeDiff(window.esd, decoded);
-      const tree = toDom(window.esd, {});
+      console.log(window.init, decoded);
+      applyTreeDiff(window.init, decoded);
+      window.esd = structuredClone(window.init);
+      const tree = toDom(window.init, {
+        afterTransform: callback,
+      });
+      // TODO target specific nodes
       console.log(tree);
       document.body = tree.body;
       document.designMode = 'off';
     }
   });
-  // es.addEventListener("step", ev => {
-  //   const decoded = JSON.parse(ev.data);
-  //   if (decoded) {
-  //     const attempt = patch(window.esd, decoded);
-  //     if (attempt) {
-  //       window.esd = attempt;
-  //       const tree = toDom(window.esd, {});
-  //       console.log(tree);
-  //       // document.body = tree.body;
-  //     }
-  //   }
-  // });
   es.addEventListener("error", ev => {
     console.log(ev);
   });

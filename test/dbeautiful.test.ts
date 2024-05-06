@@ -190,3 +190,42 @@ test('Tree Difference and Apply', async () => {
   // console.log(JSON.stringify(operations));
 
 })
+
+const testy2 = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Example Domainz</title>
+  <script type="module" src="/m/update.js"></script>
+  <script type="module" src="/m/edit.js"></script>
+  <link rel="stylesheet" href="/s/base.css" />
+  <link rel="stylesheet" href="/s/edit.css" />
+</head>
+<body>
+  <div>
+    <h1>Header is all we got yo</h1>
+    <p>Hi there. This is a message from your cats. We are here to tell you that this domain is for use in illustrative examples in documents.</p>
+    <p>If you want more, <a href="https://www.iana.org/domains/example">More information...</a></p>
+  </div>
+</body>
+</html>`;
+
+test('Complex Example', async () => {
+  const tree = await htmlToAST(testy2);
+  expect(tree).toMatchSnapshot();
+
+  const ttr = treeToRows(tree, '/', uuidNext());
+  expect(ttr).toMatchSnapshot();
+
+  // convert many times
+  for (let i = 0; i < 1000; i++) {
+    // html -> ast
+    const t = await htmlToAST(testy2);
+    expect(t).toMatchObject(tree);
+    // ast -> rows
+    const t2 = treeToRows(t, '/', uuidNext());
+    expect(t2).toMatchObject(ttr);
+  }
+})

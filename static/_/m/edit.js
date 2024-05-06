@@ -1,7 +1,10 @@
-import { diffTrees } from '../w/web.js';
+import { diffTrees, findNodeByIdRecursive, getNodeId } from '../w/web.js';
+import { fromDom } from 'https://esm.sh/hast-util-from-dom@5?bundle'
 
 const goodTags = ['SPAN', 'A', 'PRE', 'P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6'];
 const incrTags = ['P', 'H6', 'H5', 'H4', 'H3', 'H2', 'H1'];
+const editableClassNames = ['design-mode', 'selected', 'above', 'dropper', 'right', 'left', 'below'];
+
 function getCurrentEditingElement() {
   const selection = window.getSelection();
   // Check if there is a selection or if the cursor is placed within some content
@@ -18,6 +21,45 @@ function getCurrentEditingElement() {
   return element;
 }
 
+const assignIds = (n) => {
+  if (!('data' in n)) {
+    n.data = {};
+  }
+
+  if ('properties' in n) {
+    if ('dataId' in n.properties) {
+      if (!n?.data?.id) {
+        n.data.id = n.properties.dataId;
+      }
+      delete n.properties.dataId;
+    }
+
+    if ('className' in n.properties) {
+      // strip editable classes
+      n.properties.className = n.properties.className.filter(n => !editableClassNames.includes(n));
+
+      if (!n.properties.className || n.properties.className.length === 0) {
+        delete n.properties.className;
+      }
+    }
+
+    if ('draggable' in n.properties) {
+      delete n.properties.draggable;
+    }
+
+    if ('contentEditable' in n.properties) {
+      delete n.properties.contentEditable;
+    }
+  }
+
+  if (!n?.data?.id) {
+    n.data.id = crypto.randomUUID();
+  }
+
+  n?.children?.map(assignIds);
+  return n;
+}
+
 function selectElementContents(el) {
   var range = document.createRange();
   range.selectNodeContents(el);
@@ -26,7 +68,7 @@ function selectElementContents(el) {
   sel.addRange(range);
 }
 
-const toggleDesignMode  = () => {
+const toggleDesignMode = () => {
   document.designMode = document.designMode == 'on' ? 'off' : 'on';
   document.body.removeAttribute('data-cmd');
   document.querySelectorAll('[contenteditable]').forEach(c => c.removeAttribute('contentEditable'));
@@ -137,7 +179,7 @@ document.addEventListener('keydown', e => {
     // different behavior for designMode than with contentEditable
     else if (document.designMode == 'on') {
       // if (tgt.tagName != 'P') {
-        e.preventDefault();
+      e.preventDefault();
       // }
 
       let t = null;
@@ -272,6 +314,7 @@ document.addEventListener('pointerout', e => {
   e.target.removeAttribute('draggable');
 }, true);
 
+const directions = ['left', 'right', 'above', 'below'];
 const dragDropTarget = (e) => {
   const rect = e.target.getBoundingClientRect();
   const x = e.clientX - rect.left;
@@ -303,11 +346,11 @@ document.addEventListener('dragstart', e => {
   )) {
     event.dataTransfer.effectAllowed = "copyMove";
 
-    if (!e.target.id) {
-      e.target.id = crypto.randomUUID();
+    if (!e.target.dataset.id) {
+      e.target.dataset.id = crypto.randomUUID();
     }
 
-    e.dataTransfer.setData('text/plain', e.target.id);
+    e.dataTransfer.setData('text/plain', e.target.dataset.id);
     e.dataTransfer.setDragImage(e.target, 10, 10);
   }
 }, true);
@@ -316,7 +359,6 @@ document.addEventListener('dragover', e => {
   e.preventDefault();
   const targetDirection = dragDropTarget(e);
   const canMoveTo = !['BODY', 'HTML'].includes(e.target.tagName);
-  const directions = ['left', 'right', 'above', 'below'];
   let removeDirections = directions;
   e.dataTransfer.dropEffect = canMoveTo ? 'move' : 'none';
 
@@ -343,7 +385,7 @@ document.addEventListener('drop', e => {
   if (e.target
     && !['BODY', 'HTML'].includes(e.target.tagName)
   ) {
-    const dragElement = document.getElementById(d);
+    const dragElement = document.querySelector(`[data-id="${d}"]`);
 
     if (dragElement != e.target) {
       const targetDirection = dragDropTarget(e);
@@ -377,28 +419,213 @@ document.addEventListener('drop', e => {
     }
   }
 
-  document.querySelectorAll('.dropper').forEach(c => c.classList.remove('dropper'))
+  document.querySelectorAll('.dropper').forEach(c => c.classList.remove('dropper', ...directions))
 }, true);
 
+let original = null;
+
+const serverMutate = async () => {
+  if (original) {
+    const d = diffTrees(original, window.esd);
+    console.log('diff to server', d, original, window.esd);
+
+    if (d.length > 0) {
+      original = undefined;
+      await fetch('/!', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(d),
+      }).then(f => {
+        console.log(f)
+      }, r => {
+        console.error(r);
+      });
+    }
+  }
+}
+
+const debounce = (func, timeout = 300) => {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { func.apply(this, args); }, timeout);
+  }
+}
+
+const debouncedServerMutate = debounce(serverMutate);
+
 const mutation = (mutationList, observer) => {
+  const changeset = crypto.randomUUID();
+
+  console.group(changeset);
+
   for (const mutation of mutationList) {
-    // if (mutation.type === "childList") {
-    //   console.log("A child node has been added or removed.");
-    // } else if (mutation.type === "attributes") {
-    //   console.log(`The ${mutation.attributeName} attribute was modified.`);
-    // }
+    const parentId = mutation?.target?.dataset?.id;
+    console.log('mutation', mutation.type, mutation.target, mutation);
+
+    // look up target (parent) uuid in tree
+    const parent = findNodeByIdRecursive(window.esd.children, parentId);
+    const nextSiblingTreePos = mutation.nextSibling !== null ? parent?.children?.findIndex(e => getNodeId(e) === mutation.nextSibling?.dataset?.id) : undefined;
+    const previousSiblingTreePos = mutation.previousSibling !== null ? parent?.children?.findIndex(e => getNodeId(e) === mutation.previousSibling?.dataset?.id) : undefined;
+    console.log('parent', parentId, parent, nextSiblingTreePos, previousSiblingTreePos);
 
     if (mutation.type === 'attributes') {
-      if (mutation.attributeName === 'data-cmd') {
+      if (mutation.attributeName === 'data-cmd' || mutation.attributeName === 'data-id') {
+        // ignore body super design trigger and guid encoding
         continue;
       }
 
-      // if (mutation.attributeName === 'class' && mutation.)
-    }
+      if (mutation.attributeName === 'class') {
+        if (
+          editableClassNames.includes(mutation.oldValue)
+        ) {
+          // ignore JS-styling / editing
+          continue;
+        }
 
-    console.log(mutation);
+        const classListWithoutEditables = mutation.target.classList.values().filter(v => !editableClassNames.includes(v)).toArray();
+
+        if (
+          // (mutation.oldValue === null || mutation.oldValue === undefined || mutation.oldValue === '') &&
+          classListWithoutEditables.length == 0
+        ) {
+          // console.log(mutation.target.classList);
+          // ignore selected class style
+          continue;
+        }
+
+        console.log('classList', classListWithoutEditables);
+      }
+
+      if (mutation.attributeName === 'draggable' || mutation.attributeName === 'contenteditable') {
+        // ignore editing attributes
+        continue;
+      }
+    }
+    else if (mutation.type === 'childList') {
+      // console.log(mutation?.target?.tagName, mutation.addedNodes.length, mutation.removedNodes.length);
+
+      if (
+        mutation?.target?.tagName === 'HTML'
+        && mutation.addedNodes.length === 1
+        && mutation.removedNodes.length === 1
+      ) {
+        // ignore complete replacements of the document
+        continue;
+      }
+
+      if (mutation.removedNodes) {
+        original = original ?? structuredClone(window.esd);
+        const mrv = mutation.removedNodes.values();
+
+        for (const value of mrv) {
+          console.log('remove', value);
+
+          // #text node
+          if (value.nodeType === 3) {
+            // let pos = 0;
+
+            // if (nextSiblingTreePos) {
+            //   pos = nextSiblingTreePos - 1
+            // }
+            // else if (previousSiblingTreePos) {
+            //   pos = previousSiblingTreePos + 1
+            // }
+            const pos = !nextSiblingTreePos && !previousSiblingTreePos ? 0 : nextSiblingTreePos ? nextSiblingTreePos - 1 : previousSiblingTreePos + 1;
+            const del = parent.children.splice(pos, 1);
+            console.log('text', pos, del, parent.children);
+          }
+          else {
+            const child = findNodeByIdRecursive(parent.children, value.dataset.id);
+
+            // remove node from parent's children, adjusting the other's positions.
+            parent.children = parent.children.filter(i => getNodeId(i) !== child.data.id);
+            console.log('other', child, parent.children);
+          }
+        }
+      }
+
+      if (mutation.addedNodes) {
+        original = original ?? structuredClone(window.esd);
+        const mav = mutation.addedNodes.values();
+
+        for (const value of mav) {
+          // check if a child exists
+          let child = null;
+
+          if (value?.dataset?.id) {
+            child = findNodeByIdRecursive(parent.children, value.dataset.id);
+          }
+
+          // // nextSibling == null when at the end
+          // const position = mutation.nextSibling === null
+          //   ? parent.children.length
+          //   // previousSibling == null when at the start
+          //   : mutation.previousSibling === null
+          //     ? 0
+          //     // when in between two elements
+          //     // nextSibling != null && previousSibling != null
+          //     : parent.children.findIndex(e => getNodeId(e) === mutation.previousSibling?.dataset?.id) + 1
+          const pos = !nextSiblingTreePos && !previousSiblingTreePos ? 0 : nextSiblingTreePos ? nextSiblingTreePos - 1 : previousSiblingTreePos + 1;
+
+          console.log('create', child, value, pos);
+
+          const callback = (domNode, hastNode) => {
+            if (!('data' in hastNode)) {
+              hastNode.data = {};
+            }
+
+            if (!hastNode?.data?.id) {
+              hastNode.data.id = crypto.randomUUID();
+            }
+
+            if (hastNode.type === 'element') {
+              domNode.dataset.id = hastNode.data.id;
+            }
+
+            // console.log(hastNode, domNode);
+          };
+          const v = assignIds(fromDom(value, {
+            afterTransform: callback,
+          }));
+          // console.debug(parent, child, position, v);
+
+          // add node to parent's children, adjusting the other's positions.
+          parent.children.splice(pos, 0, v)
+          console.log('inserted', v, pos, parent.children);
+        }
+      }
+    }
+    else if (mutation.type === 'characterData') {
+      original = original ?? structuredClone(window.esd);
+
+      const parentNode = mutation.target.parentNode;
+      const parentId = parentNode.dataset.id;
+      const value = mutation.target.nodeValue;
+      console.log('update', parentId, value, parentNode);
+      // look up target (parent) uuid in tree
+      const parent = findNodeByIdRecursive(window.esd.children, parentId);
+      const nsIdx = Array.prototype.indexOf.call(parentNode.childNodes, mutation.target);
+      const child = parent.children[nsIdx];
+      child.value = value;
+      // console.log(parent, child)
+    }
   }
+
+  if (original) {
+    const d = diffTrees(original, window.esd);
+    console.log('diff from client', changeset, d, original, window.esd);
+
+    if (d.length > 0) {
+      debouncedServerMutate();
+    }
+  }
+
+  console.groupEnd();
 };
+
 
 const observer = new MutationObserver(mutation);
 observer.observe(document, {

@@ -1,10 +1,33 @@
-import { Elysia, error } from 'elysia';
+import { Elysia } from 'elysia';
 import { createRemoteJWKSet } from "jose";
 import jwt from "@elysiajs/jwt";
 
+export class BasicAuthError extends Error {
+  public code: string = 'BASIC_AUTH_ERROR';
+
+  constructor(public message: string = 'Authentication Required') {
+    super(message);
+  }
+}
+
+export interface BasicAuthUser {
+  username: string;
+  password: string;
+}
+
+export interface BasicAuthConfig {
+  users: BasicAuthUser[];
+  realm?: string;
+  errorMessage?: string;
+  exclude?: string[];
+  noErrorThrown?: boolean;
+}
+
 export class AuthError extends Error {
-  constructor () {
-    super('Authentication Required');
+  public code: string = 'AUTH_ERROR';
+
+  constructor (public message: string = 'Authentication Required') {
+    super(message);
   }
 }
 
@@ -14,9 +37,16 @@ const authPlugin = (env: any) => {
   const CERTS_URL = new URL(TEAM_DOMAIN ? `${TEAM_DOMAIN}/cdn-cgi/access/certs` : env.JWKS_CERT_URL);
   const JWT_COOKIE = env.JWT_COOKIE;
   const JWT_HEADER = env.JWT_HEADER;
+  const INTERNAL_SECRET = env.INTERNAL_SECRET;
   const options = {
     // issuer: TEAM_DOMAIN,
     audience: AUD,
+  }
+  const config: BasicAuthConfig = {
+    users: [
+      { username: "internal", password: INTERNAL_SECRET },
+    ],
+    noErrorThrown: true,
   }
   const jwkset = createRemoteJWKSet(<URL>CERTS_URL);
   return (app: Elysia) =>
@@ -26,7 +56,34 @@ const authPlugin = (env: any) => {
         secret: jwkset,
       })
     )
-    .derive(async ({ headers, cookie, jwt }) => {
+    .error({
+      AuthError,
+      BasicAuthError,
+    })
+    .derive({
+      as: 'global',
+    }, ({ headers }) => {
+      const authorization = headers?.authorization;
+      // console.log(authorization);
+
+      if (!authorization) {
+        return { basicAuth: { isAuthed: false, username: null } };
+      }
+
+      // @ts-ignore
+      const [username, password] = atob(authorization.split(' ')[1]).split(':');
+      // console.log(username, password, config.users);
+      const user = config.users.find(
+        (user) => user.username === username && user.password === password
+      );
+
+      if (!user) return { basicAuth: { isAuthed: false, username: null } };
+
+      return { basicAuth: { isAuthed: true, username: user.username } };
+    })
+    .derive({
+      as: 'global',
+    }, async ({ headers, cookie, jwt }) => {
       // check cookies, then check headers
       const token = JWT_COOKIE in cookie
         ? cookie[JWT_COOKIE]!.value
@@ -35,13 +92,36 @@ const authPlugin = (env: any) => {
         auth: token ? await jwt.verify(token, options) : null,
       };
     })
+    .onTransform({
+      as: 'global',
+    }, (ctx) => {
+      if (
+        !ctx.basicAuth.isAuthed &&
+        !config.noErrorThrown &&
+        ctx.path !== undefined && // handle elysia start event when ctx.path is undefined
+        // !isPathExcluded(ctx.path, config.exclude) &&
+        ctx.request.method !== 'OPTIONS'
+      )
+        throw new BasicAuthError(config.errorMessage ?? 'Unauthorized');
+    })
+    // .onError({
+    //   as: 'global',
+    // }, ({ code, error }) => {
+    //   if (code === 'BASIC_AUTH_ERROR') {
+    //     return new Response(error.message, {
+    //       status: 401,
+    //       headers: {
+    //         'WWW-Authenticate': `Basic${
+    //           config.realm ? ` realm="${config.realm}"` : ''
+    //         }`,
+    //       },
+    //     });
+    //   }
+    // })
     .get('-', async ({ auth }) => {
       return {
         auth,
       };
-    })
-    .error({
-      AuthError,
     })
     .onError({
       as: 'global',
@@ -58,8 +138,9 @@ const authPlugin = (env: any) => {
       }
     })
     .guard({
-      beforeHandle({ jwt, request }) {
+      beforeHandle({ jwt, request, store }) {
         const uri = new URL(request.url);
+        // console.log(store);
         // console.log(request);
 
         // allow localhost changes :)

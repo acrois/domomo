@@ -1,17 +1,15 @@
 import { Elysia, NotFoundError, ParseError } from "elysia";
-import { ClientBase, Pool } from "pg";
+import { Pool } from "pg";
 import { cron, Patterns } from '@elysiajs/cron'
-// import { astPrepareForRehype } from "./util";
 import { SQL } from "sql-template-strings";
 import Stream from "@elysiajs/stream";
-// import diff from "microdiff";
 import codecPlugin from "./encoder";
 import authPlugin, { AuthError } from "./auth";
 import { watch } from "fs";
 import { readdir } from "node:fs/promises";
-import { diffTrees, getNodeId, rowsToTrees, treeToRows } from "./dbeautiful";
-import type { BunFile } from "bun";
-// import diff from 'unist-diff';
+import { diffTrees, getNodeId, treeToRows, type Operation } from "./dbeautiful";
+import { loadFileByRelativePath, serveStaticDirectory, serveStaticFile } from "./util";
+import { fetchTree, fetchTrees, insertNodesAttachments } from "./database";
 
 // client-side script to connect websocket for bidirectional async updates
 // update nodes
@@ -31,107 +29,7 @@ import type { BunFile } from "bun";
 //   console.log(e);
 // }
 
-const serveStaticDirectory = (directory: string) => {
-  return async ({ params, set }) => {
-    const path = `/${directory}/${params['*']}`
-    const f = Bun.file(`./static/_${path}`);
-    return await serveStaticFile(f)({ params, set });
-  }
-}
-
-const serveStaticFile = (f: BunFile) => {
-  return async ({ params, set }) => {
-    const exists = await f.exists();
-
-    if (!exists) {
-      throw new NotFoundError();
-    }
-
-    set.headers['Content-Type'] = f.type;
-    return f.arrayBuffer();
-  }
-}
-
-function convertFileUrlToHttp(url: URL): string {
-  // Extract the pathname and split into segments
-  const pathSegments = url.pathname.split('/');
-
-  // Find the index of 'static' and determine the host, which is the segment right after 'static'
-  const staticIndex = pathSegments.indexOf('static');
-
-  if (staticIndex === -1 || staticIndex + 1 >= pathSegments.length) {
-    throw new Error('Invalid URL format: "static" directory not found');
-  }
-
-  const host = pathSegments[staticIndex + 1];
-
-  // Construct the path by joining segments after the host, remove '.html' from the last segment
-  const newPath = pathSegments
-    .slice(staticIndex + 2)
-    .filter(v => v === 'index.html' ? undefined : v)
-    .join('/')
-    .replace('.html', '')
-    .replace('//', '/')
-    ;
-
-  // Construct and return the new HTTP URL
-  return `http://${host}/${newPath}`;
-}
-
-const loadFileByRelativePath = async (handle: any, event: any, filename: string) => {
-  const location = Bun.pathToFileURL('./static/' + filename);
-  const z = Bun.file(location);
-
-  if (!z.exists()) {
-    console.error('bad', filename, location);
-    return;
-  }
-
-  if (z.type.startsWith('text/html')) {
-    const newUrl = convertFileUrlToHttp(location);
-
-    const request = new Request(newUrl, {
-      method: 'PUT',
-      body: await z.arrayBuffer(),
-      headers: {
-        'Content-Type': z.type,
-      }
-    });
-    handle(request)
-    console.log('Handled', event, newUrl);
-  }
-  else {
-    console.log(`Detected ${event} in ${filename}`);
-  }
-}
-
-const fetchTrees = async (client: ClientBase, domainId: string, documentPath: string) => {
-  const tree = await client.query(SQL`
-    SELECT
-      get_document_tree(dd.document_id) AS tree
-    FROM domain_documents dd
-    WHERE dd.id = ${domainId}
-      AND dd.document_name = ${documentPath}
-  `);
-
-  if (tree === null || tree === undefined || tree.rows.length === 0) {
-    throw new NotFoundError();
-  }
-
-  const t = tree.rows[0].tree
-  // console.log(t);
-  // console.log(tree);
-  const organized = rowsToTrees(t);
-
-  if (organized === null || organized === undefined || organized.length === 0) {
-    throw new NotFoundError();
-  }
-
-  return organized;
-}
-
-const fetchTree = async (client: ClientBase, domainId: string, documentPath: string) =>
-  (await fetchTrees(client, domainId, documentPath))[0]
+const INTERNAL_SECRET = crypto.randomUUID();
 
 const fetcher = (fetch: () => Promise<any>) => {
   return new Stream(async (stream) => {
@@ -141,7 +39,6 @@ const fetcher = (fetch: () => Promise<any>) => {
       throw 'Invalid document.';
     }
 
-    // let initialPrep = astPrepareForRehype(initial);
     stream.event = 'init';
     stream.send(initial);
 
@@ -155,14 +52,12 @@ const fetcher = (fetch: () => Promise<any>) => {
         throw 'Invalid document';
       }
 
-      // const prep = astPrepareForRehype(renewed);
       const d = diffTrees(initial, renewed);
 
       // console.log(d);
       // stream.send(d.length > 0 ? renewed : []);
 
       if (d && d.length > 0) {
-        // console.log(JSON.stringify(d), JSON.stringify(prep), JSON.stringify(diff(astPrepareForRehype(initial), prep)));
         stream.event = 'diff';
         // console.log(d);
         stream.send(d);
@@ -175,6 +70,7 @@ const fetcher = (fetch: () => Promise<any>) => {
 }
 
 const app = (env: any) => {
+  env.INTERNAL_SECRET = INTERNAL_SECRET;
   const pgUri: string = env.PG_URI || env.POSTGRES_URI || env.POSTGRES_URL
     || env.DB_URI || env.DB_URL || env.PG_URL
     || `postgres://${env.POSTGRES_USER}:${env.POSTGRES_PASSWORD}@localhost:5432/${env.POSTGRES_DB}`;
@@ -184,11 +80,12 @@ const app = (env: any) => {
   })
     .use(authPlugin(env))
     .use(codecPlugin)
+    // @ts-ignore
     .onError(({ code, error, set }) => {
       // console.error(error, code);
       const estr = typeof error === 'string' ? error : 'toString' in error ? error?.toString() : '';
 
-      if (code === 'NOT_FOUND' || estr === 'NOT_FOUND' || estr.includes('ENOENT')) {
+      if (code === 'NOT_FOUND' || estr === 'NOT_FOUND' || estr.includes('ENOENT') || error instanceof NotFoundError) {
         set.status = 404;
         return '';
       }
@@ -208,7 +105,7 @@ const app = (env: any) => {
         }
       })
     )
-    .derive(async ({ headers, request, pool, }) => {
+    .derive(async ({ request, pool, }) => {
       const db = await pool.connect();
       const uri = new URL(request.url);
 
@@ -263,7 +160,7 @@ const app = (env: any) => {
       // console.log(params);
       const path = `/${params['*']}`
       const accept = headers['accept'];
-      const boundFetcher = () => fetchTree(pool, domain.id, path);
+      const boundFetcher = () => fetchTree(<any>pool, domain.id, path);
 
       if (accept === 'text/event-stream') {
         return fetcher(boundFetcher);
@@ -272,7 +169,14 @@ const app = (env: any) => {
       return boundFetcher();
     })
     .guard({
-      beforeHandle({ auth, uri }) {
+      beforeHandle({ auth, uri, basicAuth }) {
+        // console.log(basicAuth);
+
+        // accept basic auth
+        if (basicAuth.isAuthed) {
+          return;
+        }
+
         // allow localhost changes :)
         if (uri.hostname.match(/.*\.?localhost/) !== null) {
           return;
@@ -280,12 +184,121 @@ const app = (env: any) => {
 
         if (!auth
           || !auth.email
-          || !auth!.email!.endsWith('@kinetech.llc')
+          || !auth!.email!.toString().endsWith('@kinetech.llc')
         ) {
           throw new AuthError();
         }
       },
     }, (app) => app
+      .post('!', async ({ body, pool }: { body: Operation[], pool: Pool }) => {
+        /*
+        [
+          {
+            type: "insert",
+            id: "b48b89f4-4723-48b6-8271-f721ec11c52f",
+            parentId: "aeac81bb-f3fd-4d4f-a5a4-b6a5bb105d54",
+            position: 4,
+            node: {
+              type: "element",
+              tagName: "p",
+              properties: [Object ...],
+              children: [
+                [Object ...]
+              ],
+              data: [Object ...],
+            },
+          },
+          {
+            "type": "update",
+            "id": "233135ce-4663-4c8f-a3ef-ea2d4635a283",
+            "node": {
+              "type": "text",
+              "value": "Hi there!"
+            }
+          }
+        ]
+        */
+        // console.log(body);
+        const db = await pool.connect();
+        try {
+          await db.query('BEGIN');
+
+          const rows = [];
+          const attachments = [];
+
+          for (const op of body) {
+            if (op.type === 'insert') {
+              if (op.node) {
+                const ttr = treeToRows(op.node);
+                ttr.attachments.push({
+                  parent_id: op.parentId,
+                  child_id: op.id,
+                  position: op.position,
+                })
+                // assume we are idx 1 atm
+                if (body.length > 1 && body[0]?.parentId !== op.parentId && body[0]?.type === 'delete') {
+
+                  db.query(SQL`UPDATE node_attachment
+                    SET position = position + 1
+                  WHERE id IN (
+                    SELECT id FROM node_attachment
+                    WHERE parent_id = ${op.parentId}
+                      AND position >= ${op.position}
+                    ORDER BY position DESC
+                    FOR UPDATE
+                  )`);
+                }
+                rows.push(...ttr.rows);
+                attachments.push(...ttr.attachments);
+              }
+            }
+            else if (op.type === 'update') {
+              if (op.node) {
+                // TODO properties
+                if ('value' in op.node && op.node.value) {
+                  db.query(SQL`UPDATE node
+                  SET value = ${op.node.value}
+                  WHERE id = ${op.id}`);
+                }
+                if ('name' in op.node && op.node.name) {
+                  db.query(SQL`UPDATE node
+                  SET name = ${op.node.name}
+                  WHERE id = ${op.id}`);
+                }
+                // if ('type' in op.node && op.node.type) {
+                //   db.query(SQL`UPDATE node
+                //   SET value = (
+                //     SELECT id
+                //     FROM node_type
+                //     WHERE tag = ${op.node.type}
+                //   )
+                //   WHERE id = ${op.id}`);
+                // }
+              }
+            }
+            else if (op.type === 'delete') {
+              db.query(SQL`DELETE FROM node_attachment
+              WHERE parent_id = ${op.parentId}
+                AND child_id  = ${op.id}`);
+            }
+          }
+
+          if (rows.length > 0 || attachments.length > 0) {
+            insertNodesAttachments(db, rows, attachments);
+          }
+
+          await db.query('COMMIT');
+        }
+        catch (e) {
+          console.error(e);
+          await db.query('ROLLBACK');
+          throw e;
+        }
+        finally {
+          db.release();
+        }
+        return 'meh'
+      })
       .put('*', async ({ params, domain, body, pool }) => {
         const db = await pool.connect();
         try {
@@ -318,57 +331,19 @@ const app = (env: any) => {
             `);
           }
 
-          const t = treeToRows(body, path);
+          const t = treeToRows(body as any, path);
           // console.log(JSON.stringify(t));
-
-          t.rows.map(r => db.query(SQL`
-            INSERT INTO node (
-              id,
-              type_id,
-              name,
-              value
-            ) VALUES (
-              ${r.id},
-              (
-                SELECT id
-                FROM node_type
-                WHERE tag = ${r.type}
-              ),
-              ${r.name},
-              ${r.value}
-            ) ON CONFLICT (id) DO UPDATE SET
-              name = EXCLUDED.name,
-              type_id = EXCLUDED.type_id,
-              value = EXCLUDED.value
-            returning id
-          `))
-          t.attachments.map(a => db.query(SQL`
-            INSERT INTO node_attachment
-              (parent_id, child_id, position)
-            VALUES
-              (${a.parent_id}, ${a.child_id}, ${a.position})
-            ON CONFLICT (id) DO UPDATE
-            SET
-              parent_id = EXCLUDED.parent_id,
-              child_id = EXCLUDED.child_id,
-              position = EXCLUDED.position
-          `))
-
-          const nextAttachment = await db.query(SQL`
-            SELECT next_position
-            FROM node_attachment_next
-            WHERE parent_id = ${domain.id}
-          `);
-
-          if (!nextAttachment.rowCount || nextAttachment.rowCount === 0) {
-            throw 'Uh oh...';
-          }
+          insertNodesAttachments(db, t.rows, t.attachments);
 
           db.query(SQL`
             INSERT INTO node_attachment
               (parent_id, child_id, position)
             VALUES
-              (${domain.id}, ${t.rows[0].id}, ${nextAttachment.rows[0].next_position})
+              (${domain.id}, ${t.rows[0].id}, (
+                SELECT next_position
+                FROM node_attachment_next
+                WHERE parent_id = ${domain.id}
+              ))
           `)
           await db.query('COMMIT');
         }
@@ -401,7 +376,7 @@ const app = (env: any) => {
           try {
             initialTree = await fetchTree(db, domain.id, path);
           }
-          catch (ex) {
+          catch (ex: any) {
             if (ex instanceof NotFoundError || ex?.code === 'NOT_FOUND') {
               // allow it to be empty.
             }
@@ -484,18 +459,18 @@ const app = (env: any) => {
       })
     )
     .onStart(async app => {
-      const watcher = watch(
-        './static',
-        { recursive: true },
-        async (event, filename) => await loadFileByRelativePath(app.handle, event, filename!),
-      );
-
       // read all the files in the current directory, recursively
       const rd = await readdir("./static", { recursive: true });
 
-      for await (const filename of rd) {
-        await loadFileByRelativePath(app.handle, 'load', filename!)
+      for (const filename of rd) {
+        await loadFileByRelativePath(app.handle, 'load', filename!, INTERNAL_SECRET);
       }
+
+      const watcher = watch(
+        './static',
+        { recursive: true },
+        async (event, filename) => await loadFileByRelativePath(app.handle, event, filename!, INTERNAL_SECRET),
+      );
 
       process.on('exit', () => {
         // console.log('msg', message);
