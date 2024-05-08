@@ -459,7 +459,7 @@ const debouncedServerMutate = debounce(serverMutate);
 const mutation = (mutationList, observer) => {
   const changeset = crypto.randomUUID();
 
-  console.group(changeset);
+  console.groupCollapsed(changeset);
 
   for (const mutation of mutationList) {
     const parentId = mutation?.target?.dataset?.id;
@@ -533,7 +533,7 @@ const mutation = (mutationList, observer) => {
             // else if (previousSiblingTreePos) {
             //   pos = previousSiblingTreePos + 1
             // }
-            const pos = !nextSiblingTreePos && !previousSiblingTreePos ? 0 : nextSiblingTreePos ? nextSiblingTreePos - 1 : previousSiblingTreePos + 1;
+            const pos = !nextSiblingTreePos && !previousSiblingTreePos ? 0 : nextSiblingTreePos ? nextSiblingTreePos : previousSiblingTreePos + 1;
             const del = parent.children.splice(pos, 1);
             console.log('text', pos, del, parent.children);
           }
@@ -568,7 +568,7 @@ const mutation = (mutationList, observer) => {
           //     // when in between two elements
           //     // nextSibling != null && previousSibling != null
           //     : parent.children.findIndex(e => getNodeId(e) === mutation.previousSibling?.dataset?.id) + 1
-          const pos = !nextSiblingTreePos && !previousSiblingTreePos ? 0 : nextSiblingTreePos ? nextSiblingTreePos - 1 : previousSiblingTreePos + 1;
+          const pos = !nextSiblingTreePos && !previousSiblingTreePos ? 0 : nextSiblingTreePos ? nextSiblingTreePos : previousSiblingTreePos + 1;
 
           console.log('create', child, value, pos);
 

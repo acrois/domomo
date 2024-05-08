@@ -1,9 +1,9 @@
 import { SQL } from "sql-template-strings";
 import { ClientBase, Query, } from "pg";
 import { rowsToTrees } from "./dbeautiful";
-import { NotFoundError } from "elysia";
+import { NotFoundError, t } from "elysia";
 
-const DEBUG_QUERIES = true;
+const DEBUG_QUERIES = false;
 
 if (DEBUG_QUERIES) {
   const submit = Query.prototype.submit;
@@ -75,4 +75,31 @@ export const insertNodesAttachments = (db: ClientBase, rows: any[], attachments:
     VALUES
       (${a.parent_id}, ${a.child_id}, ${a.position})
   `));
+}
+
+export const insertAttachment = async (db: ClientBase, parentId: string, position: number) => {
+  const toUpdate = await db.query(SQL`SELECT
+    id,
+    parent_id,
+    child_id,
+    position AS before_position,
+    CASE
+        WHEN position >= ${position} THEN position + 1
+        ELSE position
+    END AS after_position
+  FROM
+      node_attachment
+  WHERE parent_id = ${parentId}
+      AND position >= ${position} - 1
+  ORDER by position asc
+  FOR UPDATE
+  `);
+
+  if (toUpdate.rowCount && toUpdate.rowCount > 0) {
+    for (const attachment of toUpdate.rows.reverse()) {
+      if (attachment.before_position !== attachment.after_position) {
+        await db.query(SQL`UPDATE node_attachment SET position = ${attachment.after_position} WHERE id = ${attachment.id}`);
+      }
+    }
+  }
 }

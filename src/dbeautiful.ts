@@ -155,6 +155,9 @@ export const applyTreeDiff = (tree: Root, operations: Operation[]) => {
           if ('index' in op) {
             parentElement.children.splice(op.index, 0, childElement);
           }
+          else if ('position' in op) {
+            parentElement.children.splice(op.position, 0, childElement);
+          }
           else {
             parentElement.children.push(childElement);
           }
