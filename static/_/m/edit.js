@@ -454,7 +454,7 @@ const debounce = (func, timeout = 300) => {
   }
 }
 
-const debouncedServerMutate = debounce(serverMutate);
+const debouncedServerMutate = debounce(serverMutate, 2500);
 
 const mutation = (mutationList, observer) => {
   const changeset = crypto.randomUUID();
@@ -474,6 +474,11 @@ const mutation = (mutationList, observer) => {
     if (mutation.type === 'attributes') {
       if (mutation.attributeName === 'data-cmd' || mutation.attributeName === 'data-id') {
         // ignore body super design trigger and guid encoding
+        continue;
+      }
+
+      if (mutation.attributeName === 'draggable' || mutation.attributeName === 'contenteditable') {
+        // ignore editing attributes
         continue;
       }
 
@@ -497,11 +502,13 @@ const mutation = (mutationList, observer) => {
         }
 
         console.log('classList', classListWithoutEditables);
+        parent.properties['classList'] = classListWithoutEditables;
       }
-
-      if (mutation.attributeName === 'draggable' || mutation.attributeName === 'contenteditable') {
-        // ignore editing attributes
-        continue;
+      else {
+        // diff other attributes
+        console.log('attributes', parent, mutation.target.attributes);
+        const v = mutation.target.attributes.getNamedValue(mutation.attributeName);
+        parent.properties[mutation.attributeName] = v;
       }
     }
     else if (mutation.type === 'childList') {
@@ -568,7 +575,7 @@ const mutation = (mutationList, observer) => {
           //     // when in between two elements
           //     // nextSibling != null && previousSibling != null
           //     : parent.children.findIndex(e => getNodeId(e) === mutation.previousSibling?.dataset?.id) + 1
-          const pos = !nextSiblingTreePos && !previousSiblingTreePos ? 0 : nextSiblingTreePos ? nextSiblingTreePos : previousSiblingTreePos + 1;
+          const pos = !nextSiblingTreePos && !previousSiblingTreePos ? 0 : nextSiblingTreePos ? nextSiblingTreePos : previousSiblingTreePos;
 
           console.log('create', child, value, pos);
 
@@ -602,6 +609,13 @@ const mutation = (mutationList, observer) => {
       original = original ?? structuredClone(window.esd);
 
       const parentNode = mutation.target.parentNode;
+
+      if (!parentNode) {
+        console.log(parentNode, mutation.target);
+        continue;
+      }
+
+      // console.log(parentNode);
       const parentId = parentNode.dataset.id;
       const value = mutation.target.nodeValue;
       console.log('update', parentId, value, parentNode);
