@@ -640,7 +640,6 @@ const mutation = (mutationList, observer) => {
   console.groupEnd();
 };
 
-
 const observer = new MutationObserver(mutation);
 observer.observe(document, {
   attributes: true,
