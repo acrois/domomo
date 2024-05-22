@@ -9,7 +9,7 @@ import { watch } from "fs";
 import { readdir } from "node:fs/promises";
 import { diffTrees, getNodeId, treeToRows, type Operation } from "./dbeautiful";
 import { loadFileByRelativePath, serveStaticDirectory, serveStaticFile } from "./util";
-import { fetchTree, fetchTrees, insertNodesAttachments } from "./database";
+import { fetchTree, fetchTrees, insertAttachment, insertNodesAttachments } from "./database";
 
 // client-side script to connect websocket for bidirectional async updates
 // update nodes
@@ -44,7 +44,7 @@ const fetcher = (fetch: () => Promise<any>) => {
 
     let connected = true;
     while (connected) {
-      await stream.wait(1500)
+      await stream.wait(10000)
       // TODO LISTEN postgres pubsub this stuff only when it is actually edited.
       const renewed = await fetch();
 
@@ -235,19 +235,8 @@ const app = (env: any) => {
                   child_id: op.id,
                   position: op.position,
                 })
-                // assume we are idx 1 atm
-                if (body.length > 1 && body[0]?.parentId !== op.parentId && body[0]?.type === 'delete') {
+                await insertAttachment(db, op.parentId!, op.position!);
 
-                  db.query(SQL`UPDATE node_attachment
-                    SET position = position + 1
-                  WHERE id IN (
-                    SELECT id FROM node_attachment
-                    WHERE parent_id = ${op.parentId}
-                      AND position >= ${op.position}
-                    ORDER BY position DESC
-                    FOR UPDATE
-                  )`);
-                }
                 rows.push(...ttr.rows);
                 attachments.push(...ttr.attachments);
               }
