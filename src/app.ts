@@ -185,6 +185,7 @@ const app = (env: any) => {
         if (!auth
           || !auth.email
           || !auth!.email!.toString().endsWith('@kinetech.llc')
+          || !auth!.email!.toString().endsWith('@acrois.dev')
         ) {
           throw new AuthError();
         }
