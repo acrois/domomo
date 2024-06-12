@@ -28,7 +28,7 @@ jobs:
           github-token: ${{ secrets.SVC_CLI_BOT_GITHUB_TOKEN }}
           script: |
             return github.rest.actions.createWorkflowDispatch({
-              owner: 'KinetechSolutions',
+              owner: 'acrois',
               repo: 'magictent',
               workflow_id: 'deploy.yaml',
               ref: 'trunk',
